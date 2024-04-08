@@ -1,12 +1,12 @@
-use bevy::{prelude::*, render::{mesh::shape::Cube, render_asset::RenderAssetUsages, render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages}}};
-use bevy_compute_noise::{compute_noise::Worley2D, ComputeNoisePlugin, ComputeNoiseQueue};
+use bevy::prelude::*;
+use bevy_compute_noise::{compute_noise::worley_2d::Worley2DSettings, prelude::*};
 use bevy_flycam::PlayerPlugin;
 
 fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins,
-            ComputeNoisePlugin,
+            ComputeNoisePlugin::<Worley2D>::default(),
             PlayerPlugin,
         ))
         .add_systems(Startup, setup)
@@ -17,31 +17,7 @@ fn example(
     mut worley_noise_queue: ResMut<ComputeNoiseQueue<Worley2D>>,
     mut images: ResMut<Assets<Image>>,
 ) {
-    let mut image = 
-        Image::new_fill(
-            Extent3d {
-                width: 128,
-                height: 128,
-                depth_or_array_layers: 1,
-            },
-        TextureDimension::D2,
-        &[0, 0, 0, 255],
-        TextureFormat::Rgba8Unorm,
-        RenderAssetUsages::RENDER_WORLD,
-    );
-
-    image.texture_descriptor.usage = TextureUsages::COPY_DST
-        | TextureUsages::STORAGE_BINDING
-        | TextureUsages::TEXTURE_BINDING;
-
-    let image_handle = images.add(image);
-
-    worley_noise_queue.add(
-        image_handle.clone(),
-        Worley2D {
-            color: Vec4::new(1.0, 0.0, 1.0, 1.0),
-        }
-    );
+    worley_noise_queue.add(&mut images, 128, 128, Worley2DSettings::new(7));
 }
 
 fn setup(
@@ -51,40 +27,17 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mut image = 
-        Image::new_fill(
-            Extent3d {
-                width: 128,
-                height: 128,
-                depth_or_array_layers: 1,
-            },
-        TextureDimension::D2,
-        &[0, 0, 0, 255],
-        TextureFormat::Rgba8Unorm,
-        RenderAssetUsages::RENDER_WORLD,
-    );
-
-    image.texture_descriptor.usage = TextureUsages::COPY_DST
-        | TextureUsages::STORAGE_BINDING
-        | TextureUsages::TEXTURE_BINDING;
-
-    let image_handle = images.add(image);
-
-    worley_noise_queue.add(
-        image_handle.clone(),
-        Worley2D {
-            color: Vec4::new(1.0, 0.0, 0.0, 1.0),
-        }
-    );
+    let worley_noise = worley_noise_queue.add(&mut images, 128, 128, Worley2DSettings::new(7));
 
     commands.spawn(PbrBundle {
         mesh: meshes.add(Plane3d::default().mesh().size(5.0, 5.0)),
         material: materials.add(StandardMaterial {
             base_color: Color::WHITE,
-            base_color_texture: Some(image_handle),
+            base_color_texture: Some(worley_noise),
             
             ..default()
         }),
         ..default()
     });
 }
+
