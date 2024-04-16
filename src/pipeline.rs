@@ -12,6 +12,10 @@ pub struct ComputeNoisePipeline<T: ComputeNoise> {
     _phantom_data: PhantomData<T>,
 }
 
+impl SpecializedComputePipeline for ComputePipeline<T: ComputePipeline> {
+
+}
+
 impl<T: ComputeNoise> FromWorld for ComputeNoisePipeline<T> {
     fn from_world(world: &mut World) -> Self {
         let render_device = world.resource::<RenderDevice>();

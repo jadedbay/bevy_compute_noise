@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::{render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages}, renderer::RenderDevice}};
 use rand::Rng;
-use super::ComputeNoise;
+use super::{ComputeNoise, GpuComputeNoise};
 
 #[derive(Default, Clone)]
 #[repr(C)]
@@ -97,4 +97,8 @@ impl ComputeNoise for Worley2D {
 pub struct GpuWorley2D {
     point_count: u32,
     points: Vec<Vec2>,
+}
+
+impl GpuComputeNoise for GpuWorley2D {
+
 }

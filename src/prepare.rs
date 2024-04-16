@@ -16,7 +16,7 @@ pub fn prepare_bind_groups<T: ComputeNoise>(
             let image_bind_group = render_device.create_bind_group(
                 Some("image_bind_group".into()),
                 &pipeline.image_layout,
-                &BindGroupEntries::single(&image.texture_view,),
+                &BindGroupEntries::single(&image.texture_view),
             );
 
             let noise_bind_group = noise.bind_group(&render_device, &pipeline.noise_layout);

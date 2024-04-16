@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use bevy::{prelude::*, render::{extract_resource::ExtractResource, render_asset::RenderAssetUsages, render_resource::{BindGroup, Extent3d, TextureDimension, TextureFormat, TextureUsages}}};
 
-use crate::{compute_noise::ComputeNoise, prelude::Worley2D};
+use crate::{compute_noise::{ComputeNoise, GpuComputeNoise}, prelude::Worley2D};
 
 #[derive(Resource, Clone, ExtractResource, Default)]
 pub struct ComputeNoiseQueue<T: ComputeNoise> {
@@ -69,14 +69,22 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
 pub(crate) struct ComputeNoiseRenderQueue<T: ComputeNoise> {
     pub queue: Vec<(BindGroup, BindGroup, Vec2)>,
     _phantom_data: PhantomData<T>,
+}    
+
+pub enum GpuNoiseChannels {
+    R(Box<dyn GpuComputeNoise>),
+    RG(Box<dyn GpuComputeNoise>, Box<dyn GpuComputeNoise>),
+    RGBA(Box<dyn GpuComputeNoise>, Box<dyn GpuComputeNoise>, Box<dyn GpuComputeNoise>, Option<Box<dyn GpuComputeNoise>>)
 }
 
-pub enum Noise {
-    Worley2D(Worley2D),
+pub enum NoiseChannels {
+    R(Box<dyn ComputeNoise>),
+    RG(Box<dyn ComputeNoise>, Box<dyn ComputeNoise>),
+    RGBA(Box<dyn ComputeNoise>, Box<dyn ComputeNoise>, Box<dyn ComputeNoise>, Option<Box<dyn ComputeNoise>>)
 }
 
 pub struct CNQueue {
-    pub queue: Vec<(Handle<Image>, (Option<Box<dyn ComputeNoise>>, Option<Box<dyn ComputeNoise>>, Option<Box<dyn ComputeNoise>>, Option<Box<dyn ComputeNoise>>))>
+    pub queue: Vec<(Handle<Image>, GpuNoiseChannels)>
 }
 
 impl CNQueue {
@@ -85,33 +93,30 @@ impl CNQueue {
         images: &mut Assets<Image>, 
         width: u32, 
         height: u32, 
-        settings: (
-            Option<Box<dyn ComputeNoise>>, 
-            Option<Box<dyn ComputeNoise>>, 
-            Option<Box<dyn ComputeNoise>>, 
-            Option<Box<dyn ComputeNoise>>
-        )
+        noise: NoiseChannels
     ) -> Handle<Image> {
-        let num_channels = settings.0.is_some() as u8
-            + settings.1.is_some() as u8
-            + settings.2.is_some() as u8
-            + settings.3.is_some() as u8;
-        
-        let valid_channels = match num_channels {
-            1 | 2 => num_channels,
-            _ => 4,
-        };
+        let image_handle = Self::create_image(images, width, height, noise);
 
-        let image_handle = Self::create_image(images, width, height, valid_channels);
+        self.queue.push(match noise {
+            NoiseChannels::R(noise) => 
+                GpuNoiseChannels::R(noise.gpu_data(width, height)),
+            NoiseChannels::RG(noise_r, noise_g) => 
+                GpuNoiseChannels::RG(noise_r.gpu_data(width, height), noise_g.gpu_data(width, height)),
+            NoiseChannels::RGBA(noise_r, noise_g, noise_b, noise_a) => 
+                GpuNoiseChannels::RGBA(noise_r.gpu_data(width, height), noise_g.gpu_data(width, height), noise_b.gpu_data(width, height), match noise_a {
+                    Some(noise_a) => Some(noise_a.gpu_data(width, height)),
+                    None => None,
+                })
+        });
 
         image_handle
     }
 
-    pub fn create_image(images: &mut Assets<Image>, width: u32, height: u32, channels: u8) -> Handle<Image> {
+    pub fn create_image(images: &mut Assets<Image>, width: u32, height: u32, channels: NoiseChannels) -> Handle<Image> {
         let texture_format = match channels {
-            1 => TextureFormat::R8Unorm,
-            2 => TextureFormat::Rg8Unorm,
-            _ => TextureFormat::Rgba8Unorm,
+            NoiseChannels::R(_) => TextureFormat::R8Unorm,
+            NoiseChannels::RG(_, _) => TextureFormat::Rg8Unorm,
+            NoiseChannels::RGBA(_, _, _, _) => TextureFormat::Rgba8Unorm,
         };
 
         let mut image = 
@@ -132,5 +137,9 @@ impl CNQueue {
             | TextureUsages::TEXTURE_BINDING;
 
         images.add(image)
+    }
+
+    pub fn clear(&mut self) {
+        self.queue.clear();
     }
 }
