@@ -9,10 +9,10 @@ pub struct Worley2D {
 }
 
 impl Worley2D {
-    pub fn new(point_count: u32) -> Box<Self> {
-        Box::new(Self {
+    pub fn new(point_count: u32) -> Self {
+        Self {
             point_count,
-        })
+        }
     }
 
     fn generate_points(&self, width: u32, height: u32) -> Vec<Vec2> {
@@ -36,12 +36,41 @@ impl ComputeNoise for Worley2D {
             points: self.generate_points(width, height),
         }
     }
-    
+
     fn shader() -> ShaderRef {
         "shaders/worley_2d.wgsl".into()
     }
 
-    fn bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup {
+    fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout {
+        render_device.create_bind_group_layout(
+            "worley_noise_layout",
+            &BindGroupLayoutEntries::sequential(
+                ShaderStages::COMPUTE,
+                (
+                    BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                )
+            )
+        )
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct GpuWorley2D {
+    point_count: u32,
+    points: Vec<Vec2>,
+}
+
+impl GpuComputeNoise for GpuWorley2D {
+    fn to_bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup {
         let points_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
                     label: None,
@@ -72,33 +101,4 @@ impl ComputeNoise for Worley2D {
                 },
         )))
     }
-
-    fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout {
-        render_device.create_bind_group_layout(
-            "worley_noise_layout",
-            &BindGroupLayoutEntries::sequential(
-                ShaderStages::COMPUTE,
-                (
-                    BindingType::Buffer {
-                        ty: BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    BindingType::Buffer {
-                        ty: BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                )
-            )
-        )
-    }
-}
-pub struct GpuWorley2D {
-    point_count: u32,
-    points: Vec<Vec2>,
-}
-
-impl GpuComputeNoise for GpuWorley2D {
-
 }

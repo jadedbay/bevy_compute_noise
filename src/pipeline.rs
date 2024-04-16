@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use bevy::{prelude::*, render::{render_resource::{binding_types::{storage_buffer_read_only, texture_storage_2d, uniform_buffer}, BindGroup, BindGroupLayout, BindGroupLayoutEntries, BindGroupLayoutEntry, BindingType, BufferBindingType, CachedComputePipelineId, ComputePipelineDescriptor, PipelineCache, ShaderRef, ShaderStages, StorageTextureAccess, TextureFormat}, renderer::RenderDevice}};
+use bevy::{prelude::*, render::{render_resource::{binding_types::{storage_buffer_read_only, texture_storage_2d, uniform_buffer}, BindGroup, BindGroupLayout, BindGroupLayoutEntries, BindGroupLayoutEntry, BindingType, BufferBindingType, CachedComputePipelineId, ComputePipelineDescriptor, PipelineCache, ShaderRef, ShaderStages, SpecializedComputePipeline, StorageTextureAccess, TextureFormat}, renderer::RenderDevice}};
 
 use crate::compute_noise::{ComputeNoise, worley_2d::Worley2D};
 
@@ -10,10 +10,6 @@ pub struct ComputeNoisePipeline<T: ComputeNoise> {
     pub noise_layout: BindGroupLayout,
     pub pipeline_id: CachedComputePipelineId,
     _phantom_data: PhantomData<T>,
-}
-
-impl SpecializedComputePipeline for ComputePipeline<T: ComputePipeline> {
-
 }
 
 impl<T: ComputeNoise> FromWorld for ComputeNoisePipeline<T> {

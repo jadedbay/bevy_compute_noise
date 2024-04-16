@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::{render_asset::RenderAssets, render_resource::{BindGroup, BindGroupEntries, BufferBinding, BufferInitDescriptor, BufferUsages, DynamicBindGroupEntries}, renderer::RenderDevice}};
 
-use crate::{compute_noise::ComputeNoise, noise_queue::{ComputeNoiseQueue, ComputeNoiseRenderQueue}, pipeline::ComputeNoisePipeline};
+use crate::{compute_noise::{ComputeNoise, GpuComputeNoise}, noise_queue::{ComputeNoiseQueue, ComputeNoiseRenderQueue}, pipeline::ComputeNoisePipeline};
 
 pub fn prepare_bind_groups<T: ComputeNoise>(
     pipeline: Res<ComputeNoisePipeline<T>>,
@@ -19,7 +19,7 @@ pub fn prepare_bind_groups<T: ComputeNoise>(
                 &BindGroupEntries::single(&image.texture_view),
             );
 
-            let noise_bind_group = noise.bind_group(&render_device, &pipeline.noise_layout);
+            let noise_bind_group = noise.to_bind_group(&render_device, &pipeline.noise_layout);
 
             bind_groups.push((image_bind_group, noise_bind_group, image.size / 8.0));
         }

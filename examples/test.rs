@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_compute_noise::{compute_noise::worley_2d::Worley2DSettings, prelude::*};
+use bevy_compute_noise::{compute_noise::worley_2d::Worley2D, prelude::*};
 use bevy_flycam::PlayerPlugin;
 
 fn main() {
@@ -20,7 +20,7 @@ fn example(
     let worley_noise = worley_noise_queue.add(
         &mut images, 
         128, 128, 
-        Worley2DSettings::new(7)
+        Worley2D::new(7)
     );
 }
 
@@ -34,19 +34,7 @@ fn setup(
     let worley_noise = worley_noise_queue.add(
         &mut images, 
         128, 128, 
-        Worley2DSettings::new(2)
-    );
-
-    let test = worley_noise_queue.add_rgba::<Worley2D, Worley2D, Worley2D, Worley2D>(
-        &mut images,
-        128,
-        128,
-        (
-            Some(Worley2DSettings::new(2)),
-            Some(Worley2DSettings::new(2)),
-            Some(Worley2DSettings::new(2)),
-            Some(Worley2DSettings::new(2)),
-        )
+        Worley2D::new(2)
     );
 
     commands.spawn(PbrBundle {

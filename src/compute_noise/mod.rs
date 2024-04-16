@@ -8,8 +8,8 @@ pub trait ComputeNoise: Sync + Send + 'static + Default + Clone {
     
     fn gpu_data(&self, width: u32, height: u32) -> Self::Gpu;
     fn shader() -> ShaderRef;
-    fn bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup;
     fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout;
 }
-
-pub trait GpuComputeNoise {}
+pub trait GpuComputeNoise: Sync + Send + 'static + Default + Clone {
+    fn to_bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup;
+}
