@@ -1,5 +1,7 @@
+use std::f32::consts::PI;
+
 use bevy::prelude::*;
-use bevy_compute_noise::{compute_noise::worley_2d::{ComputeNoiseEdit, Worley2D}, prelude::*};
+use bevy_compute_noise::prelude::*;
 use bevy_flycam::PlayerPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
@@ -15,14 +17,14 @@ fn main() {
         .run()
 }
 
-fn example(
+fn _example(
     mut worley_noise_queue: ResMut<ComputeNoiseQueue<Worley2D>>,
     mut images: ResMut<Assets<Image>>,
 ) {
-    let worley_noise = worley_noise_queue.add(
+    let _worley_noise = worley_noise_queue.add(
         &mut images, 
         128, 128, 
-        Worley2D::new(7)
+        Worley2D::new((5, 5))
     );
 }
 
@@ -45,9 +47,24 @@ fn setup(
         ..default()
     });
 
-    commands.spawn(ComputeNoiseEdit::<Worley2D> {
+    commands.spawn(ComputeNoiseComponent::<Worley2D> {
         image: worley_noise.clone(),
-        noise: Worley2D::new(2),
+        noise: Worley2D::new((5, 5)),
+    });
+
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 1_000.,
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform::from_rotation(Quat::from_euler(
+            EulerRot::ZYX,
+            0.0,
+            PI * -0.15,
+            PI * -0.15,
+        )),
+        ..default()
     });
 }
 

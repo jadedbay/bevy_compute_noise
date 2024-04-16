@@ -1,8 +1,7 @@
 use std::marker::PhantomData;
 
 use bevy::{prelude::*, render::{Render, RenderApp, RenderSet}};
-use compute_noise::worley_2d::{update_noise, ComputeNoiseEdit};
-use prelude::Worley2D;
+use compute_noise::{update_noise, ComputeNoiseComponent};
 
 use crate::{
     compute::{run_compute_noise, ComputeNoiseEncoder},
@@ -23,7 +22,7 @@ mod compute;
 pub mod prelude {
     pub use crate::ComputeNoisePlugin;
     pub use crate::noise_queue::ComputeNoiseQueue;
-    pub use crate::compute_noise::Worley2D;
+    pub use crate::compute_noise::{ComputeNoiseComponent, Worley2D};
 }
 
 #[derive(Default)]
@@ -32,7 +31,7 @@ pub struct ComputeNoisePlugin<T: ComputeNoise>(PhantomData<T>);
 impl<T: ComputeNoise> Plugin for ComputeNoisePlugin<T> {
     fn build(&self, app: &mut App) {
         app
-            .register_type::<ComputeNoiseEdit<Worley2D>>()
+            .register_type::<ComputeNoiseComponent<T>>()
             .init_resource::<ComputeNoiseQueue<T>>()
             .add_systems(Update, update_noise::<T>);
 
