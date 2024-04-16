@@ -1,9 +1,12 @@
 use bevy::{prelude::*, render::{render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages}, renderer::RenderDevice}};
+use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, InspectorOptions};
 use rand::Rng;
+use crate::prelude::ComputeNoiseQueue;
+
 use super::{ComputeNoise, GpuComputeNoise};
 
-#[derive(Default, Clone)]
-#[repr(C)]
+#[derive(Default, Clone, Reflect, InspectorOptions)]
+#[reflect(InspectorOptions)]
 pub struct Worley2D {
     point_count: u32,
 }
@@ -100,5 +103,22 @@ impl GpuComputeNoise for GpuWorley2D {
                     size: None,
                 },
         )))
+    }
+}
+
+#[derive(Component, Reflect, InspectorOptions)]
+#[reflect(InspectorOptions)]
+pub struct ComputeNoiseEdit<T: ComputeNoise> {
+    pub image: Handle<Image>,
+    pub noise: T,
+}
+
+pub fn update_noise<T: ComputeNoise>(
+    mut noise_queue: ResMut<ComputeNoiseQueue<T>>,
+    mut images: ResMut<Assets<Image>>,
+    query: Query<&ComputeNoiseEdit<T>, Changed<ComputeNoiseEdit<T>>>,
+) {
+    for noise in query.iter() {
+        noise_queue.add_image(&mut images, noise.image.clone(), noise.noise.clone());
     }
 }

@@ -37,7 +37,7 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
             TextureDimension::D2,
             &[0],
             TextureFormat::R8Unorm,
-            RenderAssetUsages::RENDER_WORLD,
+            RenderAssetUsages::all(),
         );
 
         image.texture_descriptor.usage = TextureUsages::COPY_DST
