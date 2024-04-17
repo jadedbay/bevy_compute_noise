@@ -8,26 +8,24 @@ use super::{ComputeNoise, GpuComputeNoise};
 #[reflect(InspectorOptions)]
 pub struct Worley2D {
     #[inspector(min = 1)]
-    cells_x: u32,
-    cells_y: u32,
+    cells: u32
 }
 
 impl Worley2D {
-    pub fn new(cells: (u32, u32)) -> Self {
+    pub fn new(cells: u32) -> Self {
         Self {
-            cells_x: cells.0,
-            cells_y: cells.1,
+            cells,
         }
     }
 
     fn generate_points(&self, width: u32, height: u32) -> Vec<Vec2> {
-        let cell_size = (width as f32 / self.cells_x as f32, height as f32 / self.cells_y as f32);
+        let cell_size = (width as f32 / self.cells as f32, height as f32 / self.cells as f32);
 
         let mut rng = rand::thread_rng();
 
         let mut random_points = Vec::new();
-        for x in 0..self.cells_x {
-            for y in 0..self.cells_y {
+        for x in 0..self.cells {
+            for y in 0..self.cells {
                 let x_range = (x as f32 * cell_size.0)..((x + 1) as f32 * cell_size.0);
                 let y_range = (y as f32* cell_size.1)..((y + 1) as f32 * cell_size.1);
                 random_points.push(Vec2::new(rng.gen_range(x_range), rng.gen_range(y_range)));
@@ -51,7 +49,7 @@ impl ComputeNoise for Worley2D {
     
     fn gpu_data(&self, width: u32, height: u32) -> Self::Gpu {
         Self::Gpu {
-            cell_count: [self.cells_x, self.cells_y],
+            cell_count: self.cells,
             points: self.generate_points(width, height),
         }
     }
@@ -84,7 +82,7 @@ impl ComputeNoise for Worley2D {
 
 #[derive(Clone, Default)]
 pub struct GpuWorley2D {
-    cell_count: [u32; 2],
+    cell_count: u32,
     points: Vec<Vec2>,
 }
 
@@ -100,7 +98,7 @@ impl GpuComputeNoise for GpuWorley2D {
         let point_count_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
                     label: None,
-                    contents: &bytemuck::cast_slice(&self.cell_count),
+                    contents: &bytemuck::cast_slice(&[self.cell_count]),
                     usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
             });
 

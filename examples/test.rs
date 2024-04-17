@@ -24,7 +24,7 @@ fn _example(
     let _worley_noise = worley_noise_queue.add(
         &mut images, 
         128, 128, 
-        Worley2D::new((5, 5))
+        Worley2D::new(5)
     );
 }
 
@@ -43,24 +43,24 @@ fn setup(
                 material: materials.add(StandardMaterial {
                     base_color: Color::WHITE,
                     base_color_texture: Some(worley_noise.clone()),
-                    
+                    reflectance: 0.0,
                     ..default()
                 }),
                 transform: Transform::from_xyz(x as f32 * 5.0, 0.0, z as f32 * 5.0),
                 ..default()
             });
-        }
+       }
     }
 
 
     commands.spawn(ComputeNoiseComponent::<Worley2D> {
         image: worley_noise.clone(),
-        noise: Worley2D::new((5, 5)),
+        noise: Worley2D::new(5),
     });
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
-            illuminance: 100.,
+            illuminance: 1_000.,
             shadows_enabled: true,
             ..default()
         },
