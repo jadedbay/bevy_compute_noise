@@ -38,7 +38,7 @@ impl Worley2D {
 
         for x in 0..=1 {
             for y in 0..=1 {
-                duplicated_random_points.extend(random_points.iter().map(|p| *p + Vec2::new(x as f32 * width as f32, -y as f32 * height as f32)));
+                duplicated_random_points.extend(random_points.iter().map(|p| *p + Vec2::new(x as f32 * width as f32, y as f32 * height as f32)));
             }
         }
 
@@ -124,12 +124,12 @@ impl GpuComputeNoise for GpuWorley2D {
 
 #[test]
 fn test() {
-    let cell = [0, 5];
-    let cell_count = [2, 3];
+    let cell = [6, 3];
+    let cell_count = [5, 2];
 
     
     let clump = [cell[0] / cell_count[0], cell[1] / cell_count[1]];
-    let mut index = (cell_count[0] * cell_count[1] * 2 * clump[0]) + (cell[0] - cell_count[0] * clump[0]) * cell_count[1] + 1;
+    let mut index = (cell_count[0] * cell_count[1] * 2 * clump[0]) + (cell[0] - cell_count[0] * clump[0]) * cell_count[1];
     let y = cell_count[1] * cell_count[0] * clump[1] + (cell[1] - cell_count[1] * clump[1]);
     
     dbg!(y);

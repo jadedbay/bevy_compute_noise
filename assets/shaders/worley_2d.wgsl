@@ -17,37 +17,30 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>, @builtin(num_w
         invocation_id.y
     );
 
-    let cell_size = texture_size.x / f32(cell_count.x);
+    let cell_size = texture_size / vec2<f32>(cell_count);
     var cell = vec2<u32>(vec2<f32>(location) / cell_size);
-    cell = vec2<u32>(cell.x - 1, cell.y - 1);
-
-    // var distance = INFINITY;
-    // for (var x: i32 = -1; x <= 1; x = x + 1) {
-    //     for (var y: i32 = -1; y <= 1; y = y + 1) {
-    //         let index = get_index(vec2<u32>(vec2<i32>(cell) + vec2<i32>(x, y)), cell_count);
-    //         let current_distance = distance(vec2<f32>(location), points[index]);
-    //         if (current_distance < distance) {
-    //             distance = current_distance;
-    //         }
-    //     }
-    // }
+    cell += vec2<u32>(1, 1);
+    
 
     var distance = INFINITY;
-    for (var i: u32 = 0u; i < 25u; i = i + 1u) {
-        let current_distance = distance(vec2<f32>(location), points[i]);
-        if (current_distance < distance) {
-            distance = current_distance;
+    for (var x: i32 = -1; x <= 1; x = x + 1) {
+        for (var y: i32 = -1; y <= 1; y = y + 1) {
+            let index = get_index(vec2<u32>(vec2<i32>(cell) + vec2<i32>(x, y)), cell_count);
+            let current_distance = distance(vec2<f32>(location) + cell_size, points[index]);
+            if (current_distance < distance) {
+                distance = current_distance;
+            }
         }
     }
 
-    let normalized_distance = 1.0 - (distance / (texture_size.x / f32(cell_count.x)));
+    let normalized_distance = 1.0 - (distance / distance(vec2<f32>(0.0, 0.0), cell_size));
 
     textureStore(texture, location, vec4<f32>(normalized_distance, 0.0, 0.0, 0.0));
 }
 
 fn get_index(cell: vec2<u32>, cell_count: vec2<u32>) -> u32 {
     let clump = cell / cell_count;
-    var x = (cell_count.x * cell_count.y * 2 * clump.x) + (cell.x - cell_count.x * clump.x) * cell_count.y + 1;
+    var x = (cell_count.x * cell_count.y * 2 * clump.x) + (cell.x - cell_count.x * clump.x) * cell_count.y;
     let y = cell_count.y * cell_count.x * clump.y + (cell.y - cell_count.y * clump.y);
 
     return x + y;

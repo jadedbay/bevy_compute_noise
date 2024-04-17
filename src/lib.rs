@@ -18,11 +18,13 @@ mod extract;
 mod pipeline;
 mod prepare;
 mod compute;
+pub mod image;
 
 pub mod prelude {
     pub use crate::ComputeNoisePlugin;
     pub use crate::noise_queue::ComputeNoiseQueue;
     pub use crate::compute_noise::{ComputeNoiseComponent, Worley2D};
+    pub use crate::image::ComputeNoiseImage;
 }
 
 #[derive(Default)]
