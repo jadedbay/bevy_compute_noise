@@ -10,8 +10,8 @@ pub struct ComputeNoiseQueue<T: ComputeNoise> {
 }
 
 impl<T: ComputeNoise> ComputeNoiseQueue<T> {
-    pub fn add(&mut self, images: &mut Assets<Image>, width: u32, height: u32, noise: T) -> Handle<Image> {
-        let image = ComputeNoiseImage::create_image(images, width, height);
+    pub fn add(&mut self, images: &mut Assets<Image>, width: u32, height: u32, depth: u32, noise: T) -> Handle<Image> {
+        let image = ComputeNoiseImage::create_image(images, width, height, depth);
         
         self.queue.push((image.clone(), noise.gpu_data(width, height)));
 

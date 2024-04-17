@@ -1,15 +1,15 @@
-use bevy::{prelude::*, render::{render_asset::RenderAssetUsages, render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages}}};
+use bevy::{prelude::*, render::{render_asset::RenderAssetUsages, render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages}, texture::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}}};
 
 pub struct ComputeNoiseImage;
 
 impl ComputeNoiseImage {
-    pub fn create_image(images: &mut Assets<Image>, width: u32, height: u32) -> Handle<Image> {
+    pub fn create_image(images: &mut Assets<Image>, width: u32, height: u32, depth: u32) -> Handle<Image> {
         let mut image = 
             Image::new_fill(
                 Extent3d {
                     width,
                     height,
-                    depth_or_array_layers: 1,
+                    depth_or_array_layers: depth,
                 },
             TextureDimension::D2,
             &[0],

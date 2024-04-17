@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, render::{mesh::{shape::UVSphere, VertexAttributeValues}, texture::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}}};
 use bevy_compute_noise::prelude::*;
 use bevy_flycam::PlayerPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -23,7 +23,7 @@ fn _example(
 ) {
     let _worley_noise = worley_noise_queue.add(
         &mut images, 
-        128, 128, 
+        128, 128, 1, 
         Worley2D::new(5)
     );
 }
@@ -34,23 +34,49 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let worley_noise = ComputeNoiseImage::create_image(&mut images, 128, 128);
+    let worley_noise = ComputeNoiseImage::create_image(&mut images, 128, 128, 1);
 
-    for x in 0..=1 {
-        for z in 0..=1 {
-            commands.spawn(PbrBundle {
-                mesh: meshes.add(Plane3d::default().mesh().size(5.0, 5.0)),
-                material: materials.add(StandardMaterial {
-                    base_color: Color::WHITE,
-                    base_color_texture: Some(worley_noise.clone()),
-                    reflectance: 0.0,
-                    ..default()
-                }),
-                transform: Transform::from_xyz(x as f32 * 5.0, 0.0, z as f32 * 5.0),
-                ..default()
-            });
-       }
+    let image = images.get_mut(worley_noise.clone()).unwrap();
+    image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
+        address_mode_u: ImageAddressMode::Repeat,
+        address_mode_v: ImageAddressMode::Repeat,
+        ..default()
+    });
+
+    let mut plane = Mesh::from(Plane3d::default().mesh().size(5.0, 5.0));
+    if let Some(uvs) = plane.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
+        if let VertexAttributeValues::Float32x2(uvs) = uvs {
+            for uv in uvs.iter_mut() {
+                *uv = [uv[0] * 2.0, uv[1] * 2.0];
+            }
+        }
     }
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(plane),
+        material: materials.add(StandardMaterial {
+            base_color: Color::WHITE,
+            base_color_texture: Some(worley_noise.clone()),
+            reflectance: 0.0,
+            ..default()
+        }),
+        ..default()
+    });
+
+    // for x in 0..=1 {
+    //     for z in 0..=1 {
+    //         commands.spawn(PbrBundle {
+    //             mesh: meshes.add(Plane3d::default().mesh().size(5.0, 5.0)),
+    //             material: materials.add(StandardMaterial {
+    //                 base_color: Color::WHITE,
+    //                 base_color_texture: Some(worley_noise.clone()),
+    //                 reflectance: 0.0,
+    //                 ..default()
+    //             }),
+    //             transform: Transform::from_xyz(x as f32 * 5.0, 0.0, z as f32 * 5.0),
+    //             ..default()
+    //         });
+    //    }
+    // }
 
 
     commands.spawn(ComputeNoiseComponent::<Worley2D> {
@@ -58,19 +84,19 @@ fn setup(
         noise: Worley2D::new(5),
     });
 
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            illuminance: 1_000.,
-            shadows_enabled: true,
-            ..default()
-        },
-        transform: Transform::from_rotation(Quat::from_euler(
-            EulerRot::ZYX,
-            0.0,
-            PI * -0.15,
-            PI * -0.15,
-        )),
-        ..default()
-    });
+    // commands.spawn(DirectionalLightBundle {
+    //     directional_light: DirectionalLight {
+    //         illuminance: 1_000.,
+    //         shadows_enabled: true,
+    //         ..default()
+    //     },
+    //     transform: Transform::from_rotation(Quat::from_euler(
+    //         EulerRot::ZYX,
+    //         0.0,
+    //         PI * -0.15,
+    //         PI * -0.15,
+    //     )),
+    //     ..default()
+    // });
 }
 
