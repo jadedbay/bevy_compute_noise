@@ -119,19 +119,3 @@ impl GpuComputeNoise for GpuWorley2D {
         )))
     }
 }
-
-#[test]
-fn test() {
-    let cell = [6, 3];
-    let cell_count = [5, 2];
-
-    
-    let clump = [cell[0] / cell_count[0], cell[1] / cell_count[1]];
-    let mut index = (cell_count[0] * cell_count[1] * 2 * clump[0]) + (cell[0] - cell_count[0] * clump[0]) * cell_count[1];
-    let y = cell_count[1] * cell_count[0] * clump[1] + (cell[1] - cell_count[1] * clump[1]);
-    
-    dbg!(y);
-    index += y;
-
-    println!("{}", index);
-}
