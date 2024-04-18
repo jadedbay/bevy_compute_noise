@@ -31,16 +31,8 @@ impl Worley2D {
                 random_points.push(Vec2::new(rng.gen_range(x_range), rng.gen_range(y_range)));
             }
         }
-
-        let mut duplicated_random_points = Vec::new();
-
-        for x in 0..=1 {
-            for y in 0..=1 {
-                duplicated_random_points.extend(random_points.iter().map(|p| *p + Vec2::new(x as f32 * width as f32, y as f32 * height as f32)));
-            }
-        }
-
-        duplicated_random_points
+        
+        random_points
     }
 }
 

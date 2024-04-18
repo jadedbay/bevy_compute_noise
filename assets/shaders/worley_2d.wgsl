@@ -18,14 +18,16 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>, @builtin(num_w
     );
 
     let cell_size = texture_size / f32(cell_count);
-    var cell = vec2<u32>(vec2<f32>(location) / cell_size);
-    cell += vec2<u32>(1, 1);
+    let cell = vec2<u32>(vec2<f32>(location) / cell_size);
 
     var distance = INFINITY;
     for (var x: i32 = -1; x <= 1; x = x + 1) {
         for (var y: i32 = -1; y <= 1; y = y + 1) {
-            let index = get_index(vec2<u32>(vec2<i32>(cell) + vec2<i32>(x, y)), cell_count);
-            let current_distance = distance(vec2<f32>(location) + cell_size, points[index]);
+            let point_data = get_point(vec2<i32>(cell) + vec2<i32>(x, y), i32(cell_count), texture_size);
+            let index = u32(point_data.x);
+            let cell_offset = vec2<f32>(point_data.y, point_data.z);
+
+            let current_distance = distance(vec2<f32>(location), points[index] + cell_offset);
             if (current_distance < distance) {
                 distance = current_distance;
             }
@@ -43,4 +45,16 @@ fn get_index(cell: vec2<u32>, cell_count: u32) -> u32 {
     let y = cell_count * cell_count * clump.y + (cell.y - cell_count * clump.y);
 
     return x + y;
+}
+
+fn get_point(base_cell: vec2<i32>, cell_count: i32, texture_size: vec2<f32>) -> vec3<f32> {
+    var cell = (base_cell + cell_count) % cell_count;
+    var cell_offset = vec2<f32>(
+        select(0.0, sign(f32(base_cell.x)) * texture_size.x, cell.x != base_cell.x),
+        select(0.0, sign(f32(base_cell.y)) * texture_size.y, cell.y != base_cell.y)
+    );
+
+    let index = f32(cell.x * cell_count + cell.y);
+
+    return vec3<f32>(index, cell_offset);
 }
