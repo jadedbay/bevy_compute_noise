@@ -1,6 +1,6 @@
-use bevy::{prelude::*, render::{render_asset::RenderAssets, render_resource::{BindGroup, BindGroupEntries, BufferBinding, BufferInitDescriptor, BufferUsages}, renderer::RenderDevice}};
+use bevy::{prelude::*, render::{render_asset::RenderAssets, render_resource::{BindGroupEntries, BufferBinding, BufferInitDescriptor, BufferUsages}, renderer::RenderDevice}};
 
-use crate::{compute_noise::{ComputeNoise, GpuComputeNoise}, image::ComputeNoiseSize, noise_queue::{ComputeNoiseQueue, ComputeNoiseRenderQueue}, pipeline::ComputeNoisePipeline};
+use crate::{compute_noise::{ComputeNoise, GpuComputeNoise}, noise_queue::{ComputeNoiseBindGroups, ComputeNoiseQueue, ComputeNoiseRenderQueue}, pipeline::ComputeNoisePipeline};
 
 pub fn prepare_bind_groups<T: ComputeNoise>(
     pipeline: Res<ComputeNoisePipeline<T>>,
@@ -9,7 +9,7 @@ pub fn prepare_bind_groups<T: ComputeNoise>(
     render_device: Res<RenderDevice>,
     mut compute_noise_render_queue: ResMut<ComputeNoiseRenderQueue<T>>,
 ) {
-    let mut bind_groups: Vec<(BindGroup, BindGroup, ComputeNoiseSize)> = Vec::new();
+    let mut bind_groups: Vec<ComputeNoiseBindGroups> = Vec::new();
     for (image_handle, noise, size) in compute_noise.queue.iter() {
         if let Some(image) = gpu_images.get(image_handle.clone()) {
 
@@ -35,7 +35,11 @@ pub fn prepare_bind_groups<T: ComputeNoise>(
 
             let noise_bind_group = noise.to_bind_group(&render_device, &pipeline.noise_layout);
 
-            bind_groups.push((image_bind_group, noise_bind_group, size.clone()));
+            bind_groups.push(ComputeNoiseBindGroups {
+                image_bind_group,
+                noise_bind_group,
+                size: size.clone(),
+            });
         }
     }
 

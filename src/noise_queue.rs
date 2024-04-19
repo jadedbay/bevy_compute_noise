@@ -33,6 +33,13 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
 
 #[derive(Default, Resource)]
 pub(crate) struct ComputeNoiseRenderQueue<T: ComputeNoise> {
-    pub queue: Vec<(BindGroup, BindGroup, ComputeNoiseSize)>,
+    pub queue: Vec<ComputeNoiseBindGroups>,
     _phantom_data: PhantomData<T>,
-}    
+}
+
+#[derive(Clone)]
+pub struct ComputeNoiseBindGroups {
+    pub image_bind_group: BindGroup,
+    pub noise_bind_group: BindGroup,
+    pub size: ComputeNoiseSize,
+}

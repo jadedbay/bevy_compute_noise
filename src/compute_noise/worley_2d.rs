@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::{render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages}, renderer::RenderDevice}};
 use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, InspectorOptions};
-use rand::Rng;
+use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::image::ComputeNoiseSize;
 
@@ -8,28 +8,32 @@ use super::{ComputeNoise, GpuComputeNoise};
 
 #[derive(Default, Clone, Reflect, InspectorOptions)]
 #[reflect(InspectorOptions)]
-pub struct Worley2D {
-    #[inspector(min = 1)]
-    cells: u32
+pub struct Worley2d {
+    seed: u64,
+    cells: u32,
 }
 
-impl Worley2D {
-    pub fn new(cells: u32) -> Self {
+impl Worley2d {
+    pub fn new(seed: u64, cells: u32) -> Self {
         Self {
+            seed,
             cells,
         }
     }
 
     fn generate_points(&self, width: u32, height: u32) -> Vec<Vec2> {
-        let cell_size = (width as f32 / self.cells as f32, height as f32 / self.cells as f32);
+        let cell_size = (
+            width as f32 / self.cells as f32, 
+            height as f32 / self.cells as f32
+        );
 
-        let mut rng = rand::thread_rng();
+        let mut rng = StdRng::seed_from_u64(self.seed);
 
         let mut random_points = Vec::new();
         for x in 0..self.cells {
             for y in 0..self.cells {
                 let x_range = (x as f32 * cell_size.0)..((x + 1) as f32 * cell_size.0);
-                let y_range = (y as f32* cell_size.1)..((y + 1) as f32 * cell_size.1);
+                let y_range = (y as f32 * cell_size.1)..((y + 1) as f32 * cell_size.1);
                 random_points.push(Vec2::new(rng.gen_range(x_range), rng.gen_range(y_range)));
             }
         }
@@ -38,8 +42,8 @@ impl Worley2D {
     }
 }
 
-impl ComputeNoise for Worley2D {
-    type Gpu = GpuWorley2D;
+impl ComputeNoise for Worley2d {
+    type Gpu = GpuWorley2d;
     
     fn gpu_data(&self, size: ComputeNoiseSize) -> Self::Gpu {
         Self::Gpu {
@@ -75,12 +79,12 @@ impl ComputeNoise for Worley2D {
 }
 
 #[derive(Clone, Default)]
-pub struct GpuWorley2D {
+pub struct GpuWorley2d {
     cell_count: u32,
     points: Vec<Vec2>,
 }
 
-impl GpuComputeNoise for GpuWorley2D {
+impl GpuComputeNoise for GpuWorley2d {
     fn to_bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup {
         let points_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
