@@ -31,10 +31,12 @@ pub fn run_compute_noise<T: ComputeNoise>(
             let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
             pass.set_pipeline(pipeline);
             
-            for (image_bind_group, noise_bind_group, workgroup_count) in compute_noise_queue.queue.iter() {
+            for (image_bind_group, noise_bind_group, size) in compute_noise_queue.queue.iter() {
                 pass.set_bind_group(0, &image_bind_group, &[]);
                 pass.set_bind_group(1, &noise_bind_group, &[]);
-                pass.dispatch_workgroups(workgroup_count.x as u32, workgroup_count.y as u32, 1);
+
+                let workgroups = size.workgroup_count();
+                pass.dispatch_workgroups(workgroups.0, workgroups.1, workgroups.2);
                 
                 dispatched = true;
                 dbg!("DISPATCHED");

@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
-use bevy::{prelude::*, render::{mesh::{shape::UVSphere, VertexAttributeValues}, texture::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}}};
-use bevy_compute_noise::prelude::*;
+use bevy::{prelude::*, render::{mesh::VertexAttributeValues, texture::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}}};
+use bevy_compute_noise::{image::ComputeNoiseSize, prelude::*};
 use bevy_flycam::PlayerPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
@@ -23,7 +23,7 @@ fn _example(
 ) {
     let _worley_noise = worley_noise_queue.add(
         &mut images, 
-        128, 128, 1, 
+        ComputeNoiseSize::D2(128, 128),
         Worley2D::new(5)
     );
 }
@@ -34,7 +34,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let worley_noise = ComputeNoiseImage::create_image(&mut images, 128, 128, 1);
+    let worley_noise = ComputeNoiseImage::create_image(&mut images, ComputeNoiseSize::D2(128, 128));
 
     let image = images.get_mut(worley_noise.clone()).unwrap();
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
@@ -62,41 +62,24 @@ fn setup(
         ..default()
     });
 
-    // for x in 0..=1 {
-    //     for z in 0..=1 {
-    //         commands.spawn(PbrBundle {
-    //             mesh: meshes.add(Plane3d::default().mesh().size(5.0, 5.0)),
-    //             material: materials.add(StandardMaterial {
-    //                 base_color: Color::WHITE,
-    //                 base_color_texture: Some(worley_noise.clone()),
-    //                 reflectance: 0.0,
-    //                 ..default()
-    //             }),
-    //             transform: Transform::from_xyz(x as f32 * 5.0, 0.0, z as f32 * 5.0),
-    //             ..default()
-    //         });
-    //    }
-    // }
-
-
     commands.spawn(ComputeNoiseComponent::<Worley2D> {
         image: worley_noise.clone(),
         noise: Worley2D::new(5),
     });
 
-    // commands.spawn(DirectionalLightBundle {
-    //     directional_light: DirectionalLight {
-    //         illuminance: 1_000.,
-    //         shadows_enabled: true,
-    //         ..default()
-    //     },
-    //     transform: Transform::from_rotation(Quat::from_euler(
-    //         EulerRot::ZYX,
-    //         0.0,
-    //         PI * -0.15,
-    //         PI * -0.15,
-    //     )),
-    //     ..default()
-    // });
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 500.,
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform::from_rotation(Quat::from_euler(
+            EulerRot::ZYX,
+            0.0,
+            PI * -0.15,
+            PI * -0.15,
+        )),
+        ..default()
+    });
 }
 

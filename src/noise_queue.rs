@@ -2,26 +2,26 @@ use std::marker::PhantomData;
 
 use bevy::{prelude::*, render::{extract_resource::ExtractResource, render_resource::BindGroup}};
 
-use crate::{compute_noise::ComputeNoise, prelude::ComputeNoiseImage};
+use crate::{compute_noise::ComputeNoise, image::ComputeNoiseSize, prelude::ComputeNoiseImage};
 
 #[derive(Resource, Clone, ExtractResource, Default)]
 pub struct ComputeNoiseQueue<T: ComputeNoise> {
-    pub(crate) queue: Vec<(Handle<Image>, T::Gpu)>
+    pub(crate) queue: Vec<(Handle<Image>, T::Gpu, ComputeNoiseSize)>
 }
 
 impl<T: ComputeNoise> ComputeNoiseQueue<T> {
-    pub fn add(&mut self, images: &mut Assets<Image>, width: u32, height: u32, depth: u32, noise: T) -> Handle<Image> {
-        let image = ComputeNoiseImage::create_image(images, width, height, depth);
+    pub fn add(&mut self, images: &mut Assets<Image>, size: ComputeNoiseSize, noise: T) -> Handle<Image> {
+        let image = ComputeNoiseImage::create_image(images, size);
         
-        self.queue.push((image.clone(), noise.gpu_data(width, height)));
+        self.queue.push((image.clone(), noise.gpu_data(size), size));
 
         image
     }
 
     pub fn add_image(&mut self, images: &mut Assets<Image>, image: Handle<Image>, noise: T) -> Handle<Image> {
-        let size = images.get(image.clone()).unwrap().size();
+        let size = images.get(image.clone()).unwrap().texture_descriptor.size;
 
-        self.queue.push((image.clone(), noise.gpu_data(size.x, size.y)));
+        self.queue.push((image.clone(), noise.gpu_data(size.into()), size.into()));
 
         image
     }
@@ -33,6 +33,6 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
 
 #[derive(Default, Resource)]
 pub(crate) struct ComputeNoiseRenderQueue<T: ComputeNoise> {
-    pub queue: Vec<(BindGroup, BindGroup, Vec2)>,
+    pub queue: Vec<(BindGroup, BindGroup, ComputeNoiseSize)>,
     _phantom_data: PhantomData<T>,
 }    

@@ -4,12 +4,12 @@ pub mod worley_2d;
 use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, InspectorOptions};
 pub use worley_2d::Worley2D;
 
-use crate::prelude::ComputeNoiseQueue;
+use crate::{image::ComputeNoiseSize, prelude::ComputeNoiseQueue};
 
 pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + FromReflect {
     type Gpu: GpuComputeNoise;
     
-    fn gpu_data(&self, width: u32, height: u32) -> Self::Gpu;
+    fn gpu_data(&self, size: ComputeNoiseSize) -> Self::Gpu;
     fn shader() -> ShaderRef;
     fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout;
 }

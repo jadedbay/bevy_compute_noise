@@ -2,6 +2,8 @@ use bevy::{prelude::*, render::{render_resource::{BindGroup, BindGroupEntries, B
 use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, InspectorOptions};
 use rand::Rng;
 
+use crate::image::ComputeNoiseSize;
+
 use super::{ComputeNoise, GpuComputeNoise};
 
 #[derive(Default, Clone, Reflect, InspectorOptions)]
@@ -31,7 +33,7 @@ impl Worley2D {
                 random_points.push(Vec2::new(rng.gen_range(x_range), rng.gen_range(y_range)));
             }
         }
-        
+
         random_points
     }
 }
@@ -39,10 +41,10 @@ impl Worley2D {
 impl ComputeNoise for Worley2D {
     type Gpu = GpuWorley2D;
     
-    fn gpu_data(&self, width: u32, height: u32) -> Self::Gpu {
+    fn gpu_data(&self, size: ComputeNoiseSize) -> Self::Gpu {
         Self::Gpu {
             cell_count: self.cells,
-            points: self.generate_points(width, height),
+            points: self.generate_points(size.width(), size.height()),
         }
     }
 
