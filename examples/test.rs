@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::{prelude::*, render::{mesh::VertexAttributeValues, texture::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}}};
-use bevy_compute_noise::{image::ComputeNoiseSize, prelude::*};
+use bevy_compute_noise::prelude::*;
 use bevy_flycam::PlayerPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
@@ -10,6 +10,7 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             ComputeNoisePlugin::<Worley2d>::default(),
+            ComputeNoisePlugin::<Worley3d>::default(),
             WorldInspectorPlugin::new(),
             PlayerPlugin,
         ))
@@ -34,7 +35,10 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let worley_noise = ComputeNoiseImage::create_image(&mut images, ComputeNoiseSize::D2(128, 128));
+    let worley_noise = ComputeNoiseImage::create_image(
+        &mut images, 
+        ComputeNoiseSize::D2(128, 128)
+    );
 
     let image = images.get_mut(worley_noise.clone()).unwrap();
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
@@ -66,6 +70,11 @@ fn setup(
         image: worley_noise.clone(),
         noise: Worley2d::new(1, 5),
     });
+
+    // commands.spawn(ComputeNoiseComponent::<Worley3d> {
+    //     image: ComputeNoiseImage::create_image(&mut images, ComputeNoiseSize::D3(128, 128, 128)),
+    //     noise: Worley3d::new(1, 5),
+    // });
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {

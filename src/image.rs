@@ -4,11 +4,10 @@ pub struct ComputeNoiseImage;
 
 impl ComputeNoiseImage {
     pub fn create_image(images: &mut Assets<Image>, size: ComputeNoiseSize) -> Handle<Image> {
-        
         let mut image = 
             Image::new_fill(
                 size.into(),
-                TextureDimension::D2,
+                size.into(),
                 &[0],
                 TextureFormat::R8Unorm,
                 RenderAssetUsages::all(),
@@ -32,10 +31,10 @@ impl ComputeNoiseSize {
     pub fn width(&self) -> u32 {
         match self {
             Self::D2(width, _) => {
-                width.clone()
+                *width
             },
             Self::D3(width, _, _) => {
-                width.clone()
+                *width
             }
         }
     }
@@ -43,10 +42,10 @@ impl ComputeNoiseSize {
     pub fn height(&self) -> u32 {
         match self {
             Self::D2(_, height) => {
-                height.clone()
+                *height
             },
             Self::D3(_, height, _) => {
-                height.clone()
+                *height
             }
         }
     }
@@ -57,7 +56,7 @@ impl ComputeNoiseSize {
                 1
             },
             Self::D3(_, _, depth) => {
-                depth.clone()
+                *depth
             }
         }
     }
@@ -98,9 +97,18 @@ impl From<ComputeNoiseSize> for Extent3d {
 impl From<Extent3d> for ComputeNoiseSize {
     fn from(value: Extent3d) -> Self {
         if value.depth_or_array_layers == 1 {
-            Self::D2(value.width, value.height)
+            ComputeNoiseSize::D2(value.width, value.height)
         } else {
-            Self::D3(value.width, value.height, value.depth_or_array_layers)
+            ComputeNoiseSize::D3(value.width, value.height, value.depth_or_array_layers)
+        }
+    }
+}
+
+impl From<ComputeNoiseSize> for TextureDimension {
+    fn from(value: ComputeNoiseSize) -> Self {
+        match value {
+            ComputeNoiseSize::D2(_, _) => TextureDimension::D2,
+            ComputeNoiseSize::D3(_, _, _) => TextureDimension::D3,
         }
     }
 }

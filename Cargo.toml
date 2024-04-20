@@ -8,6 +8,12 @@ edition = "2021"
 [dependencies]
 bevy = "0.13.2"
 bevy_flycam = "0.13.0"
-bevy-inspector-egui = "0.23.4"
+bevy-inspector-egui = "0.24.0"
 bytemuck = "1.15.0"
 rand = "0.8.5"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3

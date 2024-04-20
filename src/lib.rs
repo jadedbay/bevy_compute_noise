@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
-use bevy::{prelude::*, render::{Render, RenderApp, RenderSet}};
+use bevy::{prelude::*, render::{render_graph::RenderGraph, Render, RenderApp, RenderSet}};
+use node::ComputeNoiseNode;
 use compute_noise::{update_noise, ComputeNoiseComponent};
 
 use crate::{
-    compute::{run_compute_noise, ComputeNoiseEncoder},
     compute_noise::ComputeNoise,
     extract::extract_compute_noise_queue,
     pipeline::ComputeNoisePipeline,
@@ -17,14 +17,16 @@ pub mod noise_queue;
 mod extract;
 mod pipeline;
 mod prepare;
-mod compute;
+mod node;
 pub mod image;
 
 pub mod prelude {
-    pub use crate::ComputeNoisePlugin;
-    pub use crate::noise_queue::ComputeNoiseQueue;
-    pub use crate::compute_noise::{ComputeNoiseComponent, Worley2d};
-    pub use crate::image::ComputeNoiseImage;
+    pub use crate::{
+        ComputeNoisePlugin,
+        noise_queue::ComputeNoiseQueue,
+        compute_noise::{ComputeNoiseComponent, Worley2d, Worley3d},
+        image::{ComputeNoiseImage, ComputeNoiseSize},
+    };
 }
 
 #[derive(Default)]
@@ -46,15 +48,15 @@ impl<T: ComputeNoise> Plugin for ComputeNoisePlugin<T> {
                 Render, 
                 (
                     prepare_bind_groups::<T>.in_set(RenderSet::PrepareBindGroups),
-                    run_compute_noise::<T>.in_set(RenderSet::Render),
                 )
             );
+
+        let mut render_graph = render_app.world.resource_mut::<RenderGraph>();
+        render_graph.add_node(T::render_label(), ComputeNoiseNode::<T>::default());
     }
 
     fn finish(&self, app: &mut App) {
         let render_app = app.sub_app_mut(RenderApp);    
-        render_app
-            .init_resource::<ComputeNoisePipeline<T>>()
-            .init_resource::<ComputeNoiseEncoder>();
+        render_app.init_resource::<ComputeNoisePipeline<T>>();
     }
 }

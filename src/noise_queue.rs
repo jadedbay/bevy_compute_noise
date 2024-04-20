@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use bevy::{prelude::*, render::{extract_resource::ExtractResource, render_resource::BindGroup}};
+use bevy::{prelude::*, render::{extract_resource::ExtractResource, render_resource::{BindGroup, TextureDimension}}};
 
 use crate::{compute_noise::ComputeNoise, image::ComputeNoiseSize, prelude::ComputeNoiseImage};
 
@@ -11,6 +11,10 @@ pub struct ComputeNoiseQueue<T: ComputeNoise> {
 
 impl<T: ComputeNoise> ComputeNoiseQueue<T> {
     pub fn add(&mut self, images: &mut Assets<Image>, size: ComputeNoiseSize, noise: T) -> Handle<Image> {
+        if TextureDimension::from(size) != T::texture_dimension() {
+            error!("Image and noise dimension size mismatch");
+        }
+        
         let image = ComputeNoiseImage::create_image(images, size);
         
         self.queue.push((image.clone(), noise.gpu_data(size), size));
@@ -20,6 +24,9 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
 
     pub fn add_image(&mut self, images: &mut Assets<Image>, image: Handle<Image>, noise: T) -> Handle<Image> {
         let size = images.get(image.clone()).unwrap().texture_descriptor.size;
+        if TextureDimension::from(ComputeNoiseSize::from(size)) != T::texture_dimension() {
+            error!("Image and noise dimension size mismatch");
+        }
 
         self.queue.push((image.clone(), noise.gpu_data(size.into()), size.into()));
 
@@ -33,7 +40,7 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
 
 #[derive(Default, Resource)]
 pub(crate) struct ComputeNoiseRenderQueue<T: ComputeNoise> {
-    pub queue: Vec<ComputeNoiseBindGroups>,
+    pub queue: [Vec<ComputeNoiseBindGroups>; 2],
     _phantom_data: PhantomData<T>,
 }
 

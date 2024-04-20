@@ -1,5 +1,4 @@
-use bevy::{prelude::*, ecs::component::Component, reflect::Reflect, render::{render_resource::{BindGroup, BindGroupLayout, ShaderRef}, renderer::RenderDevice}};
-
+use bevy::{ecs::component::Component, prelude::*, reflect::Reflect, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupLayout, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, InspectorOptions};
 
 use crate::{image::ComputeNoiseSize, prelude::ComputeNoiseQueue};
@@ -15,10 +14,12 @@ pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + Fro
     
     fn gpu_data(&self, size: ComputeNoiseSize) -> Self::Gpu;
     fn shader() -> ShaderRef;
+    fn render_label() -> impl RenderLabel;
+    fn texture_dimension() -> TextureDimension;
     fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout;
 }
 pub trait GpuComputeNoise: Sync + Send + 'static + Default + Clone {
-    fn to_bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup;
+    fn bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup;
 }
 
 #[derive(Component, Reflect, InspectorOptions)]

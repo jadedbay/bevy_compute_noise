@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use bevy::{prelude::*, render::{render_resource::{binding_types::texture_storage_2d, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBindingType, CachedComputePipelineId, ComputePipelineDescriptor, PipelineCache, ShaderRef, ShaderStages, StorageTextureAccess, TextureFormat}, renderer::RenderDevice}};
+use bevy::{prelude::*, render::{render_resource::{binding_types::texture_storage_2d, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBindingType, CachedComputePipelineId, ComputePipelineDescriptor, IntoBindGroupLayoutEntryBuilder, PipelineCache, ShaderRef, ShaderStages, StorageTextureAccess, TextureDimension, TextureFormat, TextureViewDimension}, renderer::RenderDevice}};
 
 use crate::compute_noise::ComputeNoise;
 
@@ -16,12 +16,21 @@ impl<T: ComputeNoise> FromWorld for ComputeNoisePipeline<T> {
     fn from_world(world: &mut World) -> Self {
         let render_device = world.resource::<RenderDevice>();
 
+        let texture_storage = match T::texture_dimension() {
+            TextureDimension::D3 => BindingType::StorageTexture {
+                access: StorageTextureAccess::WriteOnly,
+                format: TextureFormat::R8Unorm,
+                view_dimension: TextureViewDimension::D3,
+            }.into_bind_group_layout_entry_builder(),
+            _ => texture_storage_2d(TextureFormat::R8Unorm, StorageTextureAccess::WriteOnly),
+        };
+
         let image_layout = render_device.create_bind_group_layout(
             "image_layout",
             &BindGroupLayoutEntries::sequential(
                 ShaderStages::COMPUTE,
                 (
-                    texture_storage_2d(TextureFormat::R8Unorm, StorageTextureAccess::WriteOnly),
+                    texture_storage,
                     BindingType::Buffer {
                         ty: BufferBindingType::Storage { read_only: true },
                         has_dynamic_offset: false,

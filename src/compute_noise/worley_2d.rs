@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::{render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages}, renderer::RenderDevice}};
+use bevy::{prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
 use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, InspectorOptions};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
@@ -6,11 +6,11 @@ use crate::image::ComputeNoiseSize;
 
 use super::{ComputeNoise, GpuComputeNoise};
 
-#[derive(Default, Clone, Reflect, InspectorOptions)]
+#[derive(Default, Clone, Reflect, InspectorOptions, PartialEq, Eq, Debug)]
 #[reflect(InspectorOptions)]
 pub struct Worley2d {
-    seed: u64,
-    cells: u32,
+    pub seed: u64,
+    pub cells: u32,
 }
 
 impl Worley2d {
@@ -42,6 +42,9 @@ impl Worley2d {
     }
 }
 
+#[derive(Default, Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
+pub struct Worley2dLabel;
+
 impl ComputeNoise for Worley2d {
     type Gpu = GpuWorley2d;
     
@@ -56,9 +59,17 @@ impl ComputeNoise for Worley2d {
         "shaders/worley_2d.wgsl".into()
     }
 
+    fn render_label() -> impl RenderLabel {
+        Worley2dLabel
+    }
+
+    fn texture_dimension() -> TextureDimension {
+        TextureDimension::D2
+    }
+
     fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout {
         render_device.create_bind_group_layout(
-            "worley_noise_layout",
+            "worley2d_noise_layout",
             &BindGroupLayoutEntries::sequential(
                 ShaderStages::COMPUTE,
                 (
@@ -85,23 +96,25 @@ pub struct GpuWorley2d {
 }
 
 impl GpuComputeNoise for GpuWorley2d {
-    fn to_bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup {
+    fn bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup {
         let points_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
-                    label: None,
-                    contents: &bytemuck::cast_slice(self.points.as_slice()),
-                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
-            });
+                label: Some("worley2d_points_buffer"),
+                contents: &bytemuck::cast_slice(self.points.as_slice()),
+                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
+            }
+        );
         
-        let point_count_buffer = render_device.create_buffer_with_data(
+        let cell_count_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
-                    label: None,
-                    contents: &bytemuck::cast_slice(&[self.cell_count]),
-                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
-            });
+                label: Some("worley2d_cell_buffer"),
+                contents: &bytemuck::cast_slice(&[self.cell_count]),
+                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
+            }
+        );
 
         render_device.create_bind_group(
-            Some("noise_bind_group".into()),
+            Some("worley2d_bind_group".into()),
             layout,
             &BindGroupEntries::sequential((
                 BufferBinding {
@@ -110,7 +123,7 @@ impl GpuComputeNoise for GpuWorley2d {
                     size: None,
                 },
                 BufferBinding {
-                    buffer: &point_count_buffer,
+                    buffer: &cell_count_buffer,
                     offset: 0,
                     size: None,
                 },
