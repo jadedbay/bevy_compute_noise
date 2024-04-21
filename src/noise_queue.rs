@@ -1,34 +1,51 @@
 use std::marker::PhantomData;
 
-use bevy::{prelude::*, render::{extract_resource::ExtractResource, render_resource::{BindGroup, TextureDimension}}};
+use bevy::{
+    prelude::*,
+    render::{
+        extract_resource::ExtractResource,
+        render_resource::{BindGroup, TextureDimension},
+    },
+};
 
-use crate::{noise::ComputeNoise, image::ComputeNoiseSize, prelude::ComputeNoiseImage};
+use crate::{image::ComputeNoiseSize, noise::ComputeNoise, prelude::ComputeNoiseImage};
 
 #[derive(Resource, Clone, ExtractResource, Default)]
 pub struct ComputeNoiseQueue<T: ComputeNoise> {
-    pub(crate) queue: Vec<(Handle<Image>, T::Gpu, ComputeNoiseSize)>
+    pub(crate) queue: Vec<(Handle<Image>, T::Gpu, ComputeNoiseSize)>,
 }
 
 impl<T: ComputeNoise> ComputeNoiseQueue<T> {
-    pub fn add(&mut self, images: &mut Assets<Image>, size: ComputeNoiseSize, noise: T) -> Handle<Image> {
+    pub fn add(
+        &mut self,
+        images: &mut Assets<Image>,
+        size: ComputeNoiseSize,
+        noise: T,
+    ) -> Handle<Image> {
         if TextureDimension::from(size) != T::texture_dimension() {
             error!("Image and noise dimension size mismatch");
         }
-        
+
         let image = ComputeNoiseImage::create_image(images, size);
-        
+
         self.queue.push((image.clone(), noise.gpu_data(size), size));
 
         image
     }
 
-    pub fn add_image(&mut self, images: &mut Assets<Image>, image: Handle<Image>, noise: T) -> Handle<Image> {
+    pub fn add_image(
+        &mut self,
+        images: &mut Assets<Image>,
+        image: Handle<Image>,
+        noise: T,
+    ) -> Handle<Image> {
         let size = images.get(image.clone()).unwrap().texture_descriptor.size;
         if TextureDimension::from(ComputeNoiseSize::from(size)) != T::texture_dimension() {
             error!("Image and noise dimension size mismatch");
         }
 
-        self.queue.push((image.clone(), noise.gpu_data(size.into()), size.into()));
+        self.queue
+            .push((image.clone(), noise.gpu_data(size.into()), size.into()));
 
         image
     }
@@ -40,7 +57,7 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
 
 #[derive(Default, Resource)]
 pub(crate) struct ComputeNoiseRenderQueue<T: ComputeNoise> {
-    pub queue: [Vec<ComputeNoiseBindGroups>; 2],
+    pub queue: Vec<ComputeNoiseBindGroups>,
     _phantom_data: PhantomData<T>,
 }
 

@@ -1,13 +1,26 @@
-use bevy::{prelude::*, render::{render_asset::RenderAssets, render_graph::RenderGraph, render_resource::{BindGroupEntries, BufferBinding, BufferInitDescriptor, BufferUsages}, renderer::RenderDevice}};
+use bevy::{
+    prelude::*,
+    render::{
+        render_asset::RenderAssets,
+        render_graph::RenderGraph,
+        render_resource::{BindGroupEntries, BufferBinding, BufferInitDescriptor, BufferUsages},
+        renderer::RenderDevice,
+    },
+};
 
-use crate::{render::node::{ComputeNoiseNode, ComputeNoiseNodeState}, noise::{ComputeNoise, GpuComputeNoise}, image::ComputeNoiseSize, noise_queue::{ComputeNoiseBindGroups, ComputeNoiseQueue, ComputeNoiseRenderQueue}, render::pipeline::ComputeNoisePipeline};
+use crate::{
+    image::ComputeNoiseSize,
+    noise::{ComputeNoise, GpuComputeNoise},
+    noise_queue::{ComputeNoiseBindGroups, ComputeNoiseQueue, ComputeNoiseRenderQueue},
+    render::node::{ComputeNoiseNode, ComputeNoiseNodeState},
+    render::pipeline::ComputeNoisePipeline,
+};
 
 pub fn prepare_bind_groups<T: ComputeNoise>(
     pipeline: Res<ComputeNoisePipeline<T>>,
     gpu_images: Res<RenderAssets<Image>>,
     compute_noise: Res<ComputeNoiseQueue<T>>,
     render_device: Res<RenderDevice>,
-    render_graph: Res<RenderGraph>,
     mut compute_noise_render_queue: ResMut<ComputeNoiseRenderQueue<T>>,
 ) {
     let mut bind_groups: Vec<ComputeNoiseBindGroups> = Vec::new();
@@ -15,16 +28,16 @@ pub fn prepare_bind_groups<T: ComputeNoise>(
         if let Some(image) = gpu_images.get(image_handle.clone()) {
             let size_data = match size {
                 ComputeNoiseSize::D2(width, height) => vec![*width as f32, *height as f32],
-                ComputeNoiseSize::D3(width, height, depth) => vec![*width as f32, *height as f32, *depth as f32],
+                ComputeNoiseSize::D3(width, height, depth) => {
+                    vec![*width as f32, *height as f32, *depth as f32]
+                }
             };
 
-            let image_size_buffer = render_device.create_buffer_with_data(
-                &BufferInitDescriptor {
-                    label: None,
-                    contents: &bytemuck::cast_slice(size_data.as_slice()),
-                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
-                }
-            );
+            let image_size_buffer = render_device.create_buffer_with_data(&BufferInitDescriptor {
+                label: None,
+                contents: &bytemuck::cast_slice(size_data.as_slice()),
+                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
+            });
 
             let image_bind_group = render_device.create_bind_group(
                 Some("image_bind_group".into()),
@@ -49,16 +62,22 @@ pub fn prepare_bind_groups<T: ComputeNoise>(
         }
     }
 
-    let mut index = 0;
-    match render_graph.get_node::<ComputeNoiseNode<T>>(T::render_label()) {
-        Ok(node) => {
-            match node.get_state() {
-                ComputeNoiseNodeState::Ready(0) => index = 1,
-                _ => {}
-            }
-        },
-        Err(error) => { dbg!(error); },
-    };
-    compute_noise_render_queue.queue[index].extend(bind_groups.iter().cloned());
+    compute_noise_render_queue
+        .queue
+        .extend(bind_groups.iter().cloned());
 }
 
+pub fn clear_render_queue<T: ComputeNoise>(
+    mut compute_noise_render_queue: ResMut<ComputeNoiseRenderQueue<T>>,
+    render_graph: Res<RenderGraph>,
+) {
+    match render_graph.get_node::<ComputeNoiseNode<T>>(T::render_label()) {
+        Ok(node) => match node.get_state() {
+            ComputeNoiseNodeState::Ready => compute_noise_render_queue.queue.clear(),
+            _ => {}
+        },
+        Err(error) => {
+            dbg!(error);
+        }
+    };
+}
