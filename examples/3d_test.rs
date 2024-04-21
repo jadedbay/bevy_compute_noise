@@ -6,16 +6,16 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins,
-            ComputeNoisePlugin::<Worley2d>::default(),
+            ComputeNoisePlugin::<Worley3d>::default(),
             WorldInspectorPlugin::new(),
         ))
         .add_systems(Startup, setup)
-        .run()
+        .run();
 }
 
 fn setup(
-    mut worley2d_queue: ResMut<ComputeNoiseQueue<Worley2d>>,
+    mut noise_queue: ResMut<ComputeNoiseQueue<Worley3d>>,
     mut images: ResMut<Assets<Image>>,
 ) {
-    worley2d_queue.add(&mut images, ComputeNoiseSize::D2(128, 128), Worley2d::new(1, 5));
+    noise_queue.add(&mut images, ComputeNoiseSize::D3(128, 128, 128), Worley3d::new(1, 5));
 }

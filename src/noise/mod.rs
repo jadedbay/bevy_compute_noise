@@ -14,6 +14,7 @@ pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + Fro
     
     fn gpu_data(&self, size: ComputeNoiseSize) -> Self::Gpu;
     fn shader() -> ShaderRef;
+    fn embed_asset(app: &mut App);
     fn render_label() -> impl RenderLabel;
     fn texture_dimension() -> TextureDimension;
     fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout;

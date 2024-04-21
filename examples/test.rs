@@ -10,23 +10,11 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             ComputeNoisePlugin::<Worley2d>::default(),
-            ComputeNoisePlugin::<Worley3d>::default(),
             WorldInspectorPlugin::new(),
             PlayerPlugin,
         ))
         .add_systems(Startup, setup)
-        .run()
-}
-
-fn _example(
-    mut worley_noise_queue: ResMut<ComputeNoiseQueue<Worley2d>>,
-    mut images: ResMut<Assets<Image>>,
-) {
-    let _worley_noise = worley_noise_queue.add(
-        &mut images, 
-        ComputeNoiseSize::D2(128, 128),
-        Worley2d::new(1, 5)
-    );
+        .run();
 }
 
 fn setup(
@@ -70,11 +58,6 @@ fn setup(
         image: worley_noise.clone(),
         noise: Worley2d::new(1, 5),
     });
-
-    // commands.spawn(ComputeNoiseComponent::<Worley3d> {
-    //     image: ComputeNoiseImage::create_image(&mut images, ComputeNoiseSize::D3(128, 128, 128)),
-    //     noise: Worley3d::new(1, 5),
-    // });
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {

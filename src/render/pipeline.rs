@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use bevy::{prelude::*, render::{render_resource::{binding_types::texture_storage_2d, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBindingType, CachedComputePipelineId, ComputePipelineDescriptor, IntoBindGroupLayoutEntryBuilder, PipelineCache, ShaderRef, ShaderStages, StorageTextureAccess, TextureDimension, TextureFormat, TextureViewDimension}, renderer::RenderDevice}};
 
-use crate::compute_noise::ComputeNoise;
+use crate::noise::ComputeNoise;
 
 #[derive(Resource)]
 pub struct ComputeNoisePipeline<T: ComputeNoise> {
@@ -43,11 +43,10 @@ impl<T: ComputeNoise> FromWorld for ComputeNoisePipeline<T> {
         let noise_layout = T::bind_group_layout(render_device);
 
         let shader = match T::shader() {
-                ShaderRef::Default => None,
-                ShaderRef::Handle(handle) => Some(handle),
-                ShaderRef::Path(path) => Some(world.resource::<AssetServer>().load(path)),
-            }
-            .unwrap();
+            ShaderRef::Default => None,
+            ShaderRef::Handle(handle) => Some(handle),
+            ShaderRef::Path(path) => Some(world.resource::<AssetServer>().load(path)),
+        }.unwrap();
 
         let pipeline_id = world
             .resource_mut::<PipelineCache>()

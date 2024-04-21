@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use bevy::{prelude::*, render::{extract_resource::ExtractResource, render_resource::{BindGroup, TextureDimension}}};
 
-use crate::{compute_noise::ComputeNoise, image::ComputeNoiseSize, prelude::ComputeNoiseImage};
+use crate::{noise::ComputeNoise, image::ComputeNoiseSize, prelude::ComputeNoiseImage};
 
 #[derive(Resource, Clone, ExtractResource, Default)]
 pub struct ComputeNoiseQueue<T: ComputeNoise> {

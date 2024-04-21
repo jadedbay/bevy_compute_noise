@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use bevy::{prelude::*, render::{render_graph, render_resource::{CachedPipelineState, ComputePassDescriptor, PipelineCache}}};
 
-use crate::{compute_noise::ComputeNoise, noise_queue::ComputeNoiseRenderQueue, pipeline::ComputeNoisePipeline};
+use crate::{noise::ComputeNoise, noise_queue::ComputeNoiseRenderQueue, render::pipeline::ComputeNoisePipeline};
 
 #[derive(Default, Clone, Copy)]
 pub(crate) enum ComputeNoiseNodeState {
@@ -33,17 +33,11 @@ impl<T: ComputeNoise> render_graph::Node for ComputeNoiseNode<T> {
                     self.state = ComputeNoiseNodeState::Ready(0);
                 }
             },
-            ComputeNoiseNodeState::Ready(0) => {
+            ComputeNoiseNodeState::Ready(index) => {
                 let mut compute_noise_queue = world.resource_mut::<ComputeNoiseRenderQueue<T>>();
-                compute_noise_queue.queue[0].clear();
-                self.state = ComputeNoiseNodeState::Ready(1);
+                compute_noise_queue.queue[index].clear();
+                self.state = ComputeNoiseNodeState::Ready(1 - index);
             },
-            ComputeNoiseNodeState::Ready(1) => {
-                let mut compute_noise_queue = world.resource_mut::<ComputeNoiseRenderQueue<T>>();
-                compute_noise_queue.queue[1].clear();
-                self.state = ComputeNoiseNodeState::Ready(0);
-            },
-            ComputeNoiseNodeState::Ready(_) => unreachable!(),
         }
     }
 
@@ -57,24 +51,21 @@ impl<T: ComputeNoise> render_graph::Node for ComputeNoiseNode<T> {
                 ComputeNoiseNodeState::Loading => {},
                 ComputeNoiseNodeState::Ready(index) => {
                     let compute_noise_queue = world.resource::<ComputeNoiseRenderQueue<T>>();
-                    let pipeline = world.resource::<ComputeNoisePipeline<T>>();
+                    let pipeline_id = world.resource::<ComputeNoisePipeline<T>>();
                     let pipeline_cache = world.resource::<PipelineCache>();
 
-                    if let Some(pipeline) = pipeline_cache.get_compute_pipeline(pipeline.pipeline_id) {
-                        let mut pass = render_context
-                            .command_encoder()
-                            .begin_compute_pass(&ComputePassDescriptor::default());
+                    let pipeline = pipeline_cache.get_compute_pipeline(pipeline_id.pipeline_id).unwrap();
+                    let mut pass = render_context
+                        .command_encoder()
+                        .begin_compute_pass(&ComputePassDescriptor::default());
 
-                        pass.set_pipeline(pipeline);
-                        for bind_groups in compute_noise_queue.queue[index].iter() {
-                            pass.set_bind_group(0, &bind_groups.image_bind_group, &[]);
-                            pass.set_bind_group(1, &bind_groups.noise_bind_group, &[]);
-            
-                            let workgroups = bind_groups.size.workgroup_count();
-                            pass.dispatch_workgroups(workgroups.0, workgroups.1, workgroups.2);
-                            
-                            dbg!("DISPATCHED");
-                        }
+                    pass.set_pipeline(pipeline);
+                    for bind_groups in compute_noise_queue.queue[index].iter() {
+                        pass.set_bind_group(0, &bind_groups.image_bind_group, &[]);
+                        pass.set_bind_group(1, &bind_groups.noise_bind_group, &[]);
+        
+                        let workgroups = bind_groups.size.workgroup_count();
+                        pass.dispatch_workgroups(workgroups.0, workgroups.1, workgroups.2);
                     }
                 }
             }

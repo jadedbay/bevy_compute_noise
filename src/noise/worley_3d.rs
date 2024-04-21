@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
+use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
 use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, InspectorOptions};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
@@ -60,7 +60,11 @@ impl ComputeNoise for Worley3d {
     }
 
     fn shader() -> ShaderRef {
-        "shaders/worley_3d.wgsl".into()
+        "embedded://bevy_compute_noise/noise/shaders/worley_3d.wgsl".into()
+    }
+
+    fn embed_asset(app: &mut App) {
+        embedded_asset!(app, "shaders/worley_3d.wgsl");
     }
 
     fn render_label() -> impl RenderLabel {

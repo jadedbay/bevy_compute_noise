@@ -24,7 +24,7 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>, @builtin(num_w
     var distance = INFINITY;
     for (var x: i32 = -1; x <= 1; x = x + 1) {
         for (var y: i32 = -1; y <= 1; y = y + 1) {
-            for (var z: i32 = -1; x <= 1; z = z + 1) {
+            for (var z: i32 = -1; z <= 1; z = z + 1) {
                 let point_data = get_point(vec3<i32>(cell) + vec3<i32>(x, y, z), i32(cell_count), texture_size);
                 let index = u32(point_data.x);
                 let cell_offset = vec3<f32>(point_data.y, point_data.z, point_data.w);
@@ -47,7 +47,7 @@ fn get_point(base_cell: vec3<i32>, cell_count: i32, texture_size: vec3<f32>) -> 
     var cell_offset = vec3<f32>(
         select(0.0, sign(f32(base_cell.x)) * texture_size.x, cell.x != base_cell.x),
         select(0.0, sign(f32(base_cell.y)) * texture_size.y, cell.y != base_cell.y),
-        select(0.0, sign(f32(base_cell.z)) * texture_size.z, cell.z != base_cell.y),
+        select(0.0, sign(f32(base_cell.z)) * texture_size.z, cell.z != base_cell.z),
     );
 
     let index = f32(cell.x * cell_count * cell_count + cell.y * cell_count + cell.z);
