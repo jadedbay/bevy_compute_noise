@@ -22,10 +22,10 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>, @builtin(num_w
     let cell = vec3<u32>(vec3<f32>(location) / cell_size);
 
     var distance = INFINITY;
-    for (var x: i32 = -1; x <= 1; x = x + 1) {
-        for (var y: i32 = -1; y <= 1; y = y + 1) {
-            for (var z: i32 = -1; z <= 1; z = z + 1) {
-                let point_data = get_point(vec3<i32>(cell) + vec3<i32>(x, y, z), i32(cell_count), texture_size);
+    for (var x: i32 = -1; x <= 1; x++) {
+        for (var y: i32 = -1; y <= 1; y++) {
+            for (var z: i32 = -1; z <= 1; z++) {
+                let point_data = get_point(vec3<i32>(cell) + vec3<i32>(x, y, z));
                 let index = u32(point_data.x);
                 let cell_offset = vec3<f32>(point_data.y, point_data.z, point_data.w);
 
@@ -35,14 +35,16 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>, @builtin(num_w
                 }
             }
         }
-
-        let normalized_distance = 1.0 - (distance / distance(vec3<f32>(0.0, 0.0, 0.0), cell_size));
-
-        textureStore(texture, location, vec4<f32>(normalized_distance, 0.0, 0.0, 0.0));
     }
+
+    let normalized_distance = 1.0 - (distance / distance(vec3<f32>(0.0, 0.0, 0.0), cell_size));
+
+    textureStore(texture, location, vec4<f32>(normalized_distance, 0.0, 0.0, 0.0));
 }
 
-fn get_point(base_cell: vec3<i32>, cell_count: i32, texture_size: vec3<f32>) -> vec4<f32> {
+fn get_point(base_cell: vec3<i32>) -> vec4<f32> {
+    let cell_count = i32(cell_count);
+
     var cell = (base_cell + cell_count) % cell_count;
     var cell_offset = vec3<f32>(
         select(0.0, sign(f32(base_cell.x)) * texture_size.x, cell.x != base_cell.x),
