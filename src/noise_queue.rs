@@ -22,13 +22,12 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
         size: ComputeNoiseSize,
         noise: T,
     ) -> Handle<Image> {
-        if TextureDimension::from(size) != T::texture_dimension() {
-            error!("Image and noise dimension size mismatch");
-        }
-
         let image = ComputeNoiseImage::create_image(images, size);
-
-        self.queue.push((image.clone(), noise.gpu_data(size), size));
+        if TextureDimension::from(size) == T::texture_dimension() {
+            self.queue.push((image.clone(), noise.gpu_data(size), size));
+        } else {
+            error!("Image dimensions does not match noise dimensions - created image but did not queue compute noise.")
+        }
 
         image
     }
@@ -39,13 +38,13 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
         image: Handle<Image>,
         noise: T,
     ) -> Handle<Image> {
-        let size = images.get(image.clone()).unwrap().texture_descriptor.size;
-        if TextureDimension::from(ComputeNoiseSize::from(size)) != T::texture_dimension() {
-            error!("Image and noise dimension size mismatch");
+        let size: ComputeNoiseSize = images.get(image.clone()).unwrap().texture_descriptor.size.into();
+        if TextureDimension::from(size) == T::texture_dimension() {
+            self.queue
+                .push((image.clone(), noise.gpu_data(size), size));
+        } else {
+            error!("Image dimensions does not match noise dimensions - did not queue compute noise.")
         }
-
-        self.queue
-            .push((image.clone(), noise.gpu_data(size.into()), size.into()));
 
         image
     }
