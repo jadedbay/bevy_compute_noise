@@ -14,6 +14,7 @@ impl ComputeNoiseImage {
             );
 
         image.texture_descriptor.usage = TextureUsages::COPY_DST
+            | TextureUsages::COPY_SRC
             | TextureUsages::STORAGE_BINDING
             | TextureUsages::TEXTURE_BINDING;
 
@@ -21,7 +22,7 @@ impl ComputeNoiseImage {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum ComputeNoiseSize {
     D2(u32, u32),
     D3(u32, u32, u32),
@@ -30,45 +31,36 @@ pub enum ComputeNoiseSize {
 impl ComputeNoiseSize {
     pub fn width(&self) -> u32 {
         match self {
-            Self::D2(width, _) => {
-                *width
-            },
-            Self::D3(width, _, _) => {
-                *width
-            }
+            Self::D2(width, _) => *width,
+            Self::D3(width, _, _) => *width,
         }
     }
 
     pub fn height(&self) -> u32 {
         match self {
-            Self::D2(_, height) => {
-                *height
-            },
-            Self::D3(_, height, _) => {
-                *height
-            }
+            Self::D2(_, height) => *height,
+            Self::D3(_, height, _) => *height,
         }
     }
 
     pub fn depth(&self) -> u32 {
         match self {
-            Self::D2(_, _) => {
-                1
-            },
-            Self::D3(_, _, depth) => {
-                *depth
-            }
+            Self::D2(_, _) => 1,
+            Self::D3(_, _, depth) => *depth,
+        }
+    }
+
+    pub fn data_len(&self) -> usize {
+        match self {
+            Self::D2(width, height) => (width * height) as usize,
+            Self::D3(width, height, depth) => (width * height * depth) as usize, 
         }
     }
 
     pub(crate) fn workgroup_count(&self) -> (u32, u32, u32) {
         match self {
-            Self::D2(width, height) => {
-                (width / 8, height / 8, 1)
-            },
-            Self::D3(width, height, depth) => {
-                (width / 8, height / 8, depth / 8)
-            }
+            Self::D2(width, height) => (width / 8, height / 8, 1),
+            Self::D3(width, height, depth) => (width / 8, height / 8, depth / 8),
         }
     }
 }

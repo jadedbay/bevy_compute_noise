@@ -17,5 +17,6 @@ fn setup(
     mut noise_queue: ResMut<ComputeNoiseQueue<Worley3d>>,
     mut images: ResMut<Assets<Image>>,
 ) {
-    noise_queue.add(&mut images, ComputeNoiseSize::D3(128, 128, 128), Worley3d::new(1, 5));
+    noise_queue.add(&mut images, ComputeNoiseSize::D3(128, 128, 128), Worley3d::new(1, 5), None);
+    // compute_noise_readback.receive(image_handle) -> Option<Handle<Image>>;
 }

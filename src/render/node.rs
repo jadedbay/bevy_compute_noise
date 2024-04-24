@@ -3,9 +3,7 @@ use std::marker::PhantomData;
 use bevy::{
     prelude::*,
     render::{
-        render_graph::{self, NodeRunError, RenderGraphContext},
-        render_resource::{CachedPipelineState, ComputePassDescriptor, PipelineCache},
-        renderer::RenderContext,
+        render_graph::{self, NodeRunError, RenderGraphContext}, render_resource::{CachedPipelineState, ComputePassDescriptor, PipelineCache}, renderer::RenderContext,
     },
 };
 
@@ -65,17 +63,19 @@ impl<T: ComputeNoise> render_graph::Node for ComputeNoiseNode<T> {
                 let pipeline = pipeline_cache
                     .get_compute_pipeline(pipeline_id.pipeline_id)
                     .unwrap();
-                let mut pass = render_context
-                    .command_encoder()
-                    .begin_compute_pass(&ComputePassDescriptor::default());
+                {
+                    let mut pass = render_context
+                        .command_encoder()
+                        .begin_compute_pass(&ComputePassDescriptor::default());
 
-                pass.set_pipeline(pipeline);
-                for bind_groups in compute_noise_queue.queue.iter() {
-                    pass.set_bind_group(0, &bind_groups.image_bind_group, &[]);
-                    pass.set_bind_group(1, &bind_groups.noise_bind_group, &[]);
+                    pass.set_pipeline(pipeline);
+                    for bind_groups in compute_noise_queue.queue.iter() {
+                        pass.set_bind_group(0, &bind_groups.image_bind_group, &[]);
+                        pass.set_bind_group(1, &bind_groups.noise_bind_group, &[]);
 
-                    let workgroups = bind_groups.size.workgroup_count();
-                    pass.dispatch_workgroups(workgroups.0, workgroups.1, workgroups.2);
+                        let workgroups = bind_groups.size.workgroup_count();
+                        pass.dispatch_workgroups(workgroups.0, workgroups.1, workgroups.2);
+                    }
                 }
             }
         }

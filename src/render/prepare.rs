@@ -9,11 +9,7 @@ use bevy::{
 };
 
 use crate::{
-    image::ComputeNoiseSize,
-    noise::{ComputeNoise, GpuComputeNoise},
-    noise_queue::{ComputeNoiseBindGroups, ComputeNoiseQueue, ComputeNoiseRenderQueue},
-    render::node::{ComputeNoiseNode, ComputeNoiseNodeState},
-    render::pipeline::ComputeNoisePipeline,
+    image::ComputeNoiseSize, noise::{ComputeNoise, GpuComputeNoise}, noise_queue::{ComputeNoiseBindGroups, ComputeNoiseQueue, ComputeNoiseRenderQueue}, render::{node::{ComputeNoiseNode, ComputeNoiseNodeState}, pipeline::ComputeNoisePipeline}
 };
 
 pub fn prepare_bind_groups<T: ComputeNoise>(
@@ -55,6 +51,7 @@ pub fn prepare_bind_groups<T: ComputeNoise>(
             let noise_bind_group = noise.bind_group(&render_device, &pipeline.noise_layout);
 
             bind_groups.push(ComputeNoiseBindGroups {
+                handle: image_handle.clone(),
                 image_bind_group,
                 noise_bind_group,
                 size: *size,

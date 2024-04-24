@@ -11,6 +11,7 @@ bevy_flycam = "0.13.0"
 bevy-inspector-egui = "0.24.0"
 bytemuck = "1.15.0"
 rand = "0.8.5"
+crossbeam-channel = "0.5.12"
 
 [profile.dev]
 opt-level = 1

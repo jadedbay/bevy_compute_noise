@@ -475,6 +475,7 @@ dependencies = [
  "bevy-inspector-egui",
  "bevy_flycam",
  "bytemuck",
+ "crossbeam-channel",
  "rand",
 ]
 
