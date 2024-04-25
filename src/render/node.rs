@@ -85,12 +85,13 @@ impl<T: ComputeNoise> render_graph::Node for ComputeNoiseNode<T> {
                 for handle in readback_handles {
                     let readback = world.resource::<ComputeNoiseReadbackSender>();
                     let images = world.resource::<RenderAssets<Image>>();
-                    let image = images.get(handle.clone()).unwrap();
+                    let image = images.get(&handle).unwrap();
+                    let size = readback.0.get(&handle).unwrap().size;
                     render_context.command_encoder().copy_texture_to_buffer(
                         image.texture.as_image_copy(), 
                         ImageCopyBuffer {
-                            buffer: &readback.images.get(&handle).unwrap().1,
-                            layout: layout_data(image.size.x as u32, image.size.y as u32, image.texture_format)
+                            buffer: &readback.0.get(&handle).unwrap().buffer.as_ref().unwrap(),
+                            layout: layout_data(size.width(), size.height(), size.depth(), image.texture_format)
                         },
                         Extent3d {
                             width: image.size.x as u32,

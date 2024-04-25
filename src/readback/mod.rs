@@ -1,30 +1,52 @@
-use bevy::{prelude::*, render::{render_resource::{Buffer, BufferDescriptor, BufferUsages, TextureFormat}, renderer::RenderDevice, texture::TextureFormatPixelInfo}, utils::HashMap};
+use bevy::{prelude::*, render::render_resource::Buffer, utils::{HashMap, HashSet}};
 use crossbeam_channel::{Receiver, Sender};
 
 use crate::prelude::ComputeNoiseSize;
 
-use self::util::get_aligned_size;
-
 pub(crate) mod extract;
 pub(crate) mod read;
 pub(crate) mod util;
+pub(crate) mod prepare;
 
 #[derive(Default, Resource)]
-pub struct ComputeNoiseReadback(pub(crate) HashMap<Handle<Image>, ComputeNoiseSize>);
-
-#[derive(Default, Resource)]
-pub struct ComputeNoiseReadbackReceiver {
-    pub images: HashMap<Handle<Image>, Receiver<Vec<u8>>>,
+pub struct ComputeNoiseReadback {
+    pub receivers: HashMap<Handle<Image>, Receiver<Vec<u8>>>,
+    pub senders: HashMap<Handle<Image>, ReadbackSender>,
+    queue: HashSet<Handle<Image>>,
 }
 
-impl ComputeNoiseReadbackReceiver {
+impl ComputeNoiseReadback {
+    pub fn queue(&mut self, images: &mut Assets<Image>, image: Handle<Image>) {
+        if !self.receivers.contains_key(&image) {
+            self.add(images, image.clone());
+        }
+
+        self.queue.insert(image);
+    }
+
+    fn add(&mut self, images: &mut Assets<Image>, image: Handle<Image>) {
+        let size: ComputeNoiseSize = images.get(image.clone()).unwrap().texture_descriptor.size.into();
+
+        let (s, r) = crossbeam_channel::unbounded();
+        self.receivers.insert(image.clone(), r);
+        self.senders.insert(image.clone(), ReadbackSender {
+            sender: s,
+            size,
+            buffer: None,
+        });
+    }
+
+    pub fn remove(&mut self, image: Handle<Image>) {
+        self.receivers.remove(&image);
+        self.senders.remove(&image);
+    }
+
     pub fn receive(&mut self, images: &mut ResMut<Assets<Image>>, handle: Handle<Image>) -> Option<Handle<Image>> {
-        if let Some(receiver) = self.images.get(&handle) {
+        if let Some(receiver) = self.receivers.get(&handle) {
             if let Ok(data) = receiver.try_recv() {
                 let image = images.get_mut(handle.clone()).unwrap();
                 image.data = data;
 
-                self.images.remove(&handle);
                 return Some(handle);
             }
         } else {
@@ -35,33 +57,12 @@ impl ComputeNoiseReadbackReceiver {
     }
 }
 
-#[derive(Default, Resource, Clone)]
-pub struct ComputeNoiseReadbackSender {
-    pub images: HashMap<Handle<Image>, (Sender<Vec<u8>>, Buffer)>
-}
+#[derive(Default, Resource)]
+pub(crate) struct ComputeNoiseReadbackSender(pub HashMap<Handle<Image>, ReadbackSender>);
 
-pub fn add_readback(
-    mut readback: ResMut<ComputeNoiseReadback>,
-    mut readback_receiver: ResMut<ComputeNoiseReadbackReceiver>,
-    mut readback_sender: ResMut<ComputeNoiseReadbackSender>,
-    render_device: Res<RenderDevice>,
-) {
-    for image in readback.0.iter() {
-        let (s, r) = crossbeam_channel::unbounded();
-        readback_receiver.images.insert(image.0.clone(), r);
-        readback_sender.images.insert(
-            image.0.clone(),
-            (
-                s, 
-                render_device.create_buffer(&BufferDescriptor {
-                    label: Some("readback_buffer"),
-                    size: get_aligned_size(image.1.width(), image.1.height(), TextureFormat::R8Unorm.pixel_size() as u32) as u64,
-                    usage: BufferUsages::MAP_READ | BufferUsages::COPY_DST,
-                    mapped_at_creation: false,
-                }),
-            )
-        );
-    }
-
-    readback.0.clear();
+#[derive(Clone)]
+pub struct ReadbackSender {
+    sender: Sender<Vec<u8>>,
+    pub size: ComputeNoiseSize,
+    pub buffer: Option<Buffer>,
 }

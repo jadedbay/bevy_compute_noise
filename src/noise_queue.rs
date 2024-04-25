@@ -6,11 +6,12 @@ use bevy::{
     }
 };
 
-use crate::{image::ComputeNoiseSize, noise::ComputeNoise, prelude::ComputeNoiseImage, readback::ComputeNoiseReadback};
+use crate::{image::ComputeNoiseSize, noise::ComputeNoise, prelude::ComputeNoiseImage};
 
 #[derive(Resource, Clone, ExtractResource, Default)]
 pub struct ComputeNoiseQueue<T: ComputeNoise> {
     pub(crate) queue: Vec<(Handle<Image>, T::Gpu, ComputeNoiseSize)>,
+    pub(crate) readback: Vec<Handle<Image>>,
 }
 
 impl<T: ComputeNoise> ComputeNoiseQueue<T> {
@@ -19,14 +20,10 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
         images: &mut Assets<Image>,
         size: ComputeNoiseSize,
         noise: T,
-        readback: Option<&mut ComputeNoiseReadback>,
     ) -> Handle<Image> {
         let image = ComputeNoiseImage::create_image(images, size);
         if TextureDimension::from(size) == T::texture_dimension() {
             self.queue.push((image.clone(), noise.gpu_data(size), size));
-            if let Some(readback) = readback {
-                readback.0.insert(image.clone(), size.clone());
-            }
         } else {
             error!("Image dimensions do not match noise dimensions - created image but did not queue compute noise.")
         }
@@ -39,14 +36,10 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
         images: &mut Assets<Image>,
         image: Handle<Image>,
         noise: T,
-        readback: Option<&mut ComputeNoiseReadback>,
     ) -> Handle<Image> {
         let size: ComputeNoiseSize = images.get(image.clone()).unwrap().texture_descriptor.size.into();
         if TextureDimension::from(size) == T::texture_dimension() {
             self.queue.push((image.clone(), noise.gpu_data(size), size));
-            if let Some(readback) = readback {
-                readback.0.insert(image.clone(), size.clone());
-            }
         } else {
             error!("Image dimensions do not match noise dimensions - did not queue compute noise.")
         }

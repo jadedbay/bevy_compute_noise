@@ -9,7 +9,7 @@ fn main() {
             ComputeNoisePlugin::<Worley2d>::default()
         ))
         .add_systems(Startup, setup)
-        .add_systems(Update, receive)
+        //.add_systems(Update, receive)
         .run();
 }
 
@@ -18,18 +18,6 @@ fn setup(
     mut readback: ResMut<ComputeNoiseReadback>,
     mut images: ResMut<Assets<Image>>,
 ) {
-    worley_2d_queue.add(&mut images, ComputeNoiseSize::D2(4, 4), Worley2d::new(1, 5), Some(&mut readback));
-}
-
-fn receive(
-    input: Res<ButtonInput<KeyCode>>,
-    readback_receiver: Res<ComputeNoiseReadbackReceiver>,
-) {
-    if input.just_pressed(KeyCode::Space) {
-        for image in readback_receiver.images.iter() {
-            if let Ok(data) = image.1.try_recv() {
-                println!("Received data from render world: {data:?}");
-            }
-        }
-    }
+    let image = worley_2d_queue.add(&mut images, ComputeNoiseSize::D2(4, 4), Worley2d::new(1, 5));
+    readback.queue(&mut images, image)
 }

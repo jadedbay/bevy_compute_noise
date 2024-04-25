@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::{render_asset::RenderAssets, render_graph::RenderGraph, render_resource::{CommandEncoderDescriptor, Extent3d, ImageCopyBuffer, Maintain, MapMode}, renderer::{RenderDevice, RenderQueue}, texture::TextureFormatPixelInfo}};
+use bevy::{prelude::*, render::{render_asset::RenderAssets, render_graph::RenderGraph, render_resource::{Maintain, MapMode}, renderer::RenderDevice, texture::TextureFormatPixelInfo}};
 
 use crate::{noise::ComputeNoise, noise_queue::ComputeNoiseRenderQueue, render::node::{ComputeNoiseNode, ComputeNoiseNodeState}};
 
@@ -15,8 +15,8 @@ pub fn readback_texture<T: ComputeNoise>(
         Ok(node) => match node.get_state() {
             ComputeNoiseNodeState::Ready => {
                 for image in compute_noise_render_queue.queue.iter() {
-                    if let Some(readback) = readback_sender.images.get(&image.handle) {
-                        let buffer_slice = readback.1.slice(..);
+                    if let Some(readback) = readback_sender.0.get(&image.handle) {
+                        let buffer_slice = readback.buffer.as_ref().unwrap().slice(..);
 
                         let (s, r) = crossbeam_channel::unbounded::<()>();
 
@@ -50,14 +50,14 @@ pub fn readback_texture<T: ComputeNoise>(
                                     .collect();
                             }
 
-                            readback.0
+                            readback.sender
                                 .send(data)
                                 .expect("Failed to send data to main world, most likely a new noise was added to the queue before old one could be sent back.");
                         }
 
-                        readback.1.unmap();
+                        readback.buffer.as_ref().unwrap().unmap();
 
-                        readback_sender.images.remove(&image.handle);
+                        readback_sender.0.remove(&image.handle);
                     }
                 }
             }

@@ -4,8 +4,10 @@ use bevy::{
     prelude::*,
     render::{render_graph::RenderGraph, Render, RenderApp, RenderSet},
 };
-use noise::update_readback_image;
-use readback::{add_readback, extract::extract_readback_sender, read::readback_texture};
+
+use noise::auto_readback_image;
+use prelude::ComputeNoiseReadback;
+use readback::{extract::extract_readback_sender, prepare::prepare_readback_buffers, read::readback_texture, ComputeNoiseReadbackSender};
 
 use crate::{
     noise::{update_noise, ComputeNoise, ComputeNoiseComponent},
@@ -16,11 +18,6 @@ use crate::{
         pipeline::ComputeNoisePipeline,
         prepare::{clear_render_queue, prepare_bind_groups},
     },
-    readback::{
-        ComputeNoiseReadback,
-        ComputeNoiseReadbackReceiver,
-        ComputeNoiseReadbackSender
-    }
 };
 
 pub mod image;
@@ -34,7 +31,7 @@ pub mod prelude {
         image::{ComputeNoiseImage, ComputeNoiseSize},
         noise::{ComputeNoiseComponent, ComputeNoiseAutoReadback, Worley2d, Worley3d},
         noise_queue::ComputeNoiseQueue,
-        readback::{ComputeNoiseReadbackReceiver, ComputeNoiseReadback},
+        readback::ComputeNoiseReadback,
         ComputeNoisePlugin,
         ComputeNoiseReadbackPlugin,
     };
@@ -47,12 +44,13 @@ impl<T: ComputeNoise> Plugin for ComputeNoisePlugin<T> {
     fn build(&self, app: &mut App) {
         T::embed_asset(app);
 
-        app.register_type::<ComputeNoiseComponent<T>>()
+        app
+            .register_type::<ComputeNoiseComponent<T>>()
             .init_resource::<ComputeNoiseQueue<T>>()
             .add_systems(Update, update_noise::<T>);
 
         let readback = app.is_plugin_added::<ComputeNoiseReadbackPlugin>();
-
+        
         let render_app = app.sub_app_mut(RenderApp);
 
         render_app
@@ -87,16 +85,13 @@ impl Plugin for ComputeNoiseReadbackPlugin {
     fn build(&self, app: &mut App) {
         app
             .init_resource::<ComputeNoiseReadback>()
-            .init_resource::<ComputeNoiseReadbackReceiver>()
-            .init_resource::<ComputeNoiseReadbackSender>()
-            //.add_systems(PostStartup, add_readback)
-            .add_systems(PostUpdate, add_readback)
-            .add_systems(PreUpdate, update_readback_image);
+            .add_systems(PreUpdate, auto_readback_image);
     
         let render_app = app.sub_app_mut(RenderApp);
 
         render_app
             .init_resource::<ComputeNoiseReadbackSender>()
-            .add_systems(ExtractSchedule, extract_readback_sender);
+            .add_systems(ExtractSchedule, extract_readback_sender)
+            .add_systems(Render, prepare_readback_buffers.in_set(RenderSet::PrepareResources));
     }
 }

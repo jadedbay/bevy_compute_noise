@@ -10,6 +10,7 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             ComputeNoiseReadbackPlugin,
+            //ComputeNoisePlugin::<Worley2d>::default(),
             ComputeNoisePlugin::<Worley2d>::default(),
             WorldInspectorPlugin::new(),
             PlayerPlugin,
