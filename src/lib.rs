@@ -5,7 +5,7 @@ use bevy::{
     render::{render_graph::RenderGraph, Render, RenderApp, RenderSet},
 };
 use noise::update_readback_image;
-use readback::{add_readback, extract::extract_readback_sender, render::readback_texture};
+use readback::{add_readback, extract::extract_readback_sender, read::readback_texture};
 
 use crate::{
     noise::{update_noise, ComputeNoise, ComputeNoiseComponent},
@@ -89,9 +89,9 @@ impl Plugin for ComputeNoiseReadbackPlugin {
             .init_resource::<ComputeNoiseReadback>()
             .init_resource::<ComputeNoiseReadbackReceiver>()
             .init_resource::<ComputeNoiseReadbackSender>()
-            .add_systems(PostStartup, add_readback)
+            //.add_systems(PostStartup, add_readback)
             .add_systems(PostUpdate, add_readback)
-            .add_systems(Update, update_readback_image);
+            .add_systems(PreUpdate, update_readback_image);
     
         let render_app = app.sub_app_mut(RenderApp);
 

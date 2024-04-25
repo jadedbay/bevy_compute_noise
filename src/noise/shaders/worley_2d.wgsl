@@ -10,7 +10,7 @@ var<storage, read> cell_count: u32;
 
 const INFINITY = 3.402823e+38;
 
-@compute @workgroup_size(8, 8, 1)
+@compute @workgroup_size(8, 8)
 fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>, @builtin(num_workgroups) num_workgroups: vec3<u32>) {
     let location = vec2<u32>(
         invocation_id.x,

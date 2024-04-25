@@ -6,8 +6,8 @@ use crate::prelude::ComputeNoiseSize;
 use self::util::get_aligned_size;
 
 pub(crate) mod extract;
-pub(crate) mod render;
-mod util;
+pub(crate) mod read;
+pub(crate) mod util;
 
 #[derive(Default, Resource)]
 pub struct ComputeNoiseReadback(pub(crate) HashMap<Handle<Image>, ComputeNoiseSize>);
@@ -18,7 +18,19 @@ pub struct ComputeNoiseReadbackReceiver {
 }
 
 impl ComputeNoiseReadbackReceiver {
-    pub fn receive(image: Handle<Image>) -> Option<Handle<Image>> {
+    pub fn receive(&mut self, images: &mut ResMut<Assets<Image>>, handle: Handle<Image>) -> Option<Handle<Image>> {
+        if let Some(receiver) = self.images.get(&handle) {
+            if let Ok(data) = receiver.try_recv() {
+                let image = images.get_mut(handle.clone()).unwrap();
+                image.data = data;
+
+                self.images.remove(&handle);
+                return Some(handle);
+            }
+        } else {
+            warn!("No receiver for {:?}", handle)
+        }
+
         None
     }
 }

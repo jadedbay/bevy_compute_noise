@@ -6,7 +6,6 @@ use super::{util::*, ComputeNoiseReadbackSender};
 
 pub fn readback_texture<T: ComputeNoise>(
     render_device: Res<RenderDevice>,
-    render_queue: Res<RenderQueue>,
     mut readback_sender: ResMut<ComputeNoiseReadbackSender>,
     images: Res<RenderAssets<Image>>,
     compute_noise_render_queue: Res<ComputeNoiseRenderQueue<T>>,
@@ -17,25 +16,6 @@ pub fn readback_texture<T: ComputeNoise>(
             ComputeNoiseNodeState::Ready => {
                 for image in compute_noise_render_queue.queue.iter() {
                     if let Some(readback) = readback_sender.images.get(&image.handle) {
-
-                        let render_image = images.get(image.handle.clone()).unwrap();
-
-                        let mut encoder = render_device.create_command_encoder(&CommandEncoderDescriptor::default());
-
-                        encoder.copy_texture_to_buffer(
-                            render_image.texture.as_image_copy(), 
-                            ImageCopyBuffer {
-                                buffer: &readback.1,
-                                layout: layout_data(render_image.size.x as u32, render_image.size.y as u32, render_image.texture_format)
-                            },
-                            Extent3d {
-                                width: render_image.size.x as u32,
-                                height: render_image.size.y as u32,
-                                ..default()
-                            }
-                        );
-                        render_queue.submit([encoder.finish()]);
-
                         let buffer_slice = readback.1.slice(..);
 
                         let (s, r) = crossbeam_channel::unbounded::<()>();
@@ -69,8 +49,6 @@ pub fn readback_texture<T: ComputeNoise>(
                                     .copied()
                                     .collect();
                             }
-
-                            dbg!(&data);
 
                             readback.0
                                 .send(data)

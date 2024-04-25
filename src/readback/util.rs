@@ -1,6 +1,6 @@
 use bevy::render::{render_resource::{ImageDataLayout, TextureFormat}, texture::TextureFormatPixelInfo};
 
-// https://github.com/Commander-lol/bevy_capture_media/blob/trunk/src/render.rs#L25
+// https://github.com/Commander-lol/bevy_capture_media/blob/trunk/src/render.rs
 const COPY_BYTES_PER_ROW_ALIGNMENT: u32 = 256;
 pub fn align_byte_size(value: u32) -> u32 {
 	value + (COPY_BYTES_PER_ROW_ALIGNMENT - (value % COPY_BYTES_PER_ROW_ALIGNMENT))

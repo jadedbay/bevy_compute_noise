@@ -15,6 +15,7 @@ fn main() {
             PlayerPlugin,
         ))
         .add_systems(Startup, setup)
+        .add_systems(Update, touch_material)
         .run();
 }
 
@@ -60,7 +61,7 @@ fn setup(
             image: worley_noise.clone(),
             noise: Worley2d::new(1, 5),
         },
-        //ComputeNoiseAutoReadback,
+        ComputeNoiseAutoReadback,
     ));
 
     commands.spawn(DirectionalLightBundle {
@@ -79,3 +80,11 @@ fn setup(
     });
 }
 
+fn touch_material(
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    query: Query<&Handle<StandardMaterial>>,
+)  {
+    for material in query.iter() {
+        materials.get_mut(material);
+    }
+}

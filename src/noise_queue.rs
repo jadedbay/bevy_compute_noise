@@ -28,7 +28,7 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
                 readback.0.insert(image.clone(), size.clone());
             }
         } else {
-            error!("Image dimensions does not match noise dimensions - created image but did not queue compute noise.")
+            error!("Image dimensions do not match noise dimensions - created image but did not queue compute noise.")
         }
 
         image
@@ -48,7 +48,7 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
                 readback.0.insert(image.clone(), size.clone());
             }
         } else {
-            error!("Image dimensions does not match noise dimensions - did not queue compute noise.")
+            error!("Image dimensions do not match noise dimensions - did not queue compute noise.")
         }
 
         image

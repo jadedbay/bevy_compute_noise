@@ -52,27 +52,11 @@ pub struct ComputeNoiseAutoReadback;
 pub fn update_readback_image(
     mut images: ResMut<Assets<Image>>,
     mut readback_receiver: ResMut<ComputeNoiseReadbackReceiver>,
-    mut query: Query<&mut ComputeNoiseComponent<Worley2d>>,
+    query: Query<&ComputeNoiseComponent<Worley2d>, With<ComputeNoiseAutoReadback>>,
 ) {
-    // let mut to_remove = Vec::new();
-
-    // for image in readback_receiver.images.iter() {
-    //     let image_data = images.get_mut(image.0.clone()).unwrap();
-    //     if let Ok(data) = image.1.try_recv() {
-    //         image_data.data = data;
-    //         to_remove.push(image.0.clone())
-    //     }
-
-    //     // let new_image = image_data.clone();
-
-    //     // for mut comp in query.iter_mut() {
-    //     //     let new_handle = images.add(new_image.clone());
-    //     //     comp.image = new_handle;
-    //     // }
-
-    // }
-
-    // for handle in to_remove {
-    //     readback_receiver.images.remove(&handle);
-    // }
+    for noise in query.iter() {
+        if readback_receiver.images.contains_key(&noise.image) {
+            readback_receiver.receive(&mut images, noise.image.clone());
+        }
+    }
 }
