@@ -32,7 +32,7 @@ pub struct ComputeNoiseComponent<T: ComputeNoise> {
 
 pub fn update_noise<T: ComputeNoise>(
     mut noise_queue: ResMut<ComputeNoiseQueue<T>>,
-    mut readback: ResMut<ComputeNoiseReadback>,
+    mut readback: Option<ResMut<ComputeNoiseReadback>>,
     mut images: ResMut<Assets<Image>>,
     query: Query<(&ComputeNoiseComponent<T>, Option<&ComputeNoiseAutoReadback>), Changed<ComputeNoiseComponent<T>>>,
 ) {
@@ -43,7 +43,9 @@ pub fn update_noise<T: ComputeNoise>(
             noise.noise.clone(), 
         );
         if auto_readback.is_some() {
-            readback.queue(&mut images, noise.image.clone());
+            readback.as_mut()
+                .expect("ComputeNoiseReadback resource does not exist, have you added the ComputeNoiseReadbackPlugin?")
+                .queue(&mut images, noise.image.clone());
         }
     }
 }
@@ -51,14 +53,14 @@ pub fn update_noise<T: ComputeNoise>(
 #[derive(Component)]
 pub struct ComputeNoiseAutoReadback;
 
-pub fn auto_readback_image(
+pub fn auto_readback_image<T: ComputeNoise>(
     mut images: ResMut<Assets<Image>>,
-    mut readback_receiver: ResMut<ComputeNoiseReadback>,
-    query: Query<&ComputeNoiseComponent<Worley2d>, With<ComputeNoiseAutoReadback>>,
+    readback: Res<ComputeNoiseReadback>,
+    query: Query<&ComputeNoiseComponent<T>, With<ComputeNoiseAutoReadback>>,
 ) {
     for noise in query.iter() {
-        if readback_receiver.senders.contains_key(&noise.image) {
-            readback_receiver.receive(&mut images, noise.image.clone());
+        if readback.senders.contains_key(&noise.image) {
+            readback.receive(&mut images, noise.image.clone());
         }
     }
 }

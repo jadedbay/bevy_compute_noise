@@ -21,7 +21,7 @@ impl Worley3d {
         }
     }
 
-    fn generate_points(&self, width: u32, height: u32, depth: u32) -> Vec<Vec3> {
+    fn generate_points(&self, width: u32, height: u32, depth: u32) -> Vec<Vec4> {
         let cell_size = (
             width as f32 / self.cells as f32, 
             height as f32 / self.cells as f32,
@@ -37,7 +37,14 @@ impl Worley3d {
                     let x_range = (x as f32 * cell_size.0)..((x + 1) as f32 * cell_size.0);
                     let y_range = (y as f32 * cell_size.1)..((y + 1) as f32 * cell_size.1);
                     let z_range = (z as f32 * cell_size.2)..((z + 1) as f32 * cell_size.2);
-                    random_points.push(Vec3::new(rng.gen_range(x_range), rng.gen_range(y_range), rng.gen_range(z_range)));
+                    random_points.push(
+                        Vec4::new(
+                            rng.gen_range(x_range), 
+                            rng.gen_range(y_range), 
+                            rng.gen_range(z_range), 
+                            0.0
+                        )
+                    );
                 }
             }
         }
@@ -100,7 +107,7 @@ impl ComputeNoise for Worley3d {
 #[derive(Clone, Default)]
 pub struct GpuWorley3d {
     cell_count: u32,
-    points: Vec<Vec3>,
+    points: Vec<Vec4>,
 }
 
 impl GpuComputeNoise for GpuWorley3d {

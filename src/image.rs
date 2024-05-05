@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::{render_asset::RenderAssetUsages, render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages}}};
+use bevy::{prelude::*, render::{render_asset::RenderAssetUsages, render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages, TextureViewDimension}}};
 
 pub struct ComputeNoiseImage;
 
@@ -17,8 +17,6 @@ impl ComputeNoiseImage {
             | TextureUsages::COPY_SRC
             | TextureUsages::STORAGE_BINDING
             | TextureUsages::TEXTURE_BINDING;
-
-        
 
         images.add(image)
     }

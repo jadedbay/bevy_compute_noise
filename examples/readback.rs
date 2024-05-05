@@ -9,7 +9,6 @@ fn main() {
             ComputeNoisePlugin::<Worley2d>::default()
         ))
         .add_systems(Startup, setup)
-        //.add_systems(Update, receive)
         .run();
 }
 

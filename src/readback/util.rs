@@ -10,16 +10,10 @@ pub fn get_aligned_size(width: u32, height: u32, pixel_size: u32) -> u32 {
 	height * align_byte_size(width * pixel_size)
 }
 
-pub fn layout_data(width: u32, height: u32, depth: u32, format: TextureFormat) -> ImageDataLayout {
+pub fn layout_data(width: u32, height: u32, format: TextureFormat) -> ImageDataLayout {
 	ImageDataLayout {
 		bytes_per_row: if height > 1 {
 			Some(get_aligned_size(width, 1, format.pixel_size() as u32))
-		} else {
-			None
-		},
-		// not sure if this is right
-		rows_per_image: if depth > 1 {
-			Some(depth)
 		} else {
 			None
 		},

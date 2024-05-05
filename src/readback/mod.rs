@@ -36,18 +36,20 @@ impl ComputeNoiseReadback {
         });
     }
 
-    pub fn remove(&mut self, image: Handle<Image>) {
-        self.receivers.remove(&image);
-        self.senders.remove(&image);
+    pub fn remove(&mut self, image: &Handle<Image>) {
+        self.receivers.remove(image);
+        self.senders.remove(image);
     }
 
-    pub fn receive(&mut self, images: &mut ResMut<Assets<Image>>, handle: Handle<Image>) -> Option<Handle<Image>> {
+    pub fn receive(&self, images: &mut ResMut<Assets<Image>>, handle: Handle<Image>) -> Option<Handle<Image>> {
         if let Some(receiver) = self.receivers.get(&handle) {
             if let Ok(data) = receiver.try_recv() {
                 let image = images.get_mut(handle.clone()).unwrap();
                 image.data = data;
 
                 return Some(handle);
+            } else {
+                dbg!("0");
             }
         } else {
             warn!("No receiver for {:?}", handle)

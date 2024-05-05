@@ -4,7 +4,7 @@ var texture: texture_storage_3d<r8unorm, write>;
 var<storage, read> texture_size: vec3<f32>;
 
 @group(1) @binding(0)
-var<storage, read> points: array<vec3<f32>>;
+var<storage, read> points: array<vec4<f32>>;
 @group(1) @binding(1)
 var<storage, read> cell_count: u32;
 
@@ -29,7 +29,7 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>, @builtin(num_w
                 let index = u32(point_data.x);
                 let cell_offset = vec3<f32>(point_data.y, point_data.z, point_data.w);
 
-                let current_distance = distance(vec3<f32>(location), points[index] + cell_offset);
+                let current_distance = distance(vec3<f32>(location), points[index].xyz + cell_offset);
                 if (current_distance < distance) {
                     distance = current_distance;
                 }

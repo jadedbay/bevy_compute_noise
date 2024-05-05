@@ -11,7 +11,6 @@ use crate::{image::ComputeNoiseSize, noise::ComputeNoise, prelude::ComputeNoiseI
 #[derive(Resource, Clone, ExtractResource, Default)]
 pub struct ComputeNoiseQueue<T: ComputeNoise> {
     pub(crate) queue: Vec<(Handle<Image>, T::Gpu, ComputeNoiseSize)>,
-    pub(crate) readback: Vec<Handle<Image>>,
 }
 
 impl<T: ComputeNoise> ComputeNoiseQueue<T> {

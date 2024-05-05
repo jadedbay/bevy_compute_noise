@@ -9,8 +9,6 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins,
-            ComputeNoiseReadbackPlugin,
-            //ComputeNoisePlugin::<Worley2d>::default(),
             ComputeNoisePlugin::<Worley2d>::default(),
             WorldInspectorPlugin::new(),
             PlayerPlugin,
@@ -62,7 +60,6 @@ fn setup(
             image: worley_noise.clone(),
             noise: Worley2d::new(1, 5),
         },
-        ComputeNoiseAutoReadback,
     ));
 
     commands.spawn(DirectionalLightBundle {

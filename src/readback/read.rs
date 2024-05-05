@@ -4,7 +4,7 @@ use crate::{noise::ComputeNoise, noise_queue::ComputeNoiseRenderQueue, render::n
 
 use super::{util::*, ComputeNoiseReadbackSender};
 
-pub fn readback_texture<T: ComputeNoise>(
+pub fn map_read_texture<T: ComputeNoise>(
     render_device: Res<RenderDevice>,
     mut readback_sender: ResMut<ComputeNoiseReadbackSender>,
     images: Res<RenderAssets<Image>>,

@@ -59,6 +59,8 @@ impl<T: ComputeNoise> render_graph::Node for ComputeNoiseNode<T> {
                 let pipeline_id = world.resource::<ComputeNoisePipeline<T>>();
                 let pipeline_cache = world.resource::<PipelineCache>();
 
+                let readback = world.get_resource::<ComputeNoiseReadbackSender>();
+
                 let pipeline = pipeline_cache
                     .get_compute_pipeline(pipeline_id.pipeline_id)
                     .unwrap();
@@ -78,27 +80,32 @@ impl<T: ComputeNoise> render_graph::Node for ComputeNoiseNode<T> {
                         let workgroups = bind_groups.size.workgroup_count();
                         pass.dispatch_workgroups(workgroups.0, workgroups.1, workgroups.2);
 
-                        readback_handles.push(bind_groups.handle.clone());
+                        if let Some(readback) = readback {
+                            if readback.0.contains_key(&bind_groups.handle) {
+                                readback_handles.push(bind_groups.handle.clone());
+                            }
+                        }
                     }
                 }
 
-                for handle in readback_handles {
-                    let readback = world.resource::<ComputeNoiseReadbackSender>();
-                    let images = world.resource::<RenderAssets<Image>>();
-                    let image = images.get(&handle).unwrap();
-                    let size = readback.0.get(&handle).unwrap().size;
-                    render_context.command_encoder().copy_texture_to_buffer(
-                        image.texture.as_image_copy(), 
-                        ImageCopyBuffer {
-                            buffer: &readback.0.get(&handle).unwrap().buffer.as_ref().unwrap(),
-                            layout: layout_data(size.width(), size.height(), size.depth(), image.texture_format)
-                        },
-                        Extent3d {
-                            width: image.size.x as u32,
-                            height: image.size.y as u32,
-                            ..default()
-                        }
-                    );
+                if let Some(readback) = readback {
+                    for handle in readback_handles {
+                        let images = world.resource::<RenderAssets<Image>>();
+                        let image = images.get(&handle).unwrap();
+                        let size = readback.0.get(&handle).unwrap().size;
+                        render_context.command_encoder().copy_texture_to_buffer(
+                            image.texture.as_image_copy(), 
+                            ImageCopyBuffer {
+                                buffer: &readback.0.get(&handle).unwrap().buffer.as_ref().unwrap(),
+                                layout: layout_data(size.width(), size.height(), image.texture_format)
+                            },
+                            Extent3d {
+                                width: image.size.x as u32,
+                                height: image.size.y as u32,
+                                ..default()
+                            }
+                        );
+                    }
                 }
             }
         }

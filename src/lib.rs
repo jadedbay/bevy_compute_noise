@@ -7,7 +7,7 @@ use bevy::{
 
 use noise::auto_readback_image;
 use prelude::ComputeNoiseReadback;
-use readback::{extract::extract_readback_sender, prepare::prepare_readback_buffers, read::readback_texture, ComputeNoiseReadbackSender};
+use readback::{extract::extract_readback_sender, prepare::prepare_readback_buffers, read::map_read_texture, ComputeNoiseReadbackSender};
 
 use crate::{
     noise::{update_noise, ComputeNoise, ComputeNoiseComponent},
@@ -50,6 +50,10 @@ impl<T: ComputeNoise> Plugin for ComputeNoisePlugin<T> {
             .add_systems(Update, update_noise::<T>);
 
         let readback = app.is_plugin_added::<ComputeNoiseReadbackPlugin>();
+
+        if readback {
+            app.add_systems(PreUpdate, auto_readback_image::<T>);
+        }
         
         let render_app = app.sub_app_mut(RenderApp);
 
@@ -68,7 +72,7 @@ impl<T: ComputeNoise> Plugin for ComputeNoisePlugin<T> {
         render_graph.add_node(T::render_label(), ComputeNoiseNode::<T>::default());
 
         if readback {
-            render_app.add_systems(Render, readback_texture::<T>.after(RenderSet::Render).before(RenderSet::Cleanup));
+            render_app.add_systems(Render, map_read_texture::<T>.after(RenderSet::Render).before(RenderSet::Cleanup));
         }
     }
 
@@ -83,9 +87,7 @@ pub struct ComputeNoiseReadbackPlugin;
 
 impl Plugin for ComputeNoiseReadbackPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .init_resource::<ComputeNoiseReadback>()
-            .add_systems(PreUpdate, auto_readback_image);
+        app.init_resource::<ComputeNoiseReadback>();
     
         let render_app = app.sub_app_mut(RenderApp);
 
@@ -94,4 +96,21 @@ impl Plugin for ComputeNoiseReadbackPlugin {
             .add_systems(ExtractSchedule, extract_readback_sender)
             .add_systems(Render, prepare_readback_buffers.in_set(RenderSet::PrepareResources));
     }
+}
+
+#[test]
+fn test() {
+    let base_cell = IVec3::new(-1, 5, -1);
+    let cell_count = 5;
+    let texture_size = Vec3::new(128., 128., 128.);
+
+    let cell = (base_cell + cell_count) % cell_count;
+    let cell_offset = (
+        if cell.x != base_cell.x { base_cell.x.signum() as f32 * texture_size.x } else { 0.0 },
+        if cell.y != base_cell.y { base_cell.y.signum() as f32 * texture_size.y } else { 0.0 },
+        if cell.z != base_cell.z { base_cell.z.signum() as f32 * texture_size.z } else { 0.0 },
+    );
+
+    dbg!(cell_offset);
+    dbg!(cell);
 }
