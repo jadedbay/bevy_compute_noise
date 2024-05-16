@@ -1,14 +1,14 @@
-use bevy::{prelude::*, render::{render_asset::RenderAssetUsages, render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages, TextureViewDimension}}};
+use bevy::{prelude::*, render::{render_asset::RenderAssetUsages, render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages}}};
 
 pub struct ComputeNoiseImage;
 
 impl ComputeNoiseImage {
-    pub fn create_image(images: &mut Assets<Image>, size: ComputeNoiseSize) -> Handle<Image> {
+    pub fn create_image(size: ComputeNoiseSize) -> Image {
         let mut image = 
             Image::new_fill(
                 size.into(),
                 size.into(),
-                &[255],
+                &[0],
                 TextureFormat::R8Unorm,
                 RenderAssetUsages::all(),
             );
@@ -18,7 +18,7 @@ impl ComputeNoiseImage {
             | TextureUsages::STORAGE_BINDING
             | TextureUsages::TEXTURE_BINDING;
 
-        images.add(image)
+        image
     }
 }
 

@@ -29,7 +29,7 @@ mod readback;
 pub mod prelude {
     pub use crate::{
         image::{ComputeNoiseImage, ComputeNoiseSize},
-        noise::{ComputeNoiseComponent, ComputeNoiseAutoReadback, Worley2d, Worley3d},
+        noise::{ComputeNoiseComponent, ComputeNoiseAutoReadback, Worley2d, Worley3d, Perlin2d},
         noise_queue::ComputeNoiseQueue,
         readback::ComputeNoiseReadback,
         ComputeNoisePlugin,
@@ -82,7 +82,7 @@ impl<T: ComputeNoise> Plugin for ComputeNoisePlugin<T> {
     }
 }
 
-// Add readback plugin before any noise plugins
+// Add readback plugin before any noise plugins <- maybe? i dont remember why i added this comment
 pub struct ComputeNoiseReadbackPlugin;
 
 impl Plugin for ComputeNoiseReadbackPlugin {
@@ -100,17 +100,18 @@ impl Plugin for ComputeNoiseReadbackPlugin {
 
 #[test]
 fn test() {
-    let base_cell = IVec3::new(-1, 5, -1);
-    let cell_count = 5;
-    let texture_size = Vec3::new(128., 128., 128.);
+    let frequency: u32 = 3;
+    
+    let texture_size = Vec2::new(128., 128.);
+    let cell_size = texture_size / frequency as f32;
 
-    let cell = (base_cell + cell_count) % cell_count;
-    let cell_offset = (
-        if cell.x != base_cell.x { base_cell.x.signum() as f32 * texture_size.x } else { 0.0 },
-        if cell.y != base_cell.y { base_cell.y.signum() as f32 * texture_size.y } else { 0.0 },
-        if cell.z != base_cell.z { base_cell.z.signum() as f32 * texture_size.z } else { 0.0 },
-    );
+    let pixel = UVec2::new(21, 21);
+    let u_base = Vec2::new(pixel.x as f32 / cell_size.x, pixel.y as f32 / cell_size.y);
+    let base = UVec2::new(u_base.x as u32, u_base.y as u32);
+    let cell = (base + frequency) % frequency;
 
-    dbg!(cell_offset);
-    dbg!(cell);
+    let location_in_cell_x = (pixel.x as f32 - (cell_size.x * cell.x as f32)) / cell_size.x;
+
+    dbg!(cell_size);
+    dbg!(location_in_cell_x);
 }

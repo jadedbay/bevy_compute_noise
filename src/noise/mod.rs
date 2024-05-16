@@ -5,9 +5,11 @@ use crate::{image::ComputeNoiseSize, readback::ComputeNoiseReadback, ComputeNois
 
 pub mod worley_2d;
 pub mod worley_3d;
+pub mod perlin_2d;
 
 pub use worley_2d::Worley2d;
 pub use worley_3d::Worley3d;
+pub use perlin_2d::Perlin2d;
 
 pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + FromReflect {
     type Gpu: GpuComputeNoise;

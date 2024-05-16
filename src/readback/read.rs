@@ -52,7 +52,7 @@ pub fn map_read_texture<T: ComputeNoise>(
 
                             readback.sender
                                 .send(data)
-                                .expect("Failed to send data to main world, most likely a new noise was added to the queue before old one could be sent back.");
+                                .expect("Failed to send data to main world, most likely receiver was removed before sender was able to send.");
                         }
 
                         readback.buffer.as_ref().unwrap().unmap();

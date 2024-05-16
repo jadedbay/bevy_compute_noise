@@ -8,83 +8,66 @@ use super::{ComputeNoise, GpuComputeNoise};
 
 #[derive(Default, Clone, Reflect, InspectorOptions, PartialEq, Eq, Debug)]
 #[reflect(InspectorOptions)]
-pub struct Worley3d {
+pub struct Perlin2d {
     pub seed: u64,
-    pub cells: u32,
+    pub frequency: u32,
 }
 
-impl Worley3d {
-    pub fn new(seed: u64, cells: u32) -> Self {
+impl Perlin2d {
+    pub fn new(seed: u64, frequency: u32) -> Self {
         Self {
             seed,
-            cells,
+            frequency,
         }
     }
 
-    fn generate_points(&self, width: u32, height: u32, depth: u32) -> Vec<Vec4> {
-        let cell_size = (
-            width as f32 / self.cells as f32, 
-            height as f32 / self.cells as f32,
-            depth as f32 / self.cells as f32,
-        );
+    fn generate_vectors(&self) -> Vec<Vec2> {
+        let mut vectors = Vec::new();
 
         let mut rng = StdRng::seed_from_u64(self.seed);
 
-        let mut random_points = Vec::new();
-        for x in 0..self.cells {
-            for y in 0..self.cells {
-                for z in 0..self.cells {
-                    let x_range = (x as f32 * cell_size.0)..((x + 1) as f32 * cell_size.0);
-                    let y_range = (y as f32 * cell_size.1)..((y + 1) as f32 * cell_size.1);
-                    let z_range = (z as f32 * cell_size.2)..((z + 1) as f32 * cell_size.2);
-                    random_points.push(
-                        Vec4::new(
-                            rng.gen_range(x_range), 
-                            rng.gen_range(y_range), 
-                            rng.gen_range(z_range), 
-                            0.0
-                        )
-                    );
-                }
-            }
+        for _ in 0..self.frequency * self.frequency {
+            let angle = rng.gen::<f32>() * 2.0 * std::f32::consts::PI;
+            let vector = Vec2::new(angle.cos(), angle.sin());
+            vectors.push(vector);
         }
 
-        random_points
+        vectors
     }
 }
 
 #[derive(Default, Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
-pub struct Worley3dLabel;
+pub struct Perlin2dLabel;
 
-impl ComputeNoise for Worley3d {
-    type Gpu = GpuWorley3d;
-
-    fn gpu_data(&self, size: ComputeNoiseSize) -> Self::Gpu {
+impl ComputeNoise for Perlin2d {
+    type Gpu = GpuPerlin2d;
+    
+    fn gpu_data(&self, _size: ComputeNoiseSize) -> Self::Gpu {
         Self::Gpu {
-            cell_count: self.cells,
-            points: self.generate_points(size.width(), size.height(), size.depth()),
+            vectors: self.generate_vectors(),
+            frequency: self.frequency
         }
     }
 
     fn shader() -> ShaderRef {
-        "embedded://bevy_compute_noise/noise/shaders/worley_3d.wgsl".into()
+        "embedded://bevy_compute_noise/noise/shaders/perlin_2d.wgsl".into()
     }
 
     fn embed_asset(app: &mut App) {
-        embedded_asset!(app, "shaders/worley_3d.wgsl");
+        embedded_asset!(app, "shaders/perlin_2d.wgsl");
     }
 
     fn render_label() -> impl RenderLabel {
-        Worley3dLabel
+        Perlin2dLabel
     }
 
     fn texture_dimension() -> TextureDimension {
-        TextureDimension::D3
+        TextureDimension::D2
     }
 
     fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout {
         render_device.create_bind_group_layout(
-            "worley3d_noise_layout",
+            "worley2d_noise_layout",
             &BindGroupLayoutEntries::sequential(
                 ShaderStages::COMPUTE,
                 (
@@ -105,40 +88,40 @@ impl ComputeNoise for Worley3d {
 }
 
 #[derive(Clone, Default)]
-pub struct GpuWorley3d {
-    cell_count: u32,
-    points: Vec<Vec4>,
+pub struct GpuPerlin2d {
+    vectors: Vec<Vec2>,
+    frequency: u32,
 }
 
-impl GpuComputeNoise for GpuWorley3d {
+impl GpuComputeNoise for GpuPerlin2d {
     fn bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup {
-        let points_buffer = render_device.create_buffer_with_data(
+        let vector_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
-                label: Some("worley3d_points_buffer"),
-                contents: &bytemuck::cast_slice(self.points.as_slice()),
+                label: Some("perlin2d_vector_buffer"),
+                contents: &bytemuck::cast_slice(self.vectors.as_slice()),
                 usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
             }
         );
         
-        let cell_count_buffer = render_device.create_buffer_with_data(
+        let frequency_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
-                label: Some("worley3d_cell_count_buffer"),
-                contents: &bytemuck::cast_slice(&[self.cell_count]),
+                label: Some("perlin2d_frequency_buffer"),
+                contents: &bytemuck::cast_slice(&[self.frequency]),
                 usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
             }
         );
 
         render_device.create_bind_group(
-            Some("worley3d_bind_group".into()),
+            Some("perlin2d_bind_group".into()),
             layout,
             &BindGroupEntries::sequential((
                 BufferBinding {
-                    buffer: &points_buffer,
+                    buffer: &vector_buffer,
                     offset: 0,
                     size: None,
                 },
                 BufferBinding {
-                    buffer: &cell_count_buffer,
+                    buffer: &frequency_buffer,
                     offset: 0,
                     size: None,
                 },

@@ -111,7 +111,7 @@ impl GpuComputeNoise for GpuWorley2d {
         
         let cell_count_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
-                label: Some("worley2d_cell_buffer"),
+                label: Some("worley2d_cell_count_buffer"),
                 contents: &bytemuck::cast_slice(&[self.cell_count]),
                 usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
             }

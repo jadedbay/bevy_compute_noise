@@ -36,6 +36,7 @@ impl ComputeNoiseReadback {
         });
     }
 
+    // Make sure there are no pending readback senders before removing or app will panic.
     pub fn remove(&mut self, image: &Handle<Image>) {
         self.receivers.remove(image);
         self.senders.remove(image);
@@ -48,8 +49,6 @@ impl ComputeNoiseReadback {
                 image.data = data;
 
                 return Some(handle);
-            } else {
-                dbg!("0");
             }
         } else {
             warn!("No receiver for {:?}", handle)

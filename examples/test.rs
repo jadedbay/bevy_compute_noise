@@ -1,20 +1,16 @@
-use std::f32::consts::PI;
-
-use bevy::{prelude::*, render::{mesh::VertexAttributeValues, texture::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}}};
+use bevy::{prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}, texture::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
 use bevy_compute_noise::prelude::*;
-use bevy_flycam::PlayerPlugin;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, quick::WorldInspectorPlugin, InspectorOptions};
 
 fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins,
-            ComputeNoisePlugin::<Worley2d>::default(),
+            Material2dPlugin::<ImageMaterial>::default(),
+            ComputeNoisePlugin::<Perlin2d>::default(),
             WorldInspectorPlugin::new(),
-            PlayerPlugin,
         ))
         .add_systems(Startup, setup)
-        .add_systems(Update, touch_material)
         .run();
 }
 
@@ -22,67 +18,53 @@ fn setup(
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut materials: ResMut<Assets<ImageMaterial>>,
 ) {
-    let worley_noise = ComputeNoiseImage::create_image(
-        &mut images, 
-        ComputeNoiseSize::D2(128, 128)
-    );
-
-    let image = images.get_mut(worley_noise.clone()).unwrap();
+    let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(512, 512));
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
         address_mode_u: ImageAddressMode::Repeat,
         address_mode_v: ImageAddressMode::Repeat,
         ..default()
     });
+    let handle = images.add(image);
 
-    let mut plane = Mesh::from(Plane3d::default().mesh().size(5.0, 5.0));
-    if let Some(uvs) = plane.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
+    let mut quad = Rectangle::default().mesh();
+    if let Some(uvs) = quad.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
         if let VertexAttributeValues::Float32x2(uvs) = uvs {
             for uv in uvs.iter_mut() {
                 *uv = [uv[0] * 2.0, uv[1] * 2.0];
             }
         }
     }
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(plane),
-        material: materials.add(StandardMaterial {
-            base_color: Color::WHITE,
-            base_color_texture: Some(worley_noise.clone()),
-            reflectance: 0.0,
-            ..default()
-        }),
-        ..default()
-    });
 
     commands.spawn((
-        ComputeNoiseComponent::<Worley2d> {
-            image: worley_noise.clone(),
-            noise: Worley2d::new(1, 5),
+        MaterialMesh2dBundle {
+            mesh: meshes.add(quad).into(),
+            transform: Transform::default().with_scale(Vec3::splat(512.)),
+            material: materials.add(ImageMaterial {
+                image: handle.clone(),
+            }),
+            ..default()
+        },
+        ComputeNoiseComponent::<Perlin2d> {
+            image: handle.clone(),
+            noise: Perlin2d::new(1, 5),
         },
     ));
 
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            illuminance: 500.,
-            shadows_enabled: true,
-            ..default()
-        },
-        transform: Transform::from_rotation(Quat::from_euler(
-            EulerRot::ZYX,
-            0.0,
-            PI * -0.15,
-            PI * -0.15,
-        )),
-        ..default()
-    });
+    commands.spawn(Camera2dBundle::default());
 }
 
-fn touch_material(
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    query: Query<&Handle<StandardMaterial>>,
-)  {
-    for material in query.iter() {
-        materials.get_mut(material);
+#[derive(Asset, AsBindGroup, Debug, Clone, InspectorOptions, Reflect)]
+#[reflect(InspectorOptions)]
+struct ImageMaterial {
+    #[texture(101)]
+    #[sampler(102)]
+    image: Handle<Image>,
+}
+
+impl Material2d for ImageMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/image_shader.wgsl".into()
     }
 }

@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}, texture::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}}};
+use bevy::{prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}, texture::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
 use bevy_compute_noise::prelude::*;
 use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, quick::WorldInspectorPlugin, InspectorOptions};
 
@@ -7,7 +7,7 @@ fn main() {
         .register_asset_reflect::<Image3dMaterial>()
         .add_plugins((
             DefaultPlugins,
-            MaterialPlugin::<Image3dMaterial>::default(),
+            Material2dPlugin::<Image3dMaterial>::default(),
             ComputeNoisePlugin::<Worley3d>::default(),
             WorldInspectorPlugin::default(),
         ))
@@ -22,38 +22,39 @@ fn setup(
     mut materials: ResMut<Assets<Image3dMaterial>>,
     mut worley3d_queue: ResMut<ComputeNoiseQueue<Worley3d>>,
 ) {
-    let worley_noise = ComputeNoiseImage::create_image(&mut images, ComputeNoiseSize::D3(128, 128, 128));
-    let image = images.get_mut(worley_noise.clone()).unwrap();
+    let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D3(128, 128, 128));
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
         address_mode_u: ImageAddressMode::Repeat,
         address_mode_v: ImageAddressMode::Repeat,
         ..default()
     });
+    let handle = images.add(image);
     
-    worley3d_queue.add_image(&mut images, worley_noise.clone(), Worley3d::new(1, 4));
+    worley3d_queue.add_image(&mut images, handle.clone(), Worley3d::new(1, 4));
 
-    let mut plane = Mesh::from(Plane3d::default().mesh().size(5.0, 5.0));
-    if let Some(uvs) = plane.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
+    let mut quad = Rectangle::default().mesh();
+    if let Some(uvs) = quad.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
         if let VertexAttributeValues::Float32x2(uvs) = uvs {
             for uv in uvs.iter_mut() {
                 *uv = [uv[0] * 2.0, uv[1] * 2.0];
             }
         }
     }
-    commands.spawn(MaterialMeshBundle {
-        mesh: meshes.add(plane),
-        material: materials.add(Image3dMaterial {
-            image: worley_noise.clone(),
-            layer: 0,
-            texture_size: UVec3::new(128, 128, 128),
-        }),
-        ..default()
-    });
 
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
-    });
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes.add(quad).into(),
+            transform: Transform::default().with_scale(Vec3::splat(512.)),
+            material: materials.add(Image3dMaterial {
+                image: handle.clone(),
+                layer: 0,
+                texture_size: UVec3::new(128, 128, 128),
+            }),
+            ..default()
+        },
+    ));
+
+    commands.spawn(Camera2dBundle::default());
 }
 
 #[derive(Asset, AsBindGroup, Debug, Clone, InspectorOptions, Reflect)]
@@ -68,7 +69,7 @@ struct Image3dMaterial {
     texture_size: UVec3,
 }
 
-impl Material for Image3dMaterial {
+impl Material2d for Image3dMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/image_3d_shader.wgsl".into()
     }
