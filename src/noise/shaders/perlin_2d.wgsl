@@ -16,31 +16,33 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     );
 
     let cell_size = texture_size / f32(frequency);
-    let cell = vec2<u32>(vec2<f32>(location) / cell_size);
-    let location_in_cell = (vec2<f32>(location) - (cell_size * vec2<f32>(cell))) / cell_size;
+    let i = vec2<u32>(vec2<f32>(location) / cell_size);
+    let f = vec2<f32>(location) / cell_size;
+
+    let s = f - vec2<f32>(i);
     
-    var n0 = dot_grid_gradient(cell, location_in_cell, vec2<f32>(0.0, 0.0));
-    var n1 = dot_grid_gradient(cell + vec2<u32>(1, 0), location_in_cell, vec2<f32>(1.0, 0.0));
-    let ix0 = interpolate_cubic(n0, n1, location_in_cell.x);
+    var n0 = dot_grid_gradient(i, f, vec2<u32>(0, 0));
+    var n1 = dot_grid_gradient(i, f, vec2<u32>(1, 0));
+    let ix0 = interpolate_cubic(n0, n1, s.x);
 
-    n0 = dot_grid_gradient(cell + vec2<u32>(0, 1), location_in_cell, vec2<f32>(0.0, 1.0));
-    n1 = dot_grid_gradient(cell + vec2<u32>(1, 1), location_in_cell, vec2<f32>(1.0, 1.0));
-    let ix1 = interpolate_cubic(n0, n1, location_in_cell.x);
+    n0 = dot_grid_gradient(i, f, vec2<u32>(0, 1));
+    n1 = dot_grid_gradient(i, f, vec2<u32>(1, 1));
+    let ix1 = interpolate_cubic(n0, n1, s.x);
 
-    let value = interpolate_cubic(ix0, ix1, location_in_cell.y);
+    let value = interpolate_cubic(ix0, ix1, s.y);
 
-    textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 0.0));
+    textureStore(texture, location, vec4<f32>((value + 1.0) / 2.0, 0.0, 0.0, 0.0));
 }
 
-fn get_vector_index(base_cell: vec2<u32>) -> u32 {
-    let cell = (base_cell + frequency) % frequency;
-    return u32(cell.x * frequency + cell.y);
+fn get_vector_index(cell: vec2<u32>) -> u32 {
+    let wrapped_cell = (cell + frequency) % frequency;
+    return wrapped_cell.x * frequency + wrapped_cell.y;
 }
 
-fn dot_grid_gradient(cell: vec2<u32>, relative_location: vec2<f32>, point_location: vec2<f32>) -> f32 {
-    let gradient = vectors[get_vector_index(cell)];
+fn dot_grid_gradient(i: vec2<u32>, f: vec2<f32>, corner: vec2<u32>) -> f32 {
+    let gradient = vectors[get_vector_index(i + corner)];
     
-    let distance_vector = relative_location - point_location;
+    let distance_vector = f - vec2<f32>(i + corner);
 
     return dot(gradient, distance_vector);
 }
