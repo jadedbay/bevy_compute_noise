@@ -11,13 +11,15 @@ use super::{ComputeNoise, GpuComputeNoise};
 pub struct Perlin2d {
     pub seed: u64,
     pub frequency: u32,
+    pub octaves: u32,
 }
 
 impl Perlin2d {
-    pub fn new(seed: u64, frequency: u32) -> Self {
+    pub fn new(seed: u64, frequency: u32, octaves: u32) -> Self {
         Self {
             seed,
             frequency,
+            octaves
         }
     }
 
@@ -26,7 +28,7 @@ impl Perlin2d {
 
         let mut rng = StdRng::seed_from_u64(self.seed);
 
-        for _ in 0..self.frequency * self.frequency {
+        for _ in 0..self.frequency * self.frequency * 4_u32.pow(self.octaves - 1) {
             let angle = rng.gen::<f32>() * 2.0 * std::f32::consts::PI;
             let vector = Vec2::new(angle.cos(), angle.sin());
             vectors.push(vector);
@@ -41,11 +43,12 @@ pub struct Perlin2dLabel;
 
 impl ComputeNoise for Perlin2d {
     type Gpu = GpuPerlin2d;
-    
+
     fn gpu_data(&self, _size: ComputeNoiseSize) -> Self::Gpu {
         Self::Gpu {
             vectors: self.generate_vectors(),
-            frequency: self.frequency
+            frequency: self.frequency,
+            octaves: self.octaves,
         }
     }
 
@@ -81,6 +84,11 @@ impl ComputeNoise for Perlin2d {
                         has_dynamic_offset: false,
                         min_binding_size: None,
                     },
+                    BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
                 )
             )
         )
@@ -91,6 +99,7 @@ impl ComputeNoise for Perlin2d {
 pub struct GpuPerlin2d {
     vectors: Vec<Vec2>,
     frequency: u32,
+    octaves: u32,
 }
 
 impl GpuComputeNoise for GpuPerlin2d {
@@ -102,11 +111,19 @@ impl GpuComputeNoise for GpuPerlin2d {
                 usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
             }
         );
-        
+
         let frequency_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
                 label: Some("perlin2d_frequency_buffer"),
                 contents: &bytemuck::cast_slice(&[self.frequency]),
+                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
+            }
+        );
+
+        let octaves_buffer = render_device.create_buffer_with_data(
+            &BufferInitDescriptor {
+                label: Some("perlin2d_octaves_buffer"),
+                contents: &bytemuck::cast_slice(&[self.octaves]),
                 usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
             }
         );
@@ -125,6 +142,12 @@ impl GpuComputeNoise for GpuPerlin2d {
                     offset: 0,
                     size: None,
                 },
-        )))
+                BufferBinding {
+                    buffer: &octaves_buffer,
+                    offset: 0,
+                    size: None,
+                },
+            ))
+        )
     }
 }
