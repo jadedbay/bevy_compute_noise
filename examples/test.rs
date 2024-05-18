@@ -48,7 +48,7 @@ fn setup(
         },
         ComputeNoiseComponent::<Perlin2d> {
             image: handle.clone(),
-            noise: Perlin2d::new(1, 5, 4),
+            noise: Perlin2d::new(5, 4),
         },
     ));
 

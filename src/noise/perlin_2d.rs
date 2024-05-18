@@ -1,6 +1,5 @@
 use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
 use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, InspectorOptions};
-use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::image::ComputeNoiseSize;
 
@@ -9,32 +8,16 @@ use super::{ComputeNoise, GpuComputeNoise};
 #[derive(Default, Clone, Reflect, InspectorOptions, PartialEq, Eq, Debug)]
 #[reflect(InspectorOptions)]
 pub struct Perlin2d {
-    pub seed: u64,
     pub frequency: u32,
     pub octaves: u32,
 }
 
 impl Perlin2d {
-    pub fn new(seed: u64, frequency: u32, octaves: u32) -> Self {
+    pub fn new(frequency: u32, octaves: u32) -> Self {
         Self {
-            seed,
             frequency,
             octaves
         }
-    }
-
-    fn generate_vectors(&self) -> Vec<Vec2> {
-        let mut vectors = Vec::new();
-
-        let mut rng = StdRng::seed_from_u64(self.seed);
-
-        for _ in 0..self.frequency * self.frequency * 4_u32.pow(self.octaves - 1) {
-            let angle = rng.gen::<f32>() * 2.0 * std::f32::consts::PI;
-            let vector = Vec2::new(angle.cos(), angle.sin());
-            vectors.push(vector);
-        }
-
-        vectors
     }
 }
 
@@ -46,7 +29,6 @@ impl ComputeNoise for Perlin2d {
 
     fn gpu_data(&self, _size: ComputeNoiseSize) -> Self::Gpu {
         Self::Gpu {
-            vectors: self.generate_vectors(),
             frequency: self.frequency,
             octaves: self.octaves,
         }
@@ -84,11 +66,6 @@ impl ComputeNoise for Perlin2d {
                         has_dynamic_offset: false,
                         min_binding_size: None,
                     },
-                    BindingType::Buffer {
-                        ty: BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
                 )
             )
         )
@@ -97,21 +74,12 @@ impl ComputeNoise for Perlin2d {
 
 #[derive(Clone, Default)]
 pub struct GpuPerlin2d {
-    vectors: Vec<Vec2>,
     frequency: u32,
     octaves: u32,
 }
 
 impl GpuComputeNoise for GpuPerlin2d {
     fn bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup {
-        let vector_buffer = render_device.create_buffer_with_data(
-            &BufferInitDescriptor {
-                label: Some("perlin2d_vector_buffer"),
-                contents: &bytemuck::cast_slice(self.vectors.as_slice()),
-                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
-            }
-        );
-
         let frequency_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
                 label: Some("perlin2d_frequency_buffer"),
@@ -132,11 +100,6 @@ impl GpuComputeNoise for GpuPerlin2d {
             Some("perlin2d_bind_group".into()),
             layout,
             &BindGroupEntries::sequential((
-                BufferBinding {
-                    buffer: &vector_buffer,
-                    offset: 0,
-                    size: None,
-                },
                 BufferBinding {
                     buffer: &frequency_buffer,
                     offset: 0,
