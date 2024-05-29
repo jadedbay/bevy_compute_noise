@@ -5,12 +5,12 @@ var texture: texture_storage_2d<r8unorm, write>;
 @group(0) @binding(1)
 var<storage, read> texture_size: vec2<f32>;
 
-@group(1) @binding(0)
-var<storage, read> seed: u32;
-@group(1) @binding(1)
-var<storage, read> frequency: u32;
-@group(1) @binding(2)
-var<storage, read> octaves: u32;
+struct NoiseParameters {
+    seed: u32,
+    frequency: u32,
+    octaves: u32,
+};
+@group(1) @binding(0) var<storage, read> parameters: NoiseParameters;
 
 @compute @workgroup_size(8, 8)
 fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
@@ -19,13 +19,13 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
         invocation_id.y
     );
 
-    let base_frequency = frequency;
-    var frequency = frequency;
+    let base_frequency = parameters.frequency;
+    var frequency = parameters.frequency;
     var amplitude = 1.0;
 
     var value = 0.0;
 
-    for (var index: u32 = 0; index < octaves; index++) {
+    for (var index: u32 = 0; index < parameters.octaves; index++) {
         let pixel = vec2<f32>(location) * f32(frequency) / texture_size;
         value += perlin(pixel, i32(frequency)) * amplitude;
 
@@ -55,7 +55,7 @@ fn perlin(pixel: vec2<f32>, frequency: i32) -> f32 {
 }
 
 fn dot_grid_gradient(i: vec2<i32>, f: vec2<f32>, frequency: i32) -> f32 {
-    let gradient = random_gradient((i % frequency) + 1);
+    let gradient = random_gradient(i % frequency + 1);
 
     let distance_vector = f - vec2<f32>(i);
 
@@ -69,8 +69,8 @@ fn interpolate_cubic(a0: f32, a1: f32, w: f32) -> f32 {
 fn random_gradient(i: vec2<i32>) -> vec2<f32> {
     let w = 32u;
     let s = w / 2u;
-    var a = u32(i.x) + seed;
-    var b = u32(i.y) + seed;
+    var a = u32(i.x) + parameters.seed;
+    var b = u32(i.y) + parameters.seed;
 
     a *= 3284157443u;
     b ^= (b << s) | (b >> (w - s));
