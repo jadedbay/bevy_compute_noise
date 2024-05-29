@@ -1,4 +1,5 @@
 #import bevy_pbr::utils::PI
+#import bevy_pbr::utils::random1D
 
 @group(0) @binding(0)
 var texture: texture_storage_2d<r8unorm, write>;
@@ -9,8 +10,8 @@ var<storage, read> texture_size: vec2<f32>;
 var<storage, read> frequency: u32;
 @group(1) @binding(1)
 var<storage, read> octaves: u32;
-
-const GRID_SIZE = 400u;
+@group(1) @binding(2)
+var<storage, read> seed: u32;
 
 @compute @workgroup_size(8, 8)
 fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
@@ -19,34 +20,34 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
         invocation_id.y
     );
 
+    let base_frequency = frequency;
     var frequency = frequency;
     var amplitude = 1.0;
 
     var value = 0.0;
 
-
-    for (var i: u32 = 0; i < octaves; i++) {
+    for (var index: u32 = 0; index < octaves; index++) {
         let pixel = vec2<f32>(location) * f32(frequency) / texture_size;
-        value += perlin(pixel) * amplitude;
+        value += perlin(pixel, i32(frequency)) * amplitude;
 
-        frequency = frequency * 2;
-        amplitude = amplitude / 2;
+        frequency *= 2u;
+        amplitude /= 2.0;
     }
 
     textureStore(texture, location, vec4<f32>((value + 1.0) / 2.0, 0.0, 0.0, 0.0));
 }
 
-fn perlin(pixel: vec2<f32>) -> f32 {
+fn perlin(pixel: vec2<f32>, frequency: i32) -> f32 {
     let f = pixel;
     let i = vec2<i32>(f);
     let s = f - vec2<f32>(i);
 
-    var n0 = dot_grid_gradient(i, f);
-    var n1 = dot_grid_gradient(i + vec2<i32>(1, 0), f);
+    var n0 = dot_grid_gradient(i, f, frequency);
+    var n1 = dot_grid_gradient(i + vec2<i32>(1, 0), f, frequency);
     let ix0 = interpolate_cubic(n0, n1, s.x);
 
-    n0 = dot_grid_gradient(i + vec2<i32>(0, 1), f);
-    n1 = dot_grid_gradient(i + vec2<i32>(1, 1), f);
+    n0 = dot_grid_gradient(i + vec2<i32>(0, 1), f, frequency);
+    n1 = dot_grid_gradient(i + vec2<i32>(1, 1), f, frequency);
     let ix1 = interpolate_cubic(n0, n1, s.x);
 
     let value = interpolate_cubic(ix0, ix1, s.y);
@@ -54,13 +55,8 @@ fn perlin(pixel: vec2<f32>) -> f32 {
     return value;
 }
 
-fn get_vector_index(cell: vec2<u32>) -> u32 {
-    let wrapped_cell = (cell + frequency) % frequency;
-    return wrapped_cell.x * frequency + wrapped_cell.y;
-}
-
-fn dot_grid_gradient(i: vec2<i32>, f: vec2<f32>) -> f32 {
-    let gradient = random_gradient(i);
+fn dot_grid_gradient(i: vec2<i32>, f: vec2<f32>, frequency: i32) -> f32 {
+    let gradient = random_gradient((i % frequency) + 1);
 
     let distance_vector = f - vec2<f32>(i);
 
@@ -74,8 +70,8 @@ fn interpolate_cubic(a0: f32, a1: f32, w: f32) -> f32 {
 fn random_gradient(i: vec2<i32>) -> vec2<f32> {
     let w = 32u;
     let s = w / 2u;
-    var a = u32(i.x);
-    var b  = u32(i.y);
+    var a = u32(i.x) + seed;
+    var b = u32(i.y) + seed;
 
     a *= 3284157443u;
     b ^= (b << s) | (b >> (w - s));

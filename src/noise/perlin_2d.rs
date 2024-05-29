@@ -10,13 +10,15 @@ use super::{ComputeNoise, GpuComputeNoise};
 pub struct Perlin2d {
     pub frequency: u32,
     pub octaves: u32,
+    pub seed: u32,
 }
 
 impl Perlin2d {
-    pub fn new(frequency: u32, octaves: u32) -> Self {
+    pub fn new(frequency: u32, octaves: u32, seed: u32) -> Self {
         Self {
             frequency,
-            octaves
+            octaves,
+            seed
         }
     }
 }
@@ -31,6 +33,7 @@ impl ComputeNoise for Perlin2d {
         Self::Gpu {
             frequency: self.frequency,
             octaves: self.octaves,
+            seed: self.seed,
         }
     }
 
@@ -66,6 +69,11 @@ impl ComputeNoise for Perlin2d {
                         has_dynamic_offset: false,
                         min_binding_size: None,
                     },
+                    BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
                 )
             )
         )
@@ -76,6 +84,7 @@ impl ComputeNoise for Perlin2d {
 pub struct GpuPerlin2d {
     frequency: u32,
     octaves: u32,
+    seed: u32,
 }
 
 impl GpuComputeNoise for GpuPerlin2d {
@@ -96,6 +105,14 @@ impl GpuComputeNoise for GpuPerlin2d {
             }
         );
 
+        let seed_buffer = render_device.create_buffer_with_data(
+            &BufferInitDescriptor {
+                label: Some("perlin2d_octaves_buffer"),
+                contents: &bytemuck::cast_slice(&[self.seed]),
+                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
+            }
+        );
+
         render_device.create_bind_group(
             Some("perlin2d_bind_group".into()),
             layout,
@@ -107,6 +124,11 @@ impl GpuComputeNoise for GpuPerlin2d {
                 },
                 BufferBinding {
                     buffer: &octaves_buffer,
+                    offset: 0,
+                    size: None,
+                },
+                BufferBinding {
+                    buffer: &seed_buffer,
                     offset: 0,
                     size: None,
                 },
