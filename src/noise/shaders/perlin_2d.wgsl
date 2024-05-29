@@ -1,5 +1,4 @@
-#import bevy_pbr::utils::PI
-#import bevy_pbr::utils::random1D
+const PI: f32 = 3.141592653589793;
 
 @group(0) @binding(0)
 var texture: texture_storage_2d<r8unorm, write>;
