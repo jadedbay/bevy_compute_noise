@@ -1,4 +1,6 @@
 # bevy_compute_noise
+[![crates.io](https://img.shields.io/crates/v/bevy_compute_noise.svg)](https://crates.io/crates/bevy_compute_noise)
+[![Doc](https://docs.rs/bevy_compute_noise/badge.svg)](https://docs.rs/bevy_compute_noise)
 
 A plugin for `bevy 0.13.2` for generating tilable 2D/3D noise textures using compute shaders.
 
