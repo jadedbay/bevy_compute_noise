@@ -2,6 +2,8 @@
 
 A plugin for `bevy 0.13.2` for generating tilable 2D/3D noise textures using compute shaders.
 
+<img width="945" alt="bevy_compute_noise" src="https://github.com/jadedbay/bevy_compute_noise/assets/86005828/3d987e54-5846-47e0-ad97-262065b48596">
+
 ## Usage
 
 Add the `bevy_compute_noise` dependency to `Cargo.toml`:
