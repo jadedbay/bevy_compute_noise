@@ -8,17 +8,17 @@ use super::{ComputeNoise, GpuComputeNoise};
 #[derive(Default, Clone, Reflect, InspectorOptions, PartialEq, Eq, Debug)]
 #[reflect(InspectorOptions)]
 pub struct Perlin2d {
+    pub seed: u32,
     pub frequency: u32,
     pub octaves: u32,
-    pub seed: u32,
 }
 
 impl Perlin2d {
-    pub fn new(frequency: u32, octaves: u32, seed: u32) -> Self {
+    pub fn new(seed: u32, frequency: u32, octaves: u32) -> Self {
         Self {
+            seed,
             frequency,
             octaves,
-            seed
         }
     }
 }
@@ -31,9 +31,9 @@ impl ComputeNoise for Perlin2d {
 
     fn gpu_data(&self, _size: ComputeNoiseSize) -> Self::Gpu {
         Self::Gpu {
+            seed: self.seed,
             frequency: self.frequency,
             octaves: self.octaves,
-            seed: self.seed,
         }
     }
 
@@ -82,13 +82,21 @@ impl ComputeNoise for Perlin2d {
 
 #[derive(Clone, Default)]
 pub struct GpuPerlin2d {
+    seed: u32,
     frequency: u32,
     octaves: u32,
-    seed: u32,
 }
 
 impl GpuComputeNoise for GpuPerlin2d {
     fn bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup {
+        let seed_buffer = render_device.create_buffer_with_data(
+            &BufferInitDescriptor {
+                label: Some("perlin2d_seed_buffer"),
+                contents: &bytemuck::cast_slice(&[self.seed]),
+                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
+            }
+        );
+
         let frequency_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
                 label: Some("perlin2d_frequency_buffer"),
@@ -105,18 +113,15 @@ impl GpuComputeNoise for GpuPerlin2d {
             }
         );
 
-        let seed_buffer = render_device.create_buffer_with_data(
-            &BufferInitDescriptor {
-                label: Some("perlin2d_octaves_buffer"),
-                contents: &bytemuck::cast_slice(&[self.seed]),
-                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
-            }
-        );
-
         render_device.create_bind_group(
             Some("perlin2d_bind_group".into()),
             layout,
             &BindGroupEntries::sequential((
+                BufferBinding {
+                    buffer: &seed_buffer,
+                    offset: 0,
+                    size: None,
+                },
                 BufferBinding {
                     buffer: &frequency_buffer,
                     offset: 0,
@@ -124,11 +129,6 @@ impl GpuComputeNoise for GpuPerlin2d {
                 },
                 BufferBinding {
                     buffer: &octaves_buffer,
-                    offset: 0,
-                    size: None,
-                },
-                BufferBinding {
-                    buffer: &seed_buffer,
                     offset: 0,
                     size: None,
                 },

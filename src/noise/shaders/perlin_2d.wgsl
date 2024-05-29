@@ -7,11 +7,11 @@ var texture: texture_storage_2d<r8unorm, write>;
 var<storage, read> texture_size: vec2<f32>;
 
 @group(1) @binding(0)
-var<storage, read> frequency: u32;
-@group(1) @binding(1)
-var<storage, read> octaves: u32;
-@group(1) @binding(2)
 var<storage, read> seed: u32;
+@group(1) @binding(1)
+var<storage, read> frequency: u32;
+@group(1) @binding(2)
+var<storage, read> octaves: u32;
 
 @compute @workgroup_size(8, 8)
 fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {

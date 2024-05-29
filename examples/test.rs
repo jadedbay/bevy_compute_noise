@@ -28,6 +28,7 @@ fn setup(
     });
     let handle = images.add(image);
 
+
     let mut quad = Rectangle::default().mesh();
     if let Some(uvs) = quad.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
         if let VertexAttributeValues::Float32x2(uvs) = uvs {
@@ -48,7 +49,7 @@ fn setup(
         },
         ComputeNoiseComponent::<Perlin2d> {
             image: handle.clone(),
-            noise: Perlin2d::new(5, 4, 0),
+            noise: Perlin2d::new(0, 5, 4),
         },
     ));
 

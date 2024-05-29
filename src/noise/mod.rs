@@ -1,7 +1,7 @@
 use bevy::{ecs::component::Component, prelude::*, reflect::Reflect, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupLayout, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, InspectorOptions};
 
-use crate::{image::ComputeNoiseSize, readback::ComputeNoiseReadback, ComputeNoiseQueue};
+use crate::{image::ComputeNoiseSize, ComputeNoiseQueue};
 
 pub mod worley_2d;
 pub mod worley_3d;
@@ -34,35 +34,14 @@ pub struct ComputeNoiseComponent<T: ComputeNoise> {
 
 pub fn update_noise<T: ComputeNoise>(
     mut noise_queue: ResMut<ComputeNoiseQueue<T>>,
-    mut readback: Option<ResMut<ComputeNoiseReadback>>,
     mut images: ResMut<Assets<Image>>,
-    query: Query<(&ComputeNoiseComponent<T>, Option<&ComputeNoiseAutoReadback>), Changed<ComputeNoiseComponent<T>>>,
+    query: Query<&ComputeNoiseComponent<T>, Changed<ComputeNoiseComponent<T>>>,
 ) {
-    for (noise, auto_readback) in query.iter() {
+    for noise in query.iter() {
         noise_queue.add_image(
             &mut images,
             noise.image.clone(), 
             noise.noise.clone(), 
         );
-        if auto_readback.is_some() {
-            readback.as_mut()
-                .expect("ComputeNoiseReadback resource does not exist, have you added the ComputeNoiseReadbackPlugin?")
-                .queue(&mut images, noise.image.clone());
-        }
-    }
-}
-
-#[derive(Component)]
-pub struct ComputeNoiseAutoReadback;
-
-pub fn auto_readback_image<T: ComputeNoise>(
-    mut images: ResMut<Assets<Image>>,
-    readback: Res<ComputeNoiseReadback>,
-    query: Query<&ComputeNoiseComponent<T>, With<ComputeNoiseAutoReadback>>,
-) {
-    for noise in query.iter() {
-        if readback.senders.contains_key(&noise.image) {
-            readback.receive(&mut images, noise.image.clone());
-        }
     }
 }
