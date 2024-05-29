@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-keywords = ["bevy", "noise", "perlin", "worley", "2d", "3d", "shaders"]
+keywords = ["bevy", "noise", "perlin", "worley", "shaders"]
 repository = "https://github.com/jadedbay/bevy_compute_noise"
 description = "A Bevy plugin for generating tilable 2D/3D noise textures using compute shaders"
 
