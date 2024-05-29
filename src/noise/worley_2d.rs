@@ -11,13 +11,15 @@ use super::{ComputeNoise, GpuComputeNoise};
 pub struct Worley2d {
     pub seed: u64,
     pub cells: u32,
+    pub invert: bool,
 }
 
 impl Worley2d {
-    pub fn new(seed: u64, cells: u32) -> Self {
+    pub fn new(seed: u64, cells: u32, invert: bool) -> Self {
         Self {
             seed,
             cells,
+            invert,
         }
     }
 
@@ -52,6 +54,7 @@ impl ComputeNoise for Worley2d {
         Self::Gpu {
             cell_count: self.cells,
             points: self.generate_points(size.width(), size.height()),
+            invert: self.invert as u32,
         }
     }
 
@@ -97,6 +100,7 @@ impl ComputeNoise for Worley2d {
 pub struct GpuWorley2d {
     cell_count: u32,
     points: Vec<Vec2>,
+    invert: u32,
 }
 
 impl GpuComputeNoise for GpuWorley2d {
@@ -109,10 +113,10 @@ impl GpuComputeNoise for GpuWorley2d {
             }
         );
         
-        let cell_count_buffer = render_device.create_buffer_with_data(
+        let worley_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
                 label: Some("worley2d_cell_count_buffer"),
-                contents: &bytemuck::cast_slice(&[self.cell_count]),
+                contents: &bytemuck::cast_slice(&[self.cell_count, self.invert]),
                 usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
             }
         );
@@ -127,7 +131,7 @@ impl GpuComputeNoise for GpuWorley2d {
                     size: None,
                 },
                 BufferBinding {
-                    buffer: &cell_count_buffer,
+                    buffer: &worley_buffer,
                     offset: 0,
                     size: None,
                 },

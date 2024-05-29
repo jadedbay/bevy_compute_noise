@@ -11,13 +11,15 @@ use super::{ComputeNoise, GpuComputeNoise};
 pub struct Worley3d {
     pub seed: u64,
     pub cells: u32,
+    pub invert: bool,
 }
 
 impl Worley3d {
-    pub fn new(seed: u64, cells: u32) -> Self {
+    pub fn new(seed: u64, cells: u32, invert: bool) -> Self {
         Self {
             seed,
             cells,
+            invert,
         }
     }
 
@@ -63,6 +65,7 @@ impl ComputeNoise for Worley3d {
         Self::Gpu {
             cell_count: self.cells,
             points: self.generate_points(size.width(), size.height(), size.depth()),
+            invert: self.invert as u32,
         }
     }
 
@@ -108,6 +111,7 @@ impl ComputeNoise for Worley3d {
 pub struct GpuWorley3d {
     cell_count: u32,
     points: Vec<Vec4>,
+    invert: u32,
 }
 
 impl GpuComputeNoise for GpuWorley3d {
@@ -120,10 +124,10 @@ impl GpuComputeNoise for GpuWorley3d {
             }
         );
         
-        let cell_count_buffer = render_device.create_buffer_with_data(
+        let worley_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
-                label: Some("worley3d_cell_count_buffer"),
-                contents: &bytemuck::cast_slice(&[self.cell_count]),
+                label: Some("worley3d_buffer"),
+                contents: &bytemuck::cast_slice(&[self.cell_count, self.invert]),
                 usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
             }
         );
@@ -138,7 +142,7 @@ impl GpuComputeNoise for GpuWorley3d {
                     size: None,
                 },
                 BufferBinding {
-                    buffer: &cell_count_buffer,
+                    buffer: &worley_buffer,
                     offset: 0,
                     size: None,
                 },

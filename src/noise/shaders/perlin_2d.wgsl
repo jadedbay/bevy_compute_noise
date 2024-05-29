@@ -9,6 +9,7 @@ struct NoiseParameters {
     seed: u32,
     frequency: u32,
     octaves: u32,
+    invert: u32,
 };
 @group(1) @binding(0) var<storage, read> parameters: NoiseParameters;
 
@@ -33,7 +34,13 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
         amplitude /= 2.0;
     }
 
-    textureStore(texture, location, vec4<f32>((value + 1.0) / 2.0, 0.0, 0.0, 0.0));
+    value = (value + 1.0) / 2.0;
+
+    if (parameters.invert != 0u) {
+        value = 1.0 - value;
+    }
+
+    textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 0.0));
 }
 
 fn perlin(pixel: vec2<f32>, frequency: i32) -> f32 {

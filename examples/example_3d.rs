@@ -30,7 +30,7 @@ fn setup(
     });
     let handle = images.add(image);
     
-    worley3d_queue.add_image(&mut images, handle.clone(), Worley3d::new(1, 4));
+    worley3d_queue.add_image(&mut images, handle.clone(), Worley3d::new(1, 4, false));
 
     let mut quad = Rectangle::default().mesh();
     if let Some(uvs) = quad.attribute_mut(Mesh::ATTRIBUTE_UV_0) {

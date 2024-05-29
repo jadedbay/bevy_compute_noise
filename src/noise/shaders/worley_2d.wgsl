@@ -5,8 +5,13 @@ var<storage, read> texture_size: vec2<f32>;
 
 @group(1) @binding(0)
 var<storage, read> points: array<vec2<f32>>;
+
+struct NoiseParameters {
+    cell_count: u32,
+    invert: u32,
+};
 @group(1) @binding(1)
-var<storage, read> cell_count: u32;
+var<storage, read> parameters: NoiseParameters;
 
 const INFINITY = 3.402823e+38;
 
@@ -17,7 +22,7 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
         invocation_id.y
     );
 
-    let cell_size = texture_size / f32(cell_count);
+    let cell_size = texture_size / f32(parameters.cell_count);
     let cell = vec2<u32>(vec2<f32>(location) / cell_size);
 
     var distance = INFINITY;
@@ -34,13 +39,17 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
         }
     }
 
-    let normalized_distance = 1.0 - (distance / distance(vec2<f32>(0.0, 0.0), cell_size));
+    var normalized_distance = distance / distance(vec2<f32>(0.0, 0.0), cell_size);
+
+    if (parameters.invert != 0u) {
+        normalized_distance = 1.0 - normalized_distance;
+    }
 
     textureStore(texture, location, vec4<f32>(normalized_distance, 0.0, 0.0, 0.0));
 }
 
 fn get_point(base_cell: vec2<i32>) -> vec3<f32> {
-    let cell_count = i32(cell_count);
+    let cell_count = i32(parameters.cell_count);
 
     var cell = (base_cell + cell_count) % cell_count;
     var cell_offset = vec2<f32>(

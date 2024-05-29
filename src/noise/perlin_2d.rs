@@ -11,14 +11,16 @@ pub struct Perlin2d {
     pub seed: u32,
     pub frequency: u32,
     pub octaves: u32,
+    pub invert: bool,
 }
 
 impl Perlin2d {
-    pub fn new(seed: u32, frequency: u32, octaves: u32) -> Self {
+    pub fn new(seed: u32, frequency: u32, octaves: u32, invert: bool) -> Self {
         Self {
             seed,
             frequency,
             octaves,
+            invert
         }
     }
 }
@@ -34,6 +36,7 @@ impl ComputeNoise for Perlin2d {
             seed: self.seed,
             frequency: self.frequency,
             octaves: self.octaves,
+            invert: self.invert as u32,
         }
     }
 
@@ -75,6 +78,7 @@ pub struct GpuPerlin2d {
     seed: u32,
     frequency: u32,
     octaves: u32,
+    invert: u32,
 }
 
 impl GpuComputeNoise for GpuPerlin2d {
@@ -82,7 +86,7 @@ impl GpuComputeNoise for GpuPerlin2d {
         let perlin_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
                 label: Some("perlin2d_buffer"),
-                contents: &bytemuck::cast_slice(&[self.seed, self.frequency, self.octaves]),
+                contents: &bytemuck::cast_slice(&[self.seed, self.frequency, self.octaves, self.invert]),
                 usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
             }
         );
