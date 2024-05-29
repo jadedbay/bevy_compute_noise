@@ -7,6 +7,7 @@ license = "MIT OR Apache-2.0"
 keywords = ["bevy", "noise", "perlin", "worley", "shaders"]
 repository = "https://github.com/jadedbay/bevy_compute_noise"
 description = "A Bevy plugin for generating tilable 2D/3D noise textures using compute shaders"
+documentation = "https://docs.rs/bevy_compute_noise/latest/bevy_compute_noise/"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
