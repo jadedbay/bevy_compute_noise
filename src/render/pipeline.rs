@@ -19,10 +19,10 @@ impl<T: ComputeNoise> FromWorld for ComputeNoisePipeline<T> {
         let texture_storage = match T::texture_dimension() {
             TextureDimension::D3 => BindingType::StorageTexture {
                 access: StorageTextureAccess::WriteOnly,
-                format: TextureFormat::R8Unorm,
+                format: TextureFormat::Rgba8Unorm,
                 view_dimension: TextureViewDimension::D3,
             }.into_bind_group_layout_entry_builder(),
-            _ => texture_storage_2d(TextureFormat::R8Unorm, StorageTextureAccess::WriteOnly),
+            _ => texture_storage_2d(TextureFormat::Rgba8Unorm, StorageTextureAccess::WriteOnly),
         };
 
         let image_layout = render_device.create_bind_group_layout(

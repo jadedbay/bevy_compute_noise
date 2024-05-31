@@ -8,8 +8,8 @@ impl ComputeNoiseImage {
             Image::new_fill(
                 size.into(),
                 size.into(),
-                &[0],
-                TextureFormat::R8Unorm,
+                &[0, 0, 0, 0],
+                TextureFormat::Rgba8Unorm,
                 RenderAssetUsages::all(),
             );
 

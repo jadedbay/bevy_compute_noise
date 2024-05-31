@@ -6,8 +6,8 @@ use crate::image::ComputeNoiseSize;
 
 use super::{ComputeNoise, GpuComputeNoise};
 
-#[derive(Default, Clone, Reflect, InspectorOptions, PartialEq, Eq, Debug)]
-#[reflect(InspectorOptions)]
+#[derive(Clone, Reflect, PartialEq, Eq, Debug)]
+#[reflect(Default)]
 pub struct Worley3d {
     pub seed: u64,
     pub cells: u32,
@@ -52,6 +52,16 @@ impl Worley3d {
         }
 
         random_points
+    }
+}
+
+impl Default for Worley3d {
+    fn default() -> Self {
+        Self {
+            seed: 0,
+            cells: 5,
+            invert: false,
+        }
     }
 }
 

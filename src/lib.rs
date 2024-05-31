@@ -38,6 +38,7 @@ impl<T: ComputeNoise> Plugin for ComputeNoisePlugin<T> {
         T::embed_asset(app);
 
         app
+            .register_type::<T>()
             .register_type::<ComputeNoiseComponent<T>>()
             .init_resource::<ComputeNoiseQueue<T>>()
             .add_systems(Update, update_noise::<T>);

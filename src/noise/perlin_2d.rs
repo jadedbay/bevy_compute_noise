@@ -5,8 +5,8 @@ use crate::image::ComputeNoiseSize;
 
 use super::{ComputeNoise, GpuComputeNoise};
 
-#[derive(Default, Clone, Reflect, InspectorOptions, PartialEq, Eq, Debug)]
-#[reflect(InspectorOptions)]
+#[derive(Clone, Reflect, PartialEq, Eq, Debug)]
+#[reflect(Default)]
 pub struct Perlin2d {
     pub seed: u32,
     pub frequency: u32,
@@ -21,6 +21,17 @@ impl Perlin2d {
             frequency,
             octaves,
             invert
+        }
+    }
+}
+
+impl Default for Perlin2d {
+    fn default() -> Self {
+        Self {
+            seed: 0,
+            frequency: 5,
+            octaves: 4,
+            invert: false,
         }
     }
 }

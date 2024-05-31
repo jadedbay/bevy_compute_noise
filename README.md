@@ -73,6 +73,7 @@ fn setup(
 ## TODO
 - Add more noise types.
 - Allow combination of noise.
+- Allow writing into specific texture channels.
 
 ## Readback
 If you need to readback the noise texture to the CPU, you can clone the readback branch and view the example in there. I'm not completely happy with the implementation and it's better to just generate the noise on the CPU using another crate anyway.

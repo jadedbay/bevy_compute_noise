@@ -1,4 +1,4 @@
-use bevy::{ecs::component::Component, prelude::*, reflect::Reflect, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupLayout, ShaderRef, TextureDimension}, renderer::RenderDevice}};
+use bevy::{ecs::component::Component, prelude::*, reflect::{GetTypeRegistration, Reflect}, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupLayout, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, InspectorOptions};
 
 use crate::{image::ComputeNoiseSize, ComputeNoiseQueue};
@@ -11,7 +11,7 @@ pub use worley_2d::Worley2d;
 pub use worley_3d::Worley3d;
 pub use perlin_2d::Perlin2d;
 
-pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + FromReflect {
+pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + FromReflect + GetTypeRegistration {
     type Gpu: GpuComputeNoise;
     
     fn gpu_data(&self, size: ComputeNoiseSize) -> Self::Gpu;

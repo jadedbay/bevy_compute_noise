@@ -1,5 +1,5 @@
 @group(0) @binding(0)
-var texture: texture_storage_3d<r8unorm, write>;
+var texture: texture_storage_3d<rgba8unorm, write>;
 @group(0) @binding(1)
 var<storage, read> texture_size: vec3<f32>;
 
@@ -26,7 +26,7 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     let cell_size = texture_size / f32(parameters.cell_count);
     let cell = vec3<u32>(vec3<f32>(location) / cell_size);
 
-    var distance = INFINITY;
+    var min_distance = INFINITY;
     for (var x: i32 = -1; x <= 1; x++) {
         for (var y: i32 = -1; y <= 1; y++) {
             for (var z: i32 = -1; z <= 1; z++) {
@@ -35,14 +35,14 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
                 let cell_offset = vec3<f32>(point_data.y, point_data.z, point_data.w);
 
                 let current_distance = distance(vec3<f32>(location), points[index].xyz + cell_offset);
-                if (current_distance < distance) {
-                    distance = current_distance;
+                if (current_distance < min_distance) {
+                    min_distance = current_distance;
                 }
             }
         }
     }
 
-    var normalized_distance = distance / distance(vec3<f32>(0.0, 0.0, 0.0), cell_size);
+    var normalized_distance = min_distance / distance(vec3<f32>(0.0, 0.0, 0.0), cell_size);
 
     if (parameters.invert != 0u) {
         normalized_distance = 1.0 - normalized_distance;

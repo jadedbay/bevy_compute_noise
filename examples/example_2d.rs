@@ -18,7 +18,7 @@ fn setup(
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ImageMaterial>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(1024, 1024));
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
@@ -42,8 +42,9 @@ fn setup(
         MaterialMesh2dBundle {
             mesh: meshes.add(quad).into(),
             transform: Transform::default().with_scale(Vec3::splat(512.)),
-            material: materials.add(ImageMaterial {
-                image: handle.clone(),
+            material: materials.add(ColorMaterial {
+                texture: Some(handle.clone()),
+                ..default()
             }),
             ..default()
         },
@@ -65,7 +66,7 @@ struct ImageMaterial {
 }
 
 impl Material2d for ImageMaterial {
-    fn fragment_shader() -> ShaderRef {
-        "shaders/image_shader.wgsl".into()
-    }
+    // fn fragment_shader() -> ShaderRef {
+    //     "shaders/image_shader.wgsl".into()
+    // }
 }

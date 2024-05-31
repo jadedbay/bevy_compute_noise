@@ -1,7 +1,7 @@
 const PI: f32 = 3.141592653589793;
 
 @group(0) @binding(0)
-var texture: texture_storage_2d<r8unorm, write>;
+var texture: texture_storage_2d<rgba8unorm, write>;
 @group(0) @binding(1)
 var<storage, read> texture_size: vec2<f32>;
 
@@ -40,7 +40,7 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
         value = 1.0 - value;
     }
 
-    textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 0.0));
+    textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 1.0));
 }
 
 fn perlin(pixel: vec2<f32>, frequency: i32) -> f32 {
