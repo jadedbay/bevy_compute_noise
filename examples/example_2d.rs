@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}, texture::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
 use bevy_compute_noise::prelude::*;
-use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, quick::WorldInspectorPlugin, InspectorOptions};
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 fn main() {
     App::new()
@@ -18,7 +18,7 @@ fn setup(
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut materials: ResMut<Assets<ImageMaterial>>,
 ) {
     let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(1024, 1024));
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
@@ -42,9 +42,8 @@ fn setup(
         MaterialMesh2dBundle {
             mesh: meshes.add(quad).into(),
             transform: Transform::default().with_scale(Vec3::splat(512.)),
-            material: materials.add(ColorMaterial {
-                texture: Some(handle.clone()),
-                ..default()
+            material: materials.add(ImageMaterial {
+                image: handle.clone(),
             }),
             ..default()
         },
@@ -57,8 +56,7 @@ fn setup(
     commands.spawn(Camera2dBundle::default());
 }
 
-#[derive(Asset, AsBindGroup, Debug, Clone, InspectorOptions, Reflect)]
-#[reflect(InspectorOptions)]
+#[derive(Asset, AsBindGroup, Debug, Clone, Reflect)]
 struct ImageMaterial {
     #[texture(101)]
     #[sampler(102)]
@@ -66,7 +64,7 @@ struct ImageMaterial {
 }
 
 impl Material2d for ImageMaterial {
-    // fn fragment_shader() -> ShaderRef {
-    //     "shaders/image_shader.wgsl".into()
-    // }
+    fn fragment_shader() -> ShaderRef {
+        "shaders/image_shader.wgsl".into()
+    }
 }

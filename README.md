@@ -12,7 +12,7 @@ Add the `bevy_compute_noise` dependency to `Cargo.toml`:
 
 ```toml
 [dependencies]
-bevy_compute_noise = "0.1.0"
+bevy_compute_noise = "0.1.1"
 ```
 
 ### Generate noise texture

@@ -1,5 +1,4 @@
 use bevy::{ecs::component::Component, prelude::*, reflect::{GetTypeRegistration, Reflect}, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupLayout, ShaderRef, TextureDimension}, renderer::RenderDevice}};
-use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, InspectorOptions};
 
 use crate::{image::ComputeNoiseSize, ComputeNoiseQueue};
 
@@ -25,8 +24,7 @@ pub trait GpuComputeNoise: Sync + Send + 'static + Default + Clone {
     fn bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup;
 }
 
-#[derive(Component, Reflect, InspectorOptions)]
-#[reflect(InspectorOptions)]
+#[derive(Component, Reflect)]
 pub struct ComputeNoiseComponent<T: ComputeNoise> {
     pub image: Handle<Image>,
     pub noise: T,

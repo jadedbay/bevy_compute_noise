@@ -1,13 +1,12 @@
 use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
-use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, InspectorOptions};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::image::ComputeNoiseSize;
 
 use super::{ComputeNoise, GpuComputeNoise};
 
-#[derive(Clone, Reflect, InspectorOptions, PartialEq, Eq, Debug)]
-#[reflect(Default, InspectorOptions)]
+#[derive(Clone, Reflect, PartialEq, Eq, Debug)]
+#[reflect(Default)]
 pub struct Worley2d {
     pub seed: u64,
     pub cells: u32,
