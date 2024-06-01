@@ -19,7 +19,7 @@ rand = "0.8.5"
 [dependencies.bevy]
 version = "0.13.2"
 default-features = false
-features = [ "bevy_render", "bevy_asset" ]
+features = [ "bevy_render" ]
 
 [dev-dependencies]
 bevy-inspector-egui = "0.24.0"
