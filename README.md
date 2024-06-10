@@ -15,7 +15,7 @@ Add the `bevy_compute_noise` dependency to `Cargo.toml`:
 bevy_compute_noise = "0.1.1"
 ```
 
-### Generate noise texture
+### Add Noise Plugin
 ```rust
 use bevy_compute_noise::prelude::*;
 
@@ -25,7 +25,7 @@ App::default()
     .run();
 ```
 
-### Queue noise generation
+### Queue Noise Generation
 ```rust
 fn setup(
     mut images: ResMut<Assets<Image>>,
