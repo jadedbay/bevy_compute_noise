@@ -22,7 +22,7 @@ fn setup(
     mut materials: ResMut<Assets<Image3dMaterial>>,
     mut worley3d_queue: ResMut<ComputeNoiseQueue<Worley3d>>,
 ) {
-    let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D3(128, 128, 128));
+    let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D3(128, 128, 128), ComputeNoiseFormat::Rgba);
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
         address_mode_u: ImageAddressMode::Repeat,
         address_mode_v: ImageAddressMode::Repeat,

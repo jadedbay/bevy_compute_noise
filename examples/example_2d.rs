@@ -20,7 +20,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ImageMaterial>>,
 ) {
-    let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(1024, 1024));
+    let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(1024, 1024), ComputeNoiseFormat::Rgba);
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
         address_mode_u: ImageAddressMode::Repeat,
         address_mode_v: ImageAddressMode::Repeat,

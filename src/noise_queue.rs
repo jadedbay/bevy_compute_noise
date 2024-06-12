@@ -6,7 +6,7 @@ use bevy::{
     }
 };
 
-use crate::{image::ComputeNoiseSize, noise::ComputeNoise, prelude::ComputeNoiseImage};
+use crate::{image::{ComputeNoiseFormat, ComputeNoiseSize}, noise::ComputeNoise, prelude::ComputeNoiseImage};
 
 #[derive(Resource, Clone, ExtractResource, Default)]
 pub struct ComputeNoiseQueue<T: ComputeNoise> {
@@ -18,9 +18,10 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
         &mut self,
         images: &mut Assets<Image>,
         size: ComputeNoiseSize,
+        format: ComputeNoiseFormat,
         noise: T,
     ) -> Handle<Image> {
-        let image = images.add(ComputeNoiseImage::create_image(size));
+        let image = images.add(ComputeNoiseImage::create_image(size, format));
         if TextureDimension::from(size) == T::texture_dimension() {
             self.queue.push((image.clone(), noise.gpu_data(size), size));
         } else {
