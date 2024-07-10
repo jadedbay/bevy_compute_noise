@@ -56,7 +56,7 @@ impl<T: ComputeNoise> Plugin for ComputeNoisePlugin<T> {
                 ),
             );
 
-        let mut render_graph = render_app.world.resource_mut::<RenderGraph>();
+        let mut render_graph = render_app.world_mut().resource_mut::<RenderGraph>();
         render_graph.add_node(T::render_label(), ComputeNoiseNode::<T>::default());
     }
 

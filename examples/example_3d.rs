@@ -29,10 +29,10 @@ fn setup(
         ..default()
     });
     let handle = images.add(image);
-    
+
     worley3d_queue.add_image(&mut images, handle.clone(), Worley3d::new(1, 4, false));
 
-    let mut quad = Rectangle::default().mesh();
+    let mut quad = Rectangle::default().mesh().build();
     if let Some(uvs) = quad.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
         if let VertexAttributeValues::Float32x2(uvs) = uvs {
             for uv in uvs.iter_mut() {

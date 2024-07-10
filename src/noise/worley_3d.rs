@@ -40,9 +40,9 @@ impl Worley3d {
                     let z_range = (z as f32 * cell_size.2)..((z + 1) as f32 * cell_size.2);
                     random_points.push(
                         Vec4::new(
-                            rng.gen_range(x_range), 
-                            rng.gen_range(y_range), 
-                            rng.gen_range(z_range), 
+                            rng.gen_range(x_range),
+                            rng.gen_range(y_range),
+                            rng.gen_range(z_range),
                             0.0
                         )
                     );
@@ -132,7 +132,7 @@ impl GpuComputeNoise for GpuWorley3d {
                 usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
             }
         );
-        
+
         let worley_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
                 label: Some("worley3d_buffer"),

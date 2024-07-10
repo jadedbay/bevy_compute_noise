@@ -5,6 +5,7 @@ use bevy::{
         render_graph::RenderGraph,
         render_resource::{BindGroupEntries, BufferBinding, BufferInitDescriptor, BufferUsages},
         renderer::RenderDevice,
+        texture::GpuImage,
     },
 };
 
@@ -14,14 +15,14 @@ use crate::{
 
 pub fn prepare_bind_groups<T: ComputeNoise>(
     pipeline: Res<ComputeNoisePipeline<T>>,
-    gpu_images: Res<RenderAssets<Image>>,
+    gpu_images: Res<RenderAssets<GpuImage>>,
     compute_noise: Res<ComputeNoiseQueue<T>>,
     render_device: Res<RenderDevice>,
     mut compute_noise_render_queue: ResMut<ComputeNoiseRenderQueue<T>>,
 ) {
     let mut bind_groups: Vec<ComputeNoiseBindGroups> = Vec::new();
     for (image_handle, noise, size) in compute_noise.queue.iter() {
-        if let Some(image) = gpu_images.get(image_handle.clone()) {
+        if let Some(image) = gpu_images.get(image_handle) {
             let size_data = match size {
                 ComputeNoiseSize::D2(width, height) => vec![*width as f32, *height as f32],
                 ComputeNoiseSize::D3(width, height, depth) => {

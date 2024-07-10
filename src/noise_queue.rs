@@ -37,7 +37,7 @@ impl<T: ComputeNoise> ComputeNoiseQueue<T> {
         image: Handle<Image>,
         noise: T,
     ) -> Handle<Image> {
-        let size: ComputeNoiseSize = images.get(image.clone()).unwrap().texture_descriptor.size.into();
+        let size: ComputeNoiseSize = images.get(&image).unwrap().texture_descriptor.size.into();
         if TextureDimension::from(size) == T::texture_dimension() {
             self.queue.push((image.clone(), noise.gpu_data(size), size));
         } else {

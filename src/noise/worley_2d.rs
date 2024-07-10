@@ -24,7 +24,7 @@ impl Worley2d {
 
     fn generate_points(&self, width: u32, height: u32) -> Vec<Vec2> {
         let cell_size = (
-            width as f32 / self.cells as f32, 
+            width as f32 / self.cells as f32,
             height as f32 / self.cells as f32
         );
 
@@ -58,7 +58,7 @@ pub struct Worley2dLabel;
 
 impl ComputeNoise for Worley2d {
     type Gpu = GpuWorley2d;
-    
+
     fn gpu_data(&self, size: ComputeNoiseSize) -> Self::Gpu {
         Self::Gpu {
             cell_count: self.cells,
@@ -121,7 +121,7 @@ impl GpuComputeNoise for GpuWorley2d {
                 usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
             }
         );
-        
+
         let worley_buffer = render_device.create_buffer_with_data(
             &BufferInitDescriptor {
                 label: Some("worley2d_cell_count_buffer"),

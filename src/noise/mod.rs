@@ -12,7 +12,7 @@ pub use perlin_2d::Perlin2d;
 
 pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + FromReflect + GetTypeRegistration {
     type Gpu: GpuComputeNoise;
-    
+
     fn gpu_data(&self, size: ComputeNoiseSize) -> Self::Gpu;
     fn shader() -> ShaderRef;
     fn embed_asset(app: &mut App);
@@ -38,8 +38,8 @@ pub fn update_noise<T: ComputeNoise>(
     for noise in query.iter() {
         noise_queue.add_image(
             &mut images,
-            noise.image.clone(), 
-            noise.noise.clone(), 
+            noise.image.clone(),
+            noise.noise.clone(),
         );
     }
 }
