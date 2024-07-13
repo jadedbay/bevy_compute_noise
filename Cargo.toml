@@ -1,6 +1,6 @@
 [package]
 name = "bevy_compute_noise"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
@@ -13,17 +13,17 @@ exclude = ["examples/*", "assets/*"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bytemuck = "1.15.0"
-rand = "0.8.5"
+bytemuck = "1.15"
+rand = "0.8"
 
 [dependencies.bevy]
-version = "0.13.2"
+version = "0.14"
 default-features = false
 features = [ "bevy_render", "bevy_asset" ]
 
 [dev-dependencies]
-bevy-inspector-egui = "0.24.0"
-bevy = { version = "0.13.2", default-features = false, features = ["bevy_winit", "x11", "tonemapping_luts", "bevy_pbr", "bevy_sprite"] }
+bevy-inspector-egui = "0.25"
+bevy = { version = "0.14", default-features = false, features = ["bevy_winit", "x11", "tonemapping_luts", "bevy_pbr", "bevy_sprite"] }
 
 [profile.dev]
 opt-level = 1

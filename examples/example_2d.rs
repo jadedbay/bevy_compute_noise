@@ -29,7 +29,7 @@ fn setup(
     let handle = images.add(image);
 
 
-    let mut quad = Rectangle::default().mesh();
+    let mut quad = Rectangle::default().mesh().build();
     if let Some(uvs) = quad.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
         if let VertexAttributeValues::Float32x2(uvs) = uvs {
             for uv in uvs.iter_mut() {

@@ -4,7 +4,7 @@ pub struct ComputeNoiseImage;
 
 impl ComputeNoiseImage {
     pub fn create_image(size: ComputeNoiseSize, format: ComputeNoiseFormat) -> Image {
-        let mut image = 
+        let mut image =
             Image::new_fill(
                 size.into(),
                 size.into(),
