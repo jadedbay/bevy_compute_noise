@@ -77,5 +77,11 @@ fn setup(
 - Allow combination of noise.
 - Allow writing into specific texture channels.
 
+## Version Compatibility
+| `bevy_compute_noise` | Bevy   |
+| :--                  | :--    |
+| `0.2`                | `0.14` |
+| `0.1`                | `0.13` |
+
 ## Readback
 If you need to readback the noise texture to the CPU, you can clone the readback branch and view the example in there. I'm not completely happy with the implementation and it's better to just generate the noise on the CPU using another crate anyway.
