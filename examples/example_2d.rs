@@ -7,7 +7,7 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             Material2dPlugin::<ImageMaterial>::default(),
-            ComputeNoisePlugin::<Perlin2d>::default(),
+            ComputeNoisePlugin::<Perlin2d>::default(), 
             WorldInspectorPlugin::new(),
         ))
         .add_systems(Startup, setup)

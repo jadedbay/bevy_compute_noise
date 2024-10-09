@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
     render::{Render, RenderApp, RenderSet},
 };
-use render::compute::{compute_noise, ComputeNoiseEncoder};
+use render::compute::{compute_noise, submit_compute_noise, ComputeNoiseEncoder};
 
 use crate::{
     noise::{ComputeNoise, ComputeNoiseComponent, update_noise},
@@ -48,11 +48,13 @@ impl<T: ComputeNoise> Plugin for ComputeNoisePlugin<T> {
         render_app
             .init_resource::<ComputeNoiseRenderQueue<T>>()
             .add_systems(ExtractSchedule, extract_compute_noise_queue::<T>)
+            .configure_sets(Render, ComputeNoiseSet.after(RenderSet::PrepareBindGroups))
             .add_systems(
                 Render,
                 (
                     prepare_bind_groups::<T>.in_set(RenderSet::PrepareBindGroups),
-                    compute_noise::<T>.after(RenderSet::PrepareBindGroups).before(RenderSet::Render),
+                    compute_noise::<T>.in_set(ComputeNoiseSet),
+                    submit_compute_noise.after(ComputeNoiseSet),
                 ),
             );
    }
@@ -64,3 +66,6 @@ impl<T: ComputeNoise> Plugin for ComputeNoisePlugin<T> {
             .init_resource::<ComputeNoiseEncoder>();
     }
 }
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct ComputeNoiseSet;

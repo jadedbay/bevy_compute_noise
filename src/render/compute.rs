@@ -5,17 +5,21 @@ use crate::{noise::ComputeNoise, noise_queue::ComputeNoiseRenderQueue};
 use super::pipeline::ComputeNoisePipeline;
 
 #[derive(Resource)]
-pub struct ComputeNoiseEncoder(Option<CommandEncoder>);
+pub struct ComputeNoiseEncoder {
+    encoder: Option<CommandEncoder>,
+    submit: bool,
+}
 impl FromWorld for ComputeNoiseEncoder {
     fn from_world(world: &mut World) -> Self {
         let render_device = world.resource::<RenderDevice>();
-        ComputeNoiseEncoder(Some(
-            render_device.create_command_encoder(
+        ComputeNoiseEncoder {
+            encoder: Some(render_device.create_command_encoder(
                 &CommandEncoderDescriptor { 
                     label: Some("compute_noise_encoder"),
                 }
-            )
-        ))
+            )),
+            submit: false,
+        }
     }
 }
 
@@ -24,8 +28,6 @@ pub fn compute_noise<T: ComputeNoise>(
     mut compute_noise_queue: ResMut<ComputeNoiseRenderQueue<T>>,
     pipeline_cache: Res<PipelineCache>,
     noise_pipeline: Res<ComputeNoisePipeline<T>>,
-    render_queue: Res<RenderQueue>,
-    render_device: Res<RenderDevice>,
 ) {
     if compute_noise_queue.queue.is_empty() { return; }
 
@@ -33,7 +35,7 @@ pub fn compute_noise<T: ComputeNoise>(
 
         if let Some(pipeline) = pipeline_cache.get_compute_pipeline(noise_pipeline.pipeline_id) {
         {   
-            let Some(encoder) = &mut compute_noise_encoder.0 else { return error!("Encoder is None") };
+            let Some(encoder) = &mut compute_noise_encoder.encoder else { return error!("Encoder is None") };
             let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
             pass.set_pipeline(pipeline);
             
@@ -44,16 +46,28 @@ pub fn compute_noise<T: ComputeNoise>(
                 pass.dispatch_workgroups(workgroups.0, workgroups.1, workgroups.2);
                 
                 dispatched = true;
-                dbg!("DISPATCHED");
             }
         }
-        //TODO: move this to a separate system and submit all noise at once.
-        let encoder = compute_noise_encoder.0.take().unwrap();
+
+        if dispatched {
+            compute_noise_encoder.submit = true;
+            compute_noise_queue.queue.clear() 
+        };
+    }
+}
+
+pub fn submit_compute_noise(
+    mut compute_noise_encoder: ResMut<ComputeNoiseEncoder>,
+    render_queue: Res<RenderQueue>,
+    render_device: Res<RenderDevice>
+) {
+    if compute_noise_encoder.submit {
+        dbg!("hi");
+        let encoder = compute_noise_encoder.encoder.take().unwrap();
         render_queue.submit(Some(encoder.finish()));
-        compute_noise_encoder.0 = Some(render_device.create_command_encoder(&CommandEncoderDescriptor { 
+        compute_noise_encoder.encoder = Some(render_device.create_command_encoder(&CommandEncoderDescriptor { 
             label: Some("compute noise encoder") 
         }));
-
-        if dispatched { compute_noise_queue.queue.clear() };
+        compute_noise_encoder.submit = false;
     }
 }
