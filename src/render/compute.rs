@@ -62,7 +62,6 @@ pub fn submit_compute_noise(
     render_device: Res<RenderDevice>
 ) {
     if compute_noise_encoder.submit {
-        dbg!("hi");
         let encoder = compute_noise_encoder.encoder.take().unwrap();
         render_queue.submit(Some(encoder.finish()));
         compute_noise_encoder.encoder = Some(render_device.create_command_encoder(&CommandEncoderDescriptor { 
