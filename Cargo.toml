@@ -19,11 +19,11 @@ rand = "0.8"
 [dependencies.bevy]
 version = "0.15.0"
 default-features = false
-features = [ "bevy_render", "bevy_asset", "bevy_window"]
+features = [ "bevy_render", "bevy_asset", "bevy_sprite"]
 
 [dev-dependencies]
 bevy-inspector-egui = "0.28.0"
-bevy = { version = "0.15.0", default-features = false, features = ["bevy_winit", "x11", "tonemapping_luts", "bevy_pbr", "bevy_sprite"] }
+bevy = { version = "0.15.0", default-features = false, features = ["bevy_winit", "x11", "tonemapping_luts", "bevy_pbr", "bevy_window"] }
 
 [profile.dev]
 opt-level = 1
