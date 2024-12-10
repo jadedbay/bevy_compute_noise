@@ -2,7 +2,6 @@ use bevy::{
     prelude::*,
     render::{
         render_asset::RenderAssets,
-        render_graph::RenderGraph,
         render_resource::{BindGroupEntries, BufferBinding, BufferInitDescriptor, BufferUsages},
         renderer::RenderDevice,
         texture::GpuImage,

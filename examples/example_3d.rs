@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}, texture::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
+use bevy::{image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}, prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}}, sprite::{Material2d, Material2dPlugin}};
 use bevy_compute_noise::prelude::*;
 use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, quick::WorldInspectorPlugin, InspectorOptions};
 
@@ -41,20 +41,16 @@ fn setup(
         }
     }
 
-    commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: meshes.add(quad).into(),
-            transform: Transform::default().with_scale(Vec3::splat(512.)),
-            material: materials.add(Image3dMaterial {
-                image: handle.clone(),
-                layer: 0,
-                texture_size: UVec3::new(128, 128, 128),
-            }),
-            ..default()
-        },
+    commands.spawn(( 
+        Mesh2d(meshes.add(quad).into()),
+        MeshMaterial2d(materials.add(Image3dMaterial {
+            image: handle.clone(),
+            layer: 0,
+        })),
+        Transform::default().with_scale(Vec3::splat(512.)),
     ));
 
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d::default());
 }
 
 #[derive(Asset, AsBindGroup, Debug, Clone, InspectorOptions, Reflect)]
@@ -65,8 +61,6 @@ struct Image3dMaterial {
     image: Handle<Image>,
     #[uniform(103)]
     layer: u32,
-    #[uniform(104)]
-    texture_size: UVec3,
 }
 
 impl Material2d for Image3dMaterial {

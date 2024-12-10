@@ -2,7 +2,7 @@
 [![crates.io](https://img.shields.io/crates/v/bevy_compute_noise.svg)](https://crates.io/crates/bevy_compute_noise)
 [![Doc](https://docs.rs/bevy_compute_noise/badge.svg)](https://docs.rs/bevy_compute_noise)
 
-A plugin for `bevy 0.14` for generating tilable 2D/3D noise textures using compute shaders.
+A plugin for `bevy 0.15` for generating tilable 2D/3D noise textures using compute shaders.
 
 Check out a demo of the plugin here: https://jadedbay.com/demo/bevy_compute_noise (Chrome only)
 
@@ -14,7 +14,7 @@ Add the `bevy_compute_noise` dependency to `Cargo.toml`:
 
 ```toml
 [dependencies]
-bevy_compute_noise = "0.2.0"
+bevy_compute_noise = "0.3.0"
 ```
 
 ### Add Noise Plugin
@@ -80,6 +80,7 @@ fn setup(
 ## Version Compatibility
 | `bevy_compute_noise` | Bevy   |
 | :--                  | :--    |
+| `0.3`                | `0.15` |
 | `0.2`                | `0.14` |
 | `0.1`                | `0.13` |
 

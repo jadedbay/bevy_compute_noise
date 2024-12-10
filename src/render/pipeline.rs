@@ -57,6 +57,7 @@ impl<T: ComputeNoise> FromWorld for ComputeNoisePipeline<T> {
                 shader,
                 shader_defs: vec![],
                 entry_point: "noise".into(),
+                zero_initialize_workgroup_memory: false,
             });
 
         Self {

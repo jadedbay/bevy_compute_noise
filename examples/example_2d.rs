@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}, texture::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
+use bevy::{image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}, prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}}, sprite::{Material2d, Material2dPlugin}};
 use bevy_compute_noise::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
@@ -39,21 +39,18 @@ fn setup(
     }
 
     commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: meshes.add(quad).into(),
-            transform: Transform::default().with_scale(Vec3::splat(512.)),
-            material: materials.add(ImageMaterial {
-                image: handle.clone(),
-            }),
-            ..default()
-        },
+        Mesh2d(meshes.add(quad)),
+        Transform::default().with_scale(Vec3::splat(512.)),
+        MeshMaterial2d(materials.add(ImageMaterial {
+            image: handle.clone(),
+        })),
         ComputeNoiseComponent::<Perlin2d> {
             image: handle.clone(),
             noise: Perlin2d::new(0, 5, 4, true),
         },
     ));
 
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d::default());
 }
 
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect)]
