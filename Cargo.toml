@@ -23,7 +23,7 @@ features = [ "bevy_render", "bevy_asset", "tonemapping_luts"]
 
 [dev-dependencies]
 bevy-inspector-egui = "0.28.0"
-bevy = { version = "0.15.0", default-features = false, features = ["bevy_winit", "x11", "bevy_pbr", "bevy_sprite", "bevy_"] }
+bevy = { version = "0.15.0", default-features = false, features = ["bevy_winit", "x11", "bevy_pbr", "bevy_sprite", "bevy_window"] }
 
 [profile.dev]
 opt-level = 1
