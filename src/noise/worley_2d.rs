@@ -1,4 +1,4 @@
-use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
+use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, Buffer, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::image::ComputeNoiseSize;
@@ -59,12 +59,12 @@ pub struct Worley2dLabel;
 impl ComputeNoise for Worley2d {
     type Gpu = GpuWorley2d;
 
-    fn gpu_data(&self, size: ComputeNoiseSize) -> Self::Gpu {
+    fn buffers(&self, render_device: &RenderDevice, size: ComputeNoiseSize) -> Vec<Buffer> {
         Self::Gpu {
             cell_count: self.cells,
             points: self.generate_points(size.width(), size.height()),
             invert: self.invert as u32,
-        }
+        }.buffers(render_device)
     }
 
     fn shader() -> ShaderRef {
@@ -113,37 +113,22 @@ pub struct GpuWorley2d {
 }
 
 impl GpuComputeNoise for GpuWorley2d {
-    fn bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup {
-        let points_buffer = render_device.create_buffer_with_data(
-            &BufferInitDescriptor {
-                label: Some("worley2d_points_buffer"),
-                contents: &bytemuck::cast_slice(self.points.as_slice()),
-                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
-            }
-        );
-
-        let worley_buffer = render_device.create_buffer_with_data(
-            &BufferInitDescriptor {
-                label: Some("worley2d_cell_count_buffer"),
-                contents: &bytemuck::cast_slice(&[self.cell_count, self.invert]),
-                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
-            }
-        );
-
-        render_device.create_bind_group(
-            Some("worley2d_bind_group".into()),
-            layout,
-            &BindGroupEntries::sequential((
-                BufferBinding {
-                    buffer: &points_buffer,
-                    offset: 0,
-                    size: None,
-                },
-                BufferBinding {
-                    buffer: &worley_buffer,
-                    offset: 0,
-                    size: None,
-                },
-        )))
+    fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
+        vec![
+            render_device.create_buffer_with_data(
+                &BufferInitDescriptor {
+                    label: Some("worley2d_points_buffer"),
+                    contents: &bytemuck::cast_slice(self.points.as_slice()),
+                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
+                }
+            ),
+            render_device.create_buffer_with_data(
+                &BufferInitDescriptor {
+                    label: Some("worley2d_cell_count_buffer"),
+                    contents: &bytemuck::cast_slice(&[self.cell_count, self.invert]),
+                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
+                }
+            ) 
+        ] 
     }
 }

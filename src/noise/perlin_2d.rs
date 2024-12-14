@@ -1,4 +1,4 @@
-use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
+use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, Buffer, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
 
 use crate::image::ComputeNoiseSize;
 
@@ -41,13 +41,13 @@ pub struct Perlin2dLabel;
 impl ComputeNoise for Perlin2d {
     type Gpu = GpuPerlin2d;
 
-    fn gpu_data(&self, _size: ComputeNoiseSize) -> Self::Gpu {
+    fn buffers(&self, render_device: &RenderDevice, _size: ComputeNoiseSize) -> Vec<Buffer> {
         Self::Gpu {
             seed: self.seed,
             frequency: self.frequency,
             octaves: self.octaves,
             invert: self.invert as u32,
-        }
+        }.buffers(render_device)
     }
 
     fn shader() -> ShaderRef {
@@ -92,25 +92,15 @@ pub struct GpuPerlin2d {
 }
 
 impl GpuComputeNoise for GpuPerlin2d {
-    fn bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup {
-        let perlin_buffer = render_device.create_buffer_with_data(
-            &BufferInitDescriptor {
-                label: Some("perlin2d_buffer"),
-                contents: &bytemuck::cast_slice(&[self.seed, self.frequency, self.octaves, self.invert]),
-                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
-            }
-        );
-
-        render_device.create_bind_group(
-            Some("perlin2d_bind_group".into()),
-            layout,
-            &BindGroupEntries::sequential((
-                BufferBinding {
-                    buffer: &perlin_buffer,
-                    offset: 0,
-                    size: None,
-                },
-            ))
-        )
-    }
+    fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
+        vec![    
+            render_device.create_buffer_with_data(
+                &BufferInitDescriptor {
+                    label: Some("perlin2d_buffer"),
+                    contents: &bytemuck::cast_slice(&[self.seed, self.frequency, self.octaves, self.invert]),
+                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
+                }
+            )
+        ]
+    } 
 }

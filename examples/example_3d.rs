@@ -1,5 +1,5 @@
-use bevy::{image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}, prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}}, sprite::{Material2d, Material2dPlugin}};
-use bevy_compute_noise::prelude::*;
+use bevy::{image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}, prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}, renderer::RenderDevice}, sprite::{Material2d, Material2dPlugin}};
+use bevy_compute_noise::{noise::ComputeNoiseBuilder, noise_queue::CNQueue, prelude::*};
 use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, quick::WorldInspectorPlugin, InspectorOptions};
 
 fn main() {
@@ -8,7 +8,8 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             Material2dPlugin::<Image3dMaterial>::default(),
-            ComputeNoisePlugin::<Worley3d>::default(),
+            // ComputeNoisePlugin::<Worley3d>::default(),
+            ComputeNoisePlugin,
             WorldInspectorPlugin::default(),
         ))
         .add_systems(Startup, setup)
@@ -20,7 +21,8 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut images: ResMut<Assets<Image>>,
     mut materials: ResMut<Assets<Image3dMaterial>>,
-    mut worley3d_queue: ResMut<ComputeNoiseQueue<Worley3d>>,
+    mut noise_queue: ResMut<CNQueue>,
+    render_device: Res<RenderDevice>,
 ) {
     let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D3(128, 128, 128), ComputeNoiseFormat::Rgba);
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
@@ -30,7 +32,17 @@ fn setup(
     });
     let handle = images.add(image);
 
-    worley3d_queue.add_image(&mut images, handle.clone(), Worley3d::new(1, 4, false));
+    noise_queue.add_image(
+        &mut images, 
+        handle.clone(), 
+        ComputeNoiseBuilder::new().push_noise(Worley3d::new(1, 4, false)).build(),
+        &render_device,
+    );
+
+    // let instructions = ComputeNoiseBuilder::new()
+    //     .push_noise(Worley3d::new(1, 4, true))
+    //     .push_noise(Perlin2d::new(0, 5, 4, false))
+    //     .build();
 
     let mut quad = Rectangle::default().mesh().build();
     if let Some(uvs) = quad.attribute_mut(Mesh::ATTRIBUTE_UV_0) {

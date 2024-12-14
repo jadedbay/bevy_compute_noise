@@ -1,5 +1,5 @@
-use bevy::{image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}, prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}}, sprite::{Material2d, Material2dPlugin}};
-use bevy_compute_noise::prelude::*;
+use bevy::{image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}, prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}, renderer::RenderDevice}, sprite::{Material2d, Material2dPlugin}};
+use bevy_compute_noise::{noise::ComputeNoiseBuilder, noise_queue::CNQueue, prelude::*};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 fn main() {
@@ -7,7 +7,8 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             Material2dPlugin::<ImageMaterial>::default(),
-            ComputeNoisePlugin::<Perlin2d>::default(), 
+            // ComputeNoisePlugin::<Perlin2d>::default(), 
+            ComputeNoisePlugin,
             WorldInspectorPlugin::new(),
         ))
         .add_systems(Startup, setup)
@@ -19,6 +20,8 @@ fn setup(
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ImageMaterial>>,
+    render_device: Res<RenderDevice>,
+    mut noise_queue: ResMut<CNQueue>
 ) {
     let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(1024, 1024), ComputeNoiseFormat::Rgba);
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
@@ -38,16 +41,23 @@ fn setup(
         }
     }
 
+    noise_queue.add_image(
+        &mut images, 
+        handle.clone(), 
+        ComputeNoiseBuilder::new().push_noise(Perlin2d::new(0, 5, 4, false)).build(),
+        &render_device,
+    );
+
     commands.spawn((
         Mesh2d(meshes.add(quad)),
         Transform::default().with_scale(Vec3::splat(512.)),
         MeshMaterial2d(materials.add(ImageMaterial {
             image: handle.clone(),
         })),
-        ComputeNoiseComponent::<Perlin2d> {
-            image: handle.clone(),
-            noise: Perlin2d::new(0, 5, 4, true),
-        },
+        // ComputeNoiseComponent::<Perlin2d> {
+        //     image: handle.clone(),
+        //     noise: Perlin2d::new(0, 5, 4, true),
+        // },
     ));
 
     commands.spawn(Camera2d::default());
