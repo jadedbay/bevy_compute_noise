@@ -61,12 +61,15 @@ impl<T: ComputeNoise> Plugin for ComputeNoiseTypePlugin<T> {
             // );
    }
 
-    // fn finish(&self, app: &mut App) {
-    //     let render_app = app.sub_app_mut(RenderApp);
-    //     render_app
-            // .init_resource::<ComputeNoisePipeline<T>>();
-            // .init_resource::<ComputeNoiseEncoder>();
-    // }
+    fn finish(&self, app: &mut App) {
+        let render_app = app.sub_app_mut(RenderApp);
+        // render_app
+        //     .init_resource::<ComputeNoisePipeline<T>>()
+        //     .init_resource::<ComputeNoiseEncoder>();
+        ComputeNoisePipeline::<Perlin2d>::create_pipeline(render_app.world_mut());
+        ComputeNoisePipeline::<Worley2d>::create_pipeline(render_app.world_mut());
+        ComputeNoisePipeline::<Worley3d>::create_pipeline(render_app.world_mut());
+    }
 }
 
 pub struct ComputeNoisePlugin;

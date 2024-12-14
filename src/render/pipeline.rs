@@ -11,8 +11,8 @@ pub struct ComputeNoisePipeline<T: ComputeNoise> {
     _phantom_data: PhantomData<T>,
 }
 
-impl<T: ComputeNoise> FromWorld for ComputeNoisePipeline<T> {
-    fn from_world(world: &mut World) -> Self {
+impl<T: ComputeNoise> ComputeNoisePipeline<T> {
+    pub fn create_pipeline(world: &mut World) {
         let render_device = world.resource::<RenderDevice>();
 
         let texture_storage = match T::texture_dimension() {
@@ -59,11 +59,12 @@ impl<T: ComputeNoise> FromWorld for ComputeNoisePipeline<T> {
                 zero_initialize_workgroup_memory: false,
             });
 
-        Self {
+        let mut pipelines = world.resource_mut::<ComputeNoisePipelines>();
+        pipelines.add_pipeline::<T>(Self {
             noise_layout,
             pipeline_id,
             _phantom_data: PhantomData,
-        }
+        }.into())
     }
 }
 
@@ -143,26 +144,10 @@ impl FromWorld for ComputeNoisePipelines {
             )
         );
 
-        let mut pipelines = HashMap::new();
-        pipelines.insert(TypeId::of::<Perlin2d>(), ComputeNoisePipeline::<Perlin2d>::from_world(world).into());
-        pipelines.insert(TypeId::of::<Worley2d>(), ComputeNoisePipeline::<Worley2d>::from_world(world).into());
-        pipelines.insert(TypeId::of::<Worley3d>(), ComputeNoisePipeline::<Worley3d>::from_world(world).into());
-
         Self {
             image_2d_layout,
             image_3d_layout,
-            pipelines,
+            pipelines: HashMap::new(),
         }
     }
-}
-
-pub(crate) fn initialize_pipelines(
-    mut compute_noise_pipelines: ResMut<ComputeNoisePipelines>,
-    perlin_2d: ComputeNoisePipeline<Perlin2d>,
-    worley_2d: ComputeNoisePipeline<Worley2d>,
-    worley_3d: ComputeNoisePipeline<Worley3d>,
-) {
-    compute_noise_pipelines.add_pipeline::<Perlin2d>(perlin_2d.into());
-    compute_noise_pipelines.add_pipeline::<Worley2d>(worley_2d.into());
-    compute_noise_pipelines.add_pipeline::<Worley3d>(worley_3d.into());
 }
