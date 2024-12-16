@@ -62,12 +62,11 @@ impl Plugin for ComputeNoisePlugin {
         render_app
             .init_resource::<ComputeNoiseRenderQueue>()
             .add_systems(ExtractSchedule, extract_compute_noise_queue)
-            .configure_sets(Render, ComputeNoiseSet.after(RenderSet::PrepareBindGroups))
             .add_systems(
                 Render,
                 (
                     prepare_bind_groups.in_set(RenderSet::PrepareBindGroups),
-                    (compute_noise, submit_compute_noise).in_set(ComputeNoiseSet).chain(),
+                    (compute_noise, submit_compute_noise).after(RenderSet::PrepareBindGroups).before(RenderSet::Render).chain(),
                 )
             );
     }
@@ -79,6 +78,3 @@ impl Plugin for ComputeNoisePlugin {
             .init_resource::<ComputeNoiseEncoder>();
     }
 }
-
-#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-struct ComputeNoiseSet;
