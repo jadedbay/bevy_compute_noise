@@ -11,23 +11,23 @@ use bevy::{
 };
 
 use crate::{
-    image::ComputeNoiseSize, noise::{ComputeNoise, GpuComputeNoise}, noise_queue::{ComputeNoiseBindGroups, ComputeNoiseQueue, ComputeNoiseRenderQueue}, render::pipeline::ComputeNoisePipelines
+    image::ComputeNoiseSize, noise::{ComputeNoise, GpuComputeNoise}, noise_queue::{ComputeNoiseBindGroups, ComputeNoiseBufferQueue, ComputeNoiseQueue, ComputeNoiseRenderQueue}, render::pipeline::ComputeNoisePipelines
 };
 
 pub fn prepare_bind_groups(
     pipeline: Res<ComputeNoisePipelines>,
     gpu_images: Res<RenderAssets<GpuImage>>,
-    queue: Res<ComputeNoiseQueue>,
+    queue: Res<ComputeNoiseBufferQueue>,
     render_device: Res<RenderDevice>,
     mut render_queue: ResMut<ComputeNoiseRenderQueue>,
 ) {
     let mut bind_groups: Vec<ComputeNoiseBindGroups> = Vec::new();
-    for (image_handle, buffers, size) in queue.queue.iter() {
-        if let Some(image) = gpu_images.get(image_handle) {
-            let size_data = match size {
-                    ComputeNoiseSize::D2(width, height) => vec![*width as f32, *height as f32],
+    for noise in queue.queue.iter() {
+        if let Some(image) = gpu_images.get(&noise.image) {
+            let size_data = match noise.size {
+                    ComputeNoiseSize::D2(width, height) => vec![width as f32, height as f32],
                     ComputeNoiseSize::D3(width, height, depth) => {
-                        vec![*width as f32, *height as f32, *depth as f32]
+                        vec![width as f32, height as f32, depth as f32]
                     }
             };
 
@@ -37,7 +37,7 @@ pub fn prepare_bind_groups(
                 usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
             });
 
-            let image_layout = match size {
+            let image_layout = match noise.size {
                 ComputeNoiseSize::D2(_, _) => &pipeline.image_2d_layout,
                 ComputeNoiseSize::D3(_, _, _) => &pipeline.image_3d_layout,
             };
@@ -55,9 +55,9 @@ pub fn prepare_bind_groups(
                     )),
                 );
             
-            let noise_bind_groups: Vec<(BindGroup, TypeId)> = buffers
+            let noise_bind_groups: Vec<(BindGroup, TypeId)> = noise.buffers
                 .iter()
-                .map(|(buffers, type_id)| {
+                .map(|(type_id, buffers)| {
                     let pipeline_layout = pipeline.get_pipeline(*type_id)
                         .ok_or_else(|| format!("Failed to get pipeline for type_id: {:?}", type_id))
                         .unwrap_or_else(|err| panic!("{}", err));
@@ -77,7 +77,7 @@ pub fn prepare_bind_groups(
             bind_groups.push(ComputeNoiseBindGroups {
                 image_bind_group,
                 noise_bind_groups,
-                size: *size,
+                size: noise.size,
             });
         }
     }

@@ -40,9 +40,7 @@ fn setup(
         }
     }
 
-    noise_queue.add_image(
-        &mut images, 
-        &render_device,
+    noise_queue.add(
         handle.clone(), 
         ComputeNoiseBuilder::new()
             .push_noise(Worley2d::new(1, 4, true))

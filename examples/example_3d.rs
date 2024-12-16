@@ -21,7 +21,6 @@ fn setup(
     mut images: ResMut<Assets<Image>>,
     mut materials: ResMut<Assets<Image3dMaterial>>,
     mut noise_queue: ResMut<ComputeNoiseQueue>,
-    render_device: Res<RenderDevice>,
 ) {
     let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D3(128, 128, 128), ComputeNoiseFormat::Rgba);
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
@@ -31,9 +30,7 @@ fn setup(
     });
     let handle = images.add(image);
 
-    noise_queue.add_image(
-        &mut images, 
-        &render_device,
+    noise_queue.add(
         handle.clone(), 
         ComputeNoiseBuilder::new().push_noise(Worley3d::new(1, 4, false)).build(),
     );
