@@ -1,27 +1,18 @@
 use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries, BindingType, Buffer, BufferBinding, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
+use bytemuck::{Pod, Zeroable};
 
 use crate::image::ComputeNoiseSize;
 
 use super::{ComputeNoise, GpuComputeNoise};
 
-#[derive(Clone, Reflect, PartialEq, Eq, Debug)]
+#[derive(Clone, Reflect, PartialEq, Debug)]
 #[reflect(Default)]
 pub struct Perlin2d {
     pub seed: u32,
     pub frequency: u32,
     pub octaves: u32,
     pub invert: bool,
-}
-
-impl Perlin2d {
-    pub fn new(seed: u32, frequency: u32, octaves: u32, invert: bool) -> Self {
-        Self {
-            seed,
-            frequency,
-            octaves,
-            invert
-        }
-    }
+    pub persistence: f32,
 }
 
 impl Default for Perlin2d {
@@ -31,6 +22,7 @@ impl Default for Perlin2d {
             frequency: 5,
             octaves: 4,
             invert: false,
+            persistence: 1.0,
         }
     }
 }
@@ -47,6 +39,7 @@ impl ComputeNoise for Perlin2d {
             frequency: self.frequency,
             octaves: self.octaves,
             invert: self.invert as u32,
+            persistence: self.persistence,
         }.buffers(render_device)
     }
 
@@ -54,7 +47,7 @@ impl ComputeNoise for Perlin2d {
         "embedded://bevy_compute_noise/noise/shaders/perlin_2d.wgsl".into()
     }
 
-    fn embed_asset(app: &mut App) {
+    fn embed_shader(app: &mut App) {
         embedded_asset!(app, "shaders/perlin_2d.wgsl");
     }
 
@@ -83,12 +76,14 @@ impl ComputeNoise for Perlin2d {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Copy, Default, Pod, Zeroable)]
+#[repr(C)]
 pub struct GpuPerlin2d {
     seed: u32,
     frequency: u32,
     octaves: u32,
     invert: u32,
+    persistence: f32,
 }
 
 impl GpuComputeNoise for GpuPerlin2d {
@@ -97,7 +92,7 @@ impl GpuComputeNoise for GpuPerlin2d {
             render_device.create_buffer_with_data(
                 &BufferInitDescriptor {
                     label: Some("perlin2d_buffer"),
-                    contents: &bytemuck::cast_slice(&[self.seed, self.frequency, self.octaves, self.invert]),
+                    contents: &bytemuck::cast_slice(&[self.clone()]),
                     usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
                 }
             )

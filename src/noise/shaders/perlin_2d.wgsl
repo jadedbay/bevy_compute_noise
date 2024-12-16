@@ -10,6 +10,7 @@ struct NoiseParameters {
     frequency: u32,
     octaves: u32,
     invert: u32,
+    persistence: f32,
 };
 @group(1) @binding(0) var<storage, read> parameters: NoiseParameters;
 
@@ -39,6 +40,8 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     if (parameters.invert != 0u) {
         value = 1.0 - value;
     }
+
+    value = mix(textureLoad(texture, location).r, value, parameters.persistence);
 
     textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 1.0));
 }

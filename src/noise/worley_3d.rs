@@ -82,7 +82,7 @@ impl ComputeNoise for Worley3d {
         "embedded://bevy_compute_noise/noise/shaders/worley_3d.wgsl".into()
     }
 
-    fn embed_asset(app: &mut App) {
+    fn embed_shader(app: &mut App) {
         embedded_asset!(app, "shaders/worley_3d.wgsl");
     }
 

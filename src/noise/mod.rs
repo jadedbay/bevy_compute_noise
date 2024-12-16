@@ -1,8 +1,8 @@
-use std::{any::{Any, TypeId}, sync::Arc};
+use std::any::{Any, TypeId};
 
-use bevy::{ecs::component::Component, prelude::*, reflect::{GetTypeRegistration, Reflect, Typed}, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntry, BindGroupLayout, Buffer, DynamicBindGroupEntries, ShaderRef, TextureDimension}, renderer::RenderDevice}};
+use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntry, BindGroupLayout, Buffer, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 
-use crate::{image::ComputeNoiseSize, ComputeNoiseQueue};
+use crate::image::ComputeNoiseSize;
 
 pub mod worley_2d;
 pub mod worley_3d;
@@ -15,7 +15,7 @@ pub use perlin_2d::Perlin2d;
 pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + FromReflect + GetTypeRegistration + Typed {
     type Gpu: GpuComputeNoise;
 
-    fn embed_asset(app: &mut App);
+    fn embed_shader(app: &mut App);
     fn render_label() -> impl RenderLabel;
 
     fn buffers(&self, render_device: &RenderDevice, size: ComputeNoiseSize) -> Vec<Buffer>;
@@ -27,30 +27,10 @@ pub trait GpuComputeNoise: Sync + Send + 'static + Default + Clone {
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer>;
 }
 
-#[derive(Component, Reflect)]
-pub struct ComputeNoiseComponent<T: ComputeNoise> {
-    pub image: Handle<Image>,
-    pub noise: T,
-}
-
-pub fn update_noise<T: ComputeNoise>(
-    mut noise_queue: ResMut<ComputeNoiseQueue<T>>,
-    mut images: ResMut<Assets<Image>>,
-    query: Query<&ComputeNoiseComponent<T>, Changed<ComputeNoiseComponent<T>>>,
-) {
-    for noise in query.iter() {
-        noise_queue.add_image(
-            &mut images,
-            noise.image.clone(),
-            noise.noise.clone(),
-        );
-    }
-}
-
 pub struct ErasedComputeNoise {
     noise_data: Box<dyn Any + Send + Sync>,
-    texture_dimensions_fn: fn() -> TextureDimension,
     buffers_fn: Box<dyn Fn(&RenderDevice, &ComputeNoiseSize) -> Vec<Buffer> + Send + Sync>,
+    pub texture_dimension: TextureDimension,
     pub type_id: TypeId,
 }
 
@@ -59,7 +39,7 @@ impl ErasedComputeNoise {
         let noise_clone = noise.clone();
         Self {
             noise_data: Box::new(noise),
-            texture_dimensions_fn: T::texture_dimension,
+            texture_dimension: T::texture_dimension(),
             buffers_fn: Box::new(move |device, size| noise_clone.buffers(device, *size)),
             type_id: TypeId::of::<T>(),
         }
@@ -67,10 +47,6 @@ impl ErasedComputeNoise {
 
     pub fn as_noise<T: ComputeNoise>(&self) -> Option<&T> {
         self.noise_data.downcast_ref::<T>()
-    }
-
-    pub fn texture_dimension(&self) -> TextureDimension {
-        (self.texture_dimensions_fn)()
     }
 
     pub fn buffers(&self, render_device: &RenderDevice, size: &ComputeNoiseSize) -> Vec<Buffer> {
@@ -90,6 +66,18 @@ impl ComputeNoiseSequence {
             self.0.remove(index);
         } else {
             warn!("Index out of bounds: {}, trying to remove compute noise from sequence", index);
+        }
+    }
+
+    pub fn edit_noise<T: ComputeNoise>(&mut self, index: usize, f: impl FnOnce(&mut T)) {
+        if index >= self.0.len() {
+            warn!("Index out of bounds: {}, trying to edit compute noise in sequence", index);
+        }
+
+        if let Some(noise) = self.0[index].noise_data.downcast_mut::<T>() {
+            f(noise);
+        } else {
+            warn!("Type mismatch: trying to edit noise with incorrect type");
         }
     }
 }

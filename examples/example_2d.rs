@@ -1,5 +1,5 @@
 use bevy::{image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}, prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}, renderer::RenderDevice}, sprite::{Material2d, Material2dPlugin}};
-use bevy_compute_noise::{noise::ComputeNoiseBuilder, noise_queue::CNQueue, prelude::*};
+use bevy_compute_noise::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 fn main() {
@@ -7,7 +7,6 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             Material2dPlugin::<ImageMaterial>::default(),
-            // ComputeNoisePlugin::<Perlin2d>::default(), 
             ComputeNoisePlugin,
             WorldInspectorPlugin::new(),
         ))
@@ -21,7 +20,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ImageMaterial>>,
     render_device: Res<RenderDevice>,
-    mut noise_queue: ResMut<CNQueue>
+    mut noise_queue: ResMut<ComputeNoiseQueue>
 ) {
     let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(1024, 1024), ComputeNoiseFormat::Rgba);
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
@@ -43,9 +42,17 @@ fn setup(
 
     noise_queue.add_image(
         &mut images, 
-        handle.clone(), 
-        ComputeNoiseBuilder::new().push_noise(Perlin2d::new(0, 5, 4, false)).build(),
         &render_device,
+        handle.clone(), 
+        ComputeNoiseBuilder::new()
+            .push_noise(Worley2d::new(1, 4, true))
+            .push_noise(Perlin2d {
+                frequency: 5,
+                octaves: 4,
+                persistence: 0.4,
+                ..default()
+            })
+            .build(),
     );
 
     commands.spawn((
