@@ -1,12 +1,13 @@
 use std::any::{Any, TypeId};
 
-use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_graph::RenderLabel, render_resource::{BindGroup, BindGroupEntry, BindGroupLayout, Buffer, ShaderRef, TextureDimension}, renderer::RenderDevice}};
+use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_graph::RenderLabel, render_resource::{BindGroupLayout, Buffer, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 
 use crate::image::ComputeNoiseSize;
 
 pub mod worley_2d;
 pub mod worley_3d;
 pub mod perlin_2d;
+pub mod fbm;
 
 pub use worley_2d::Worley2d;
 pub use worley_3d::Worley3d;
@@ -98,16 +99,8 @@ impl ComputeNoiseBuilder {
     }
 }
 
-pub struct ComputeNoiseBuffers(Vec<Buffer>);
-impl ComputeNoiseBuffers {
-    fn create_bind_group(&self, render_device: &RenderDevice, layout: &BindGroupLayout) -> BindGroup {
-        render_device.create_bind_group(
-            Some("compute_noise_bind_group".into()),
-            layout,
-            self.0.iter().enumerate().map(|(i, buffer)| BindGroupEntry {
-                binding: i as u32,
-                resource: buffer.as_entire_binding(),
-            }).collect::<Vec<_>>().as_slice(),
-        )
+impl<T: ComputeNoise> From<T> for ComputeNoiseSequence {
+    fn from(value: T) -> Self {
+        Self(vec![ErasedComputeNoise::new(value)])
     }
 }

@@ -1,8 +1,7 @@
 use std::marker::PhantomData;
 
 use bevy::{
-    prelude::*,
-    render::{Render, RenderApp, RenderSet},
+    asset::embedded_asset, prelude::*, render::{Render, RenderApp, RenderSet}
 };
 use noise::{Perlin2d, Worley2d, Worley3d};
 use noise_queue::{prepare_compute_noise_buffers, ComputeNoiseBufferQueue};
@@ -47,9 +46,16 @@ impl<T: ComputeNoise> Plugin for ComputeNoiseTypePlugin<T> {
     }
 }
 
+// TODO: take in shader so can use custom noise with fbm
+// pub struct ComputeNoisePlugin {
+//     fbm_shader: &'static str,
+// }
 pub struct ComputeNoisePlugin;
 impl Plugin for ComputeNoisePlugin {
     fn build(&self, app: &mut App) {
+        embedded_asset!(app, "noise/shaders/util.wgsl");
+        embedded_asset!(app, "noise/shaders/fbm.wgsl");
+
         app
             .add_plugins((
                 ComputeNoiseTypePlugin::<Perlin2d>::default(),

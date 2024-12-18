@@ -19,7 +19,6 @@ fn setup(
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ImageMaterial>>,
-    render_device: Res<RenderDevice>,
     mut noise_queue: ResMut<ComputeNoiseQueue>
 ) {
     let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(1024, 1024), ComputeNoiseFormat::Rgba);
@@ -43,14 +42,26 @@ fn setup(
     noise_queue.add(
         handle.clone(), 
         ComputeNoiseBuilder::new()
-            .push_noise(Worley2d::new(1, 4, true))
+            // .push_noise(Worley2d::new(1, 4, true))
             .push_noise(Perlin2d {
+                seed: 5,
                 frequency: 5,
                 octaves: 4,
                 persistence: 0.4,
                 ..default()
             })
             .build(),
+    );
+
+    noise_queue.add(
+        handle.clone(),
+        Perlin2d {
+            seed: 5,
+            frequency: 5,
+            octaves: 4,
+            persistence: 1.0,
+            ..default()
+        }.into(),
     );
 
     commands.spawn((

@@ -1,10 +1,9 @@
 use std::{any::TypeId, marker::PhantomData};
 
-use bevy::{prelude::*, render::{render_resource::{binding_types::texture_storage_2d, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBindingType, CachedComputePipelineId, ComputePipelineDescriptor, ComputePipelineId, IntoBindGroupLayoutEntryBuilder, PipelineCache, ShaderRef, ShaderStages, StorageTextureAccess, TextureDimension, TextureFormat, TextureViewDimension}, renderer::RenderDevice}, utils::HashMap};
+use bevy::{prelude::*, render::{render_resource::{binding_types::texture_storage_2d, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBindingType, CachedComputePipelineId, ComputePipelineDescriptor, ComputePipelineId, IntoBindGroupLayoutEntryBuilder, PipelineCache, ShaderRef, ShaderStages, SpecializedComputePipeline, StorageTextureAccess, TextureDimension, TextureFormat, TextureViewDimension}, renderer::RenderDevice}, utils::HashMap};
 
 use crate::noise::{ComputeNoise, Perlin2d, Worley2d, Worley3d};
 
-#[derive(Resource, Clone)]
 pub struct ComputeNoisePipeline<T: ComputeNoise> {
     pub noise_layout: BindGroupLayout,
     pub pipeline_id: CachedComputePipelineId,
@@ -83,12 +82,78 @@ impl<T: ComputeNoise> From<ComputeNoisePipeline<T>> for CNPipeline {
 }
 
 
+pub struct ComputeNoiseFbmPipeline {
+    pub fbm_2d_layout: BindGroupLayout,
+    pub fbm_3d_layout: BindGroupLayout,
+    shader: Handle<Shader>,
+}
+
+impl FromWorld for ComputeNoiseFbmPipeline {
+    fn from_world(world: &mut World) -> Self {
+        let render_device = world.resource::<RenderDevice>();
+        
+        let fbm_2d_layout = render_device.create_bind_group_layout(
+            "fbm_layout",
+            &BindGroupLayoutEntries::sequential(
+                ShaderStages::COMPUTE,
+                (
+                    texture_storage_2d(TextureFormat::Rgba8Unorm, StorageTextureAccess::ReadWrite),
+                    BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    }
+                )
+            )
+        );
+        
+        let fbm_3d_layout = render_device.create_bind_group_layout(
+            "fbm_layout",
+            &BindGroupLayoutEntries::sequential(
+                ShaderStages::COMPUTE,
+                (
+                    BindingType::StorageTexture {
+                        access: StorageTextureAccess::ReadWrite,
+                        format: TextureFormat::Rgba8Unorm,
+                        view_dimension: TextureViewDimension::D3,
+                    }.into_bind_group_layout_entry_builder(),
+                    BindingType::Buffer {
+                        ty: BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    }
+                )
+            )
+        );
+        
+        let shader = world.resource::<AssetServer>().load("embedded://bevy_compute_noise/noise/shaders/fbm.wgsl");
+
+        Self {
+            fbm_2d_layout,
+            fbm_3d_layout,
+            shader,
+        }
+    }
+}
+
+// #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+// pub struct FbmPipelineKey {
+//     noise_type_id: TypeId,
+// }
+// impl SpecializedComputePipeline for ComputeNoiseFbmPipeline {
+//     type Key = FbmPipelineKey;
+
+//     fn specialize(&self, key: Self::Key) -> ComputePipelineDescriptor {
+
+//     }
+// }
 
 #[derive(Resource)]
 pub struct ComputeNoisePipelines {
     pub image_2d_layout: BindGroupLayout,
     pub image_3d_layout: BindGroupLayout,
     pipelines: HashMap<TypeId, CNPipeline>,
+    _util_shader: Handle<Shader>,
 }
 impl ComputeNoisePipelines {
     pub fn get_pipeline(&self, type_id: TypeId) -> Option<&CNPipeline> {
@@ -148,6 +213,8 @@ impl FromWorld for ComputeNoisePipelines {
             image_2d_layout,
             image_3d_layout,
             pipelines: HashMap::new(),
+            _util_shader: world.resource::<AssetServer>().load("embedded://bevy_compute_noise/noise/shaders/util.wgsl"),
         }
     }
 }
+
