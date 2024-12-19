@@ -3,8 +3,6 @@
 
 @group(0) @binding(0)
 var texture: texture_storage_2d<rgba8unorm, read_write>;
-@group(0) @binding(1)
-var<storage, read> texture_size: vec2<f32>;
 
 struct NoiseParameters {
     seed: u32,
@@ -13,7 +11,7 @@ struct NoiseParameters {
     invert: u32,
     persistence: f32,
 };
-@group(1) @binding(0) var<storage, read> parameters: NoiseParameters;
+@group(1) @binding(0) var<uniform> parameters: NoiseParameters;
 
 @compute @workgroup_size(8, 8)
 fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {

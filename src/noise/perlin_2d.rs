@@ -1,7 +1,5 @@
-use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroupLayout, BindGroupLayoutEntries, BindingType, Buffer, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
+use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroupLayout, BindGroupLayoutEntries, BindingType, Buffer, BufferBindingType, BufferInitDescriptor, BufferUsages, IntoBindGroupLayoutEntryBuilderArray, ShaderDefVal, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
 use bytemuck::{Pod, Zeroable};
-
-use crate::image::ComputeNoiseSize;
 
 use super::{ComputeNoise, GpuComputeNoise};
 
@@ -30,7 +28,7 @@ impl Default for Perlin2d {
 impl ComputeNoise for Perlin2d {
     type Gpu = GpuPerlin2d;
 
-    fn buffers(&self, render_device: &RenderDevice, _size: ComputeNoiseSize) -> Vec<Buffer> { 
+    fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> { 
         Self::Gpu {
             seed: self.seed,
             frequency: self.frequency,
@@ -55,22 +53,6 @@ impl ComputeNoise for Perlin2d {
     fn shader_def() -> ShaderDefVal {
        "PERLIN_2D".into() 
     }
-
-    fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout {
-        render_device.create_bind_group_layout(
-            "worley2d_noise_layout",
-            &BindGroupLayoutEntries::sequential(
-                ShaderStages::COMPUTE,
-                (
-                    BindingType::Buffer {
-                        ty: BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                )
-            )
-        )
-    }
 }
 
 #[derive(Clone, Copy, Default, Pod, Zeroable)]
@@ -90,7 +72,7 @@ impl GpuComputeNoise for GpuPerlin2d {
                 &BufferInitDescriptor {
                     label: Some("perlin2d_buffer"),
                     contents: &bytemuck::cast_slice(&[self.clone()]),
-                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
+                    usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST
                 }
             )
         ]

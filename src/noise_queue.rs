@@ -31,7 +31,7 @@ pub fn prepare_compute_noise_buffers(
                 ComputeNoiseBuffers {
                     image: noise.0.clone(),
                     buffers: noise.1.0.iter()
-                        .map(|n| (n.type_id, n.buffers(&render_device, &size)))
+                        .map(|n| (n.type_id, n.buffers(&render_device)))
                         .collect(),
                     size,
                 }

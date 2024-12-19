@@ -9,7 +9,7 @@ struct NoiseParameters {
     invert: u32,
 };
 @group(1) @binding(0)
-var<storage, read> parameters: NoiseParameters;
+var<uniform> parameters: NoiseParameters;
 
 const INFINITY = 3.402823e+38;
 

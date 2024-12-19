@@ -1,6 +1,6 @@
 use std::{any::TypeId, marker::PhantomData};
 
-use bevy::{prelude::*, render::{render_resource::{binding_types::texture_storage_2d, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBindingType, CachedComputePipelineId, ComputePipelineDescriptor, IntoBindGroupLayoutEntryBuilder, PipelineCache, ShaderDefVal, ShaderRef, ShaderStages, SpecializedComputePipeline, StorageTextureAccess, TextureDimension, TextureFormat, TextureViewDimension}, renderer::RenderDevice}, utils::HashMap};
+use bevy::{prelude::*, render::{render_resource::{binding_types::{texture_storage_2d, uniform_buffer_sized}, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBindingType, CachedComputePipelineId, ComputePipelineDescriptor, DynamicBindGroupLayoutEntries, IntoBindGroupLayoutEntryBuilder, PipelineCache, ShaderDefVal, ShaderRef, ShaderStages, SpecializedComputePipeline, StorageTextureAccess, TextureDimension, TextureFormat, TextureViewDimension}, renderer::RenderDevice}, utils::HashMap};
 
 use crate::noise::ComputeNoise;
 
@@ -12,9 +12,23 @@ pub struct ComputeNoiseTypePipeline<T: ComputeNoise> {
 
 impl<T: ComputeNoise> ComputeNoiseTypePipeline<T> {
     pub fn create_pipeline(world: &mut World) {
-        let render_device = world.resource::<RenderDevice>();
+        let render_device = world.resource::<RenderDevice>().clone();
 
-        let noise_layout = T::bind_group_layout(render_device); 
+        let mut entries = DynamicBindGroupLayoutEntries::sequential(
+            ShaderStages::COMPUTE,
+            (T::bind_group_layout_entries()[0],)
+        );
+        for binding in T::bind_group_layout_entries().iter().skip(1) {
+            entries = entries.extend_sequential(
+                (*binding,)
+            )
+        }
+
+        let noise_layout = render_device.create_bind_group_layout(
+            Some("noise_layout".into()),
+            &entries,
+        );
+        
         let image_layout = world.resource::<ComputeNoisePipelines>().get_image_layout(T::texture_dimension()).clone();
 
         let shader = match T::shader() {
@@ -42,8 +56,22 @@ impl<T: ComputeNoise> ComputeNoiseTypePipeline<T> {
             _phantom_data: PhantomData,
         }.into());
 
+        let mut entries = DynamicBindGroupLayoutEntries::sequential(
+            ShaderStages::COMPUTE,
+            (uniform_buffer_sized(false, None),)
+        );
+        for binding in T::bind_group_layout_entries().iter() {
+            entries = entries.extend_sequential(
+                (*binding,)
+            )
+        }
+        let fbm_layout = render_device.create_bind_group_layout(
+            Some("fbm_layout"),
+            &entries,
+        );
+
         let mut fbm_pipelines = world.resource_mut::<ComputeNoiseFbmPipeline>();
-        fbm_pipelines.type_data.insert(TypeId::of::<T>(), (T::texture_dimension(), T::shader_def()));
+        fbm_pipelines.type_data.insert(TypeId::of::<T>(), (T::texture_dimension(), T::shader_def(), fbm_layout));
     }
 }
 
@@ -65,8 +93,7 @@ impl<T: ComputeNoise> From<ComputeNoiseTypePipeline<T>> for ComputeNoisePipeline
 pub struct ComputeNoiseFbmPipeline {
     pub image_2d_layout: BindGroupLayout,
     pub image_3d_layout: BindGroupLayout,
-    pub fbm_layout: BindGroupLayout,
-    pub type_data: HashMap<TypeId, (TextureDimension, ShaderDefVal)>,
+    pub type_data: HashMap<TypeId, (TextureDimension, ShaderDefVal, BindGroupLayout)>,
     shader: Handle<Shader>,
 }
 
@@ -76,49 +103,21 @@ impl FromWorld for ComputeNoiseFbmPipeline {
         
         let image_2d_layout = render_device.create_bind_group_layout(
             "image_2d_layout",
-            &BindGroupLayoutEntries::sequential(
+            &BindGroupLayoutEntries::single(
                 ShaderStages::COMPUTE,
-                (
-                    texture_storage_2d(TextureFormat::Rgba8Unorm, StorageTextureAccess::ReadWrite),
-                    BindingType::Buffer {
-                        ty: BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    }
-                )
+                texture_storage_2d(TextureFormat::Rgba8Unorm, StorageTextureAccess::ReadWrite),
             )
         );
         
         let image_3d_layout = render_device.create_bind_group_layout(
             "image_3d_layout",
-            &BindGroupLayoutEntries::sequential(
+            &BindGroupLayoutEntries::single(
                 ShaderStages::COMPUTE,
-                (
-                    BindingType::StorageTexture {
-                        access: StorageTextureAccess::ReadWrite,
-                        format: TextureFormat::Rgba8Unorm,
-                        view_dimension: TextureViewDimension::D3,
-                    }.into_bind_group_layout_entry_builder(),
-                    BindingType::Buffer {
-                        ty: BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    }
-                )
-            )
-        );
-
-        let fbm_layout = render_device.create_bind_group_layout(
-            "fbm_layout",
-            &BindGroupLayoutEntries::sequential(
-                ShaderStages::COMPUTE,
-                (
-                    BindingType::Buffer {
-                        ty: BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                )
+                BindingType::StorageTexture {
+                    access: StorageTextureAccess::ReadWrite,
+                    format: TextureFormat::Rgba8Unorm,
+                    view_dimension: TextureViewDimension::D3,
+                }.into_bind_group_layout_entry_builder(),
             )
         );
         
@@ -127,7 +126,6 @@ impl FromWorld for ComputeNoiseFbmPipeline {
         Self {
             image_2d_layout,
             image_3d_layout,
-            fbm_layout,
             type_data: HashMap::new(),
             shader,
         }
@@ -153,7 +151,7 @@ impl SpecializedComputePipeline for ComputeNoiseFbmPipeline {
 
         ComputePipelineDescriptor {
             label: Some("fbm_pipeline".into()),
-            layout: vec![image_layout.clone(), self.fbm_layout.clone()],
+            layout: vec![image_layout.clone(), type_data.2.clone()],
             push_constant_ranges: Vec::new(),
             shader: self.shader.clone(),
             shader_defs,

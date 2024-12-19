@@ -27,7 +27,7 @@ impl Default for Worley2d {
 impl ComputeNoise for Worley2d {
     type Gpu = GpuWorley2d;
 
-    fn buffers(&self, render_device: &RenderDevice, _size: ComputeNoiseSize) -> Vec<Buffer> {
+    fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
         Self::Gpu {
             seed: self.seed,
             frequency: self.frequency,
@@ -50,20 +50,6 @@ impl ComputeNoise for Worley2d {
     fn shader_def() -> ShaderDefVal {
        "WORLEY_2D".into() 
     }
-
-    fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout {
-        render_device.create_bind_group_layout(
-            "worley2d_noise_layout",
-            &BindGroupLayoutEntries::single(
-                ShaderStages::COMPUTE,
-                BindingType::Buffer {
-                    ty: BufferBindingType::Storage { read_only: true },
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-            )
-        )
-    }
 }
 
 #[derive(Clone, Copy, Default, Pod, Zeroable)]
@@ -81,7 +67,7 @@ impl GpuComputeNoise for GpuWorley2d {
                 &BufferInitDescriptor {
                     label: Some("worley2d_points_buffer"),
                     contents: &bytemuck::cast_slice(&[self.clone()]),
-                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
+                    usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST
                 }
             ),
         ] 

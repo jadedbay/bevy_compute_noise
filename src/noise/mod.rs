@@ -1,8 +1,6 @@
 use std::any::{Any, TypeId};
 
-use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_graph::RenderLabel, render_resource::{BindGroupLayout, Buffer, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
-
-use crate::image::ComputeNoiseSize;
+use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_graph::RenderLabel, render_resource::{binding_types::{uniform_buffer, uniform_buffer_sized}, BindGroupLayout, BindGroupLayoutEntries, BindGroupLayoutEntryBuilder, BindingType, Buffer, BufferBindingType, DynamicBindGroupLayoutEntries, IntoBindGroupLayoutEntryBuilderArray, IntoIndexedBindGroupLayoutEntryBuilderArray, ShaderDefVal, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
 
 pub mod worley_2d;
 pub mod worley_3d;
@@ -18,11 +16,13 @@ pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + Fro
 
     fn embed_shader(app: &mut App);
     
-    fn buffers(&self, render_device: &RenderDevice, size: ComputeNoiseSize) -> Vec<Buffer>;
+    fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer>;
     fn shader() -> ShaderRef;
     fn texture_dimension() -> TextureDimension;
     fn shader_def() -> ShaderDefVal;
-    fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout;
+    fn bind_group_layout_entries() -> Vec<BindGroupLayoutEntryBuilder> {
+        vec![uniform_buffer_sized(false, None)]
+    }
 }
 pub trait GpuComputeNoise: Sync + Send + 'static + Default + Clone {
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer>;
@@ -30,7 +30,7 @@ pub trait GpuComputeNoise: Sync + Send + 'static + Default + Clone {
 
 pub struct ErasedComputeNoise {
     noise_data: Box<dyn Any + Send + Sync>,
-    buffers_fn: Box<dyn Fn(&RenderDevice, &ComputeNoiseSize) -> Vec<Buffer> + Send + Sync>,
+    buffers_fn: Box<dyn Fn(&RenderDevice) -> Vec<Buffer> + Send + Sync>,
     pub texture_dimension: TextureDimension,
     pub type_id: TypeId,
 }
@@ -40,8 +40,8 @@ impl ErasedComputeNoise {
         self.noise_data.downcast_ref::<T>()
     }
 
-    pub fn buffers(&self, render_device: &RenderDevice, size: &ComputeNoiseSize) -> Vec<Buffer> {
-        (self.buffers_fn)(render_device, size)
+    pub fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
+        (self.buffers_fn)(render_device)
     }
 }
 
@@ -100,7 +100,7 @@ impl<T: ComputeNoise> From<T> for ErasedComputeNoise {
         Self {
             noise_data: Box::new(value.clone()),
             texture_dimension: T::texture_dimension(),
-            buffers_fn: Box::new(move |device, size| value.buffers(device, *size)),
+            buffers_fn: Box::new(move |device| value.buffers(device)),
             type_id: TypeId::of::<T>(),
         }
     }
