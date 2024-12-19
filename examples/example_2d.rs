@@ -11,6 +11,7 @@ fn main() {
             WorldInspectorPlugin::new(),
         ))
         .add_systems(Startup, setup)
+        .add_systems(Update, update_noise)
         .run();
 }
 
@@ -40,27 +41,11 @@ fn setup(
     }
 
     noise_queue.add(
-        handle.clone(), 
-        ComputeNoiseBuilder::new()
-            // .push_noise(Worley2d::new(1, 4, true))
-            .push_noise(Perlin2d {
-                seed: 5,
-                frequency: 5,
-                octaves: 4,
-                persistence: 0.4,
-                ..default()
-            })
-            .build(),
-    );
-
-    noise_queue.add(
         handle.clone(),
-        Perlin2d {
-            seed: 5,
-            frequency: 5,
-            octaves: 4,
-            persistence: 1.0,
-            ..default()
+        Worley2d {
+            seed: 1,
+            frequency: 4,
+            invert: true,
         }.into(),
     );
 
@@ -70,13 +55,32 @@ fn setup(
         MeshMaterial2d(materials.add(ImageMaterial {
             image: handle.clone(),
         })),
-        // ComputeNoiseComponent::<Perlin2d> {
-        //     image: handle.clone(),
-        //     noise: Perlin2d::new(0, 5, 4, true),
-        // },
     ));
 
     commands.spawn(Camera2d::default());
+}
+
+fn update_noise(
+    mut noise_queue: ResMut<ComputeNoiseQueue>,
+    query: Query<&MeshMaterial2d<ImageMaterial>>,
+    keys: Res<ButtonInput<KeyCode>>,
+    mut local: Local<u32>,
+    materials: Res<Assets<ImageMaterial>>,
+) {
+    if keys.just_pressed(KeyCode::Space) {
+        for material in query.iter() {
+            noise_queue.add(
+                materials.get(&material.0).unwrap().image.clone(),
+                Worley2d {
+                    seed: *local,
+                    frequency: 6,
+                    invert: true,
+                }.into(),
+            );
+        }
+        
+        *local = *local + 1;
+    }
 }
 
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect)]
