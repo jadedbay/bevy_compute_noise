@@ -1,6 +1,6 @@
 use std::any::{Any, TypeId};
 
-use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_graph::RenderLabel, render_resource::{BindGroupLayout, Buffer, ShaderRef, TextureDimension}, renderer::RenderDevice}};
+use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_graph::RenderLabel, render_resource::{BindGroupLayout, Buffer, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 
 use crate::image::ComputeNoiseSize;
 
@@ -17,11 +17,11 @@ pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + Fro
     type Gpu: GpuComputeNoise;
 
     fn embed_shader(app: &mut App);
-    fn render_label() -> impl RenderLabel;
-
+    
     fn buffers(&self, render_device: &RenderDevice, size: ComputeNoiseSize) -> Vec<Buffer>;
     fn shader() -> ShaderRef;
     fn texture_dimension() -> TextureDimension;
+    fn shader_def() -> ShaderDefVal;
     fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout;
 }
 pub trait GpuComputeNoise: Sync + Send + 'static + Default + Clone {
@@ -36,16 +36,6 @@ pub struct ErasedComputeNoise {
 }
 
 impl ErasedComputeNoise {
-    pub fn new<T: ComputeNoise>(noise: T) -> Self {
-        let noise_clone = noise.clone();
-        Self {
-            noise_data: Box::new(noise),
-            texture_dimension: T::texture_dimension(),
-            buffers_fn: Box::new(move |device, size| noise_clone.buffers(device, *size)),
-            type_id: TypeId::of::<T>(),
-        }
-    }
-
     pub fn as_noise<T: ComputeNoise>(&self) -> Option<&T> {
         self.noise_data.downcast_ref::<T>()
     }
@@ -58,7 +48,7 @@ impl ErasedComputeNoise {
 pub struct ComputeNoiseSequence(pub Vec<ErasedComputeNoise>);
 impl ComputeNoiseSequence {
     pub fn push_noise<T: ComputeNoise>(mut self, noise: T) -> Self {
-        self.0.push(ErasedComputeNoise::new(noise));
+        self.0.push(noise.into());
         self
     }
 
@@ -90,7 +80,7 @@ impl ComputeNoiseBuilder {
     }
 
     pub fn push_noise<T: ComputeNoise>(mut self, noise: T) -> Self {
-        self.0.push(ErasedComputeNoise::new(noise));
+        self.0.push(noise.into());
         self
     }
 
@@ -101,6 +91,17 @@ impl ComputeNoiseBuilder {
 
 impl<T: ComputeNoise> From<T> for ComputeNoiseSequence {
     fn from(value: T) -> Self {
-        Self(vec![ErasedComputeNoise::new(value)])
+        Self(vec![value.into()])
+    }
+}
+
+impl<T: ComputeNoise> From<T> for ErasedComputeNoise {
+    fn from(value: T) -> Self {
+        Self {
+            noise_data: Box::new(value.clone()),
+            texture_dimension: T::texture_dimension(),
+            buffers_fn: Box::new(move |device, size| value.buffers(device, *size)),
+            type_id: TypeId::of::<T>(),
+        }
     }
 }

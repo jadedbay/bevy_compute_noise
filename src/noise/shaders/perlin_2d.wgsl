@@ -44,8 +44,10 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
 
     // value = mix(textureLoad(texture, location).r, value, parameters.persistence);
 
+    let texture_size = textureDimensions(texture);
+
     let frequency = parameters.frequency;
-    let pixel = vec2<f32>(location) * f32(frequency) / texture_size;
+    let pixel = vec2<f32>(location) * f32(frequency) / vec2<f32>(texture_size);
     let value = perlin(pixel, i32(frequency));
 
     textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 1.0));

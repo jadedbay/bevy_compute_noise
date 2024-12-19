@@ -1,4 +1,4 @@
-use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroupLayout, BindGroupLayoutEntries, BindingType, Buffer, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
+use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroupLayout, BindGroupLayoutEntries, BindingType, Buffer, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::image::ComputeNoiseSize;
@@ -64,9 +64,6 @@ impl Default for Worley3d {
     }
 }
 
-#[derive(Default, Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
-pub struct Worley3dLabel;
-
 impl ComputeNoise for Worley3d {
     type Gpu = GpuWorley3d;
 
@@ -86,12 +83,12 @@ impl ComputeNoise for Worley3d {
         embedded_asset!(app, "shaders/worley_3d.wgsl");
     }
 
-    fn render_label() -> impl RenderLabel {
-        Worley3dLabel
-    }
-
     fn texture_dimension() -> TextureDimension {
         TextureDimension::D3
+    }
+
+    fn shader_def() -> ShaderDefVal {
+       "WORLEY_3D".into() 
     }
 
     fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout {

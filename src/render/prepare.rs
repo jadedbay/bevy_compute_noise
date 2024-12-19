@@ -24,19 +24,6 @@ pub fn prepare_bind_groups(
     let mut bind_groups: Vec<ComputeNoiseBindGroups> = Vec::new();
     for noise in queue.queue.iter() {
         if let Some(image) = gpu_images.get(&noise.image) {
-            let size_data = match noise.size {
-                    ComputeNoiseSize::D2(width, height) => vec![width as f32, height as f32],
-                    ComputeNoiseSize::D3(width, height, depth) => {
-                        vec![width as f32, height as f32, depth as f32]
-                    }
-            };
-
-            let image_size_buffer = render_device.create_buffer_with_data(&BufferInitDescriptor {
-                label: None,
-                contents: &bytemuck::cast_slice(size_data.as_slice()),
-                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
-            });
-
             let image_layout = match noise.size {
                 ComputeNoiseSize::D2(_, _) => &pipeline.image_2d_layout,
                 ComputeNoiseSize::D3(_, _, _) => &pipeline.image_3d_layout,
@@ -45,14 +32,7 @@ pub fn prepare_bind_groups(
             let image_bind_group = render_device.create_bind_group(
                     Some("image_bind_group".into()),
                     &image_layout,
-                    &BindGroupEntries::sequential((
-                        &image.texture_view,
-                        BufferBinding {
-                            buffer: &image_size_buffer,
-                            offset: 0,
-                            size: None,
-                        },
-                    )),
+                    &BindGroupEntries::single(&image.texture_view),
                 );
             
             let noise_bind_groups: Vec<(BindGroup, TypeId)> = noise.buffers
