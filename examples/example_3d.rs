@@ -12,6 +12,7 @@ fn main() {
             WorldInspectorPlugin::default(),
         ))
         .add_systems(Startup, setup)
+        .add_systems(Update, update_noise)
         .run();
 }
 
@@ -32,7 +33,11 @@ fn setup(
 
     noise_queue.add(
         handle.clone(), 
-        ComputeNoiseBuilder::new().push_noise(Worley3d::new(1, 4, false)).build(),
+        Worley3d {
+            seed: 0,
+            frequency: 5,
+            invert: true,
+        }.into()
     );
 
     let mut quad = Rectangle::default().mesh().build();
@@ -54,6 +59,29 @@ fn setup(
     ));
 
     commands.spawn(Camera2d::default());
+}
+
+fn update_noise(
+    mut noise_queue: ResMut<ComputeNoiseQueue>,
+    query: Query<&MeshMaterial2d<Image3dMaterial>>,
+    keys: Res<ButtonInput<KeyCode>>,
+    mut local: Local<u32>,
+    materials: Res<Assets<Image3dMaterial>>,
+) {
+    if keys.just_pressed(KeyCode::Space) {
+        for material in query.iter() {
+            noise_queue.add(
+                materials.get(&material.0).unwrap().image.clone(),
+                Worley3d {
+                    seed: *local,
+                    frequency: 6,
+                    invert: true,
+                }.into(),
+            );
+        }
+        
+        *local = *local + 1;
+    }
 }
 
 #[derive(Asset, AsBindGroup, Debug, Clone, InspectorOptions, Reflect)]
