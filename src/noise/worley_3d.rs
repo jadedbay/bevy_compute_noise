@@ -2,7 +2,7 @@ use bevy::{asset::embedded_asset, prelude::*, render::{render_resource::{Buffer,
 use bytemuck::{Pod, Zeroable};
 
 
-use super::ComputeNoise;
+use super::{ComputeNoise, ComputeNoiseType};
 
 #[derive(Clone, Reflect, PartialEq, Eq, Debug)]
 #[reflect(Default)]
@@ -34,17 +34,19 @@ impl ComputeNoise for Worley3d {
             ),
         ]
     }
+    
+    fn texture_dimension() -> TextureDimension {
+        TextureDimension::D3
+    }
+}
 
+impl ComputeNoiseType for Worley3d {
     fn shader() -> ShaderRef {
         "embedded://bevy_compute_noise/noise/shaders/worley_3d.wgsl".into()
     }
 
     fn embed_shader(app: &mut App) {
         embedded_asset!(app, "shaders/worley_3d.wgsl");
-    }
-
-    fn texture_dimension() -> TextureDimension {
-        TextureDimension::D3
     }
 
     fn shader_def() -> ShaderDefVal {

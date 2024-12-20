@@ -2,15 +2,15 @@ use std::{any::TypeId, marker::PhantomData};
 
 use bevy::{prelude::*, render::{render_resource::{binding_types::{texture_storage_2d, uniform_buffer_sized}, BindGroupLayout, BindGroupLayoutEntries, BindingType, CachedComputePipelineId, ComputePipelineDescriptor, DynamicBindGroupLayoutEntries, IntoBindGroupLayoutEntryBuilder, PipelineCache, ShaderDefVal, ShaderRef, ShaderStages, SpecializedComputePipeline, StorageTextureAccess, TextureDimension, TextureFormat, TextureViewDimension}, renderer::RenderDevice}, utils::HashMap};
 
-use crate::noise::ComputeNoise;
+use crate::noise::ComputeNoiseType;
 
-pub struct ComputeNoiseTypePipeline<T: ComputeNoise> {
+pub struct ComputeNoiseTypePipeline<T: ComputeNoiseType> {
     pub noise_layout: BindGroupLayout,
     pub pipeline_id: CachedComputePipelineId,
     _phantom_data: PhantomData<T>,
 }
 
-impl<T: ComputeNoise> ComputeNoiseTypePipeline<T> {
+impl<T: ComputeNoiseType> ComputeNoiseTypePipeline<T> {
     pub fn create_pipeline(world: &mut World) {
         let render_device = world.resource::<RenderDevice>().clone();
 
@@ -80,7 +80,7 @@ pub struct ComputeNoisePipeline {
     pub pipeline_id: CachedComputePipelineId,
 }
 
-impl<T: ComputeNoise> From<ComputeNoiseTypePipeline<T>> for ComputeNoisePipeline {
+impl<T: ComputeNoiseType> From<ComputeNoiseTypePipeline<T>> for ComputeNoisePipeline {
     fn from(compute_noise_pipeline: ComputeNoiseTypePipeline<T>) -> Self {
         ComputeNoisePipeline {
             noise_layout: compute_noise_pipeline.noise_layout,
@@ -159,7 +159,7 @@ impl ComputeNoisePipelines {
         self.pipelines.get(&type_id)
     }
 
-    pub fn add_pipeline<T: ComputeNoise>(&mut self, pipeline: ComputeNoisePipeline) {
+    pub fn add_pipeline<T: ComputeNoiseType>(&mut self, pipeline: ComputeNoisePipeline) {
         self.pipelines.insert(TypeId::of::<T>(), pipeline);
     }
 

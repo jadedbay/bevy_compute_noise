@@ -12,16 +12,19 @@ pub use worley_3d::Worley3d;
 pub use perlin_2d::Perlin2d;
 pub use fbm::Fbm;
 
-pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + FromReflect + GetTypeRegistration + Typed {
+pub trait ComputeNoiseType: ComputeNoise {
     fn embed_shader(app: &mut App);
     
-    fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer>;
     fn shader() -> ShaderRef;
-    fn texture_dimension() -> TextureDimension;
     fn shader_def() -> ShaderDefVal;
     fn bind_group_layout_entries() -> Vec<BindGroupLayoutEntryBuilder> {
         vec![uniform_buffer_sized(false, None)]
     }
+}
+
+pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + FromReflect + GetTypeRegistration + Typed {
+    fn texture_dimension() -> TextureDimension;
+    fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer>;
 }
 
 pub struct ErasedComputeNoise {

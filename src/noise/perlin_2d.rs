@@ -1,7 +1,7 @@
 use bevy::{asset::embedded_asset, prelude::*, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 use bytemuck::{Pod, Zeroable};
 
-use super::ComputeNoise;
+use super::{ComputeNoise, ComputeNoiseType};
 
 #[derive(Clone, Reflect, PartialEq, Debug)]
 #[reflect(Default)]
@@ -38,6 +38,12 @@ impl ComputeNoise for Perlin2d {
         ]
     }
 
+    fn texture_dimension() -> TextureDimension {
+        TextureDimension::D2
+    }
+}
+
+impl ComputeNoiseType for Perlin2d {
     fn shader() -> ShaderRef {
         "embedded://bevy_compute_noise/noise/shaders/perlin_2d.wgsl".into()
     }
@@ -46,9 +52,6 @@ impl ComputeNoise for Perlin2d {
         embedded_asset!(app, "shaders/perlin_2d.wgsl");
     }
 
-    fn texture_dimension() -> TextureDimension {
-        TextureDimension::D2
-    }
 
     fn shader_def() -> ShaderDefVal {
        "PERLIN_2D".into() 

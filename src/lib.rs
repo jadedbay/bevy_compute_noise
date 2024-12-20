@@ -8,7 +8,7 @@ use noise_queue::{prepare_compute_noise_buffers, ComputeNoiseBufferQueue};
 use render::{compute::{compute_noise, submit_compute_noise, ComputeNoiseEncoder}, pipeline::{ComputeNoiseFbmPipeline, ComputeNoisePipelines}};
 
 use crate::{
-    noise::ComputeNoise,
+    noise::ComputeNoiseType,
     noise_queue::{ComputeNoiseQueue, ComputeNoiseRenderQueue},
     render::{
         extract::extract_compute_noise_queue,
@@ -25,16 +25,16 @@ mod render;
 pub mod prelude {
     pub use crate::{
         image::{ComputeNoiseImage, ComputeNoiseSize, ComputeNoiseFormat},
-        noise::{Worley2d, Worley3d, Perlin2d, ComputeNoiseBuilder},
+        noise::{Worley2d, Worley3d, Perlin2d, Fbm, ComputeNoiseBuilder},
         noise_queue::ComputeNoiseQueue,
         ComputeNoisePlugin
     };
 }
 
 #[derive(Default)]
-pub struct ComputeNoiseTypePlugin<T: ComputeNoise>(PhantomData<T>);
+pub struct ComputeNoiseTypePlugin<T: ComputeNoiseType>(PhantomData<T>);
 
-impl<T: ComputeNoise> Plugin for ComputeNoiseTypePlugin<T> {
+impl<T: ComputeNoiseType> Plugin for ComputeNoiseTypePlugin<T> {
     fn build(&self, app: &mut App) {
         T::embed_shader(app);
         app.register_type::<T>();
