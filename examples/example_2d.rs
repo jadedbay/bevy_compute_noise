@@ -32,22 +32,36 @@ fn setup(
 
 
     let mut quad = Rectangle::default().mesh().build();
-    if let Some(uvs) = quad.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
-        if let VertexAttributeValues::Float32x2(uvs) = uvs {
-            for uv in uvs.iter_mut() {
-                *uv = [uv[0] * 2.0, uv[1] * 2.0];
-            }
-        }
-    }
+    // if let Some(uvs) = quad.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
+    //     if let VertexAttributeValues::Float32x2(uvs) = uvs {
+    //         for uv in uvs.iter_mut() {
+    //             *uv = [uv[0] * 2.0, uv[1] * 2.0];
+    //         }
+    //     }
+    // }
 
     noise_queue.add(
         handle.clone(),
-        Worley2d {
+        Perlin2d {
             seed: 1,
-            frequency: 4,
+            frequency: 4.0,
             invert: true,
         }.into(),
     );
+
+    // noise_queue.add(
+    //     handle.clone(),
+    //     Fbm::<Perlin2d> {
+    //         noise: Perlin2d {
+    //             seed: 1,
+    //             frequency: 8.0,
+    //             invert: true,
+    //         },
+    //         octaves: 3,
+    //         lacunarity: 2.0,
+    //         persistence: 0.4,
+    //     }.into(),
+    // );
 
     commands.spawn((
         Mesh2d(meshes.add(quad)),
@@ -71,10 +85,15 @@ fn update_noise(
         for material in query.iter() {
             noise_queue.add(
                 materials.get(&material.0).unwrap().image.clone(),
-                Worley2d {
-                    seed: *local,
-                    frequency: 6,
-                    invert: true,
+                Fbm::<Perlin2d> {
+                    noise: Perlin2d {
+                        seed: *local,
+                        frequency: 8.0,
+                        invert: true,
+                    },
+                    octaves: 3,
+                    lacunarity: 2.0,
+                    persistence: 0.4,
                 }.into(),
             );
         }

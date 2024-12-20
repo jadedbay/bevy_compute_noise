@@ -1,68 +1,52 @@
-use bevy::{reflect::Reflect, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef}, renderer::RenderDevice}};
+use bevy::{reflect::Reflect, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 use bytemuck::{Pod, Zeroable};
 
 
-use super::ComputeNoise;
+use super::{ComputeNoise, ComputeNoiseType};
 
 #[derive(Clone, Reflect, Default)] // TODO: manual default impl
 pub struct Fbm<T: ComputeNoise> {
     pub noise: T,
     pub octaves: u32,
-    pub frequency: f32,
     pub lacunarity: f32,
     pub persistence: f32,
 }
 
-// impl<T: ComputeNoise> ComputeNoise for Fbm<T> {
-//     type Gpu = GpuFbm;
+impl<T: ComputeNoiseType> ComputeNoise for Fbm<T> {
+    const FBM: bool = true;
 
-//     fn embed_shader(_app: &mut App) {}
-//     fn shader() -> ShaderRef {"".into()}
-//     fn shader_def() -> ShaderDefVal {"".into()}
-//     fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout {
-//         render_device.create_bind_group_layout(
-//             "unused",
-//             &BindGroupLayoutEntries::sequential(
-//                 ShaderStages::COMPUTE,
-//                 (
-//                     BindingType::Buffer {
-//                         ty: BufferBindingType::Storage { read_only: true },
-//                         has_dynamic_offset: false,
-//                         min_binding_size: None,
-//                     },
-//                 )
-//             )
-//         )
-//     }
-//     fn texture_dimension() -> TextureDimension {
-//         T::texture_dimension()
-//     }
-//     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
-//         Self::Gpu {
-            
-//         }
-//     }
-// }
+    fn texture_dimension() -> TextureDimension {
+        T::texture_dimension()
+    }
+    fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
+        let mut buffers = vec![    
+            render_device.create_buffer_with_data(
+                &BufferInitDescriptor {
+                    label: Some("perlin2d_buffer"),
+                    contents: &bytemuck::cast_slice(&[GpuFbm::from(self.clone())]),
+                    usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST
+                }
+            )
+        ];
+        buffers.extend(self.noise.buffers(render_device));
+        buffers
+    }
+}
 
 #[derive(Clone, Copy, Default, Pod, Zeroable)]
 #[repr(C)]
 pub struct GpuFbm {
     pub octaves: u32,
-    pub frequency: f32,
     pub lacunarity: f32,
     pub persistence: f32,
 }
 
-// impl GpuComputeNoise for GpuFbm {
-//     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
-//         vec![
-//             render_device.create_buffer_with_data(
-//                 &BufferInitDescriptor {
-//                     label: Some("fbm_buffer"),
-//                     contents: &bytemuck::cast_slice(&[self.clone()]),
-//                     usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
-//                 }
-//             )
-//         ]
-//     }
-// }
+impl<T: ComputeNoiseType> From<Fbm<T>> for GpuFbm {
+    fn from(value: Fbm<T>) -> Self {
+        Self {
+            octaves: value.octaves,
+            lacunarity: value.lacunarity,
+            persistence: value.persistence,
+        }
+    }
+}

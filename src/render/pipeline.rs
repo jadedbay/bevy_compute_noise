@@ -2,7 +2,7 @@ use std::{any::TypeId, marker::PhantomData};
 
 use bevy::{prelude::*, render::{render_resource::{binding_types::{texture_storage_2d, uniform_buffer_sized}, BindGroupLayout, BindGroupLayoutEntries, BindingType, CachedComputePipelineId, ComputePipelineDescriptor, DynamicBindGroupLayoutEntries, IntoBindGroupLayoutEntryBuilder, PipelineCache, ShaderDefVal, ShaderRef, ShaderStages, SpecializedComputePipeline, StorageTextureAccess, TextureDimension, TextureFormat, TextureViewDimension}, renderer::RenderDevice}, utils::HashMap};
 
-use crate::noise::ComputeNoiseType;
+use crate::noise::{ComputeNoise, ComputeNoiseType};
 
 pub struct ComputeNoiseTypePipeline<T: ComputeNoiseType> {
     pub noise_layout: BindGroupLayout,
@@ -75,6 +75,7 @@ impl<T: ComputeNoiseType> ComputeNoiseTypePipeline<T> {
     }
 }
 
+#[derive(Clone)]
 pub struct ComputeNoisePipeline {
     pub noise_layout: BindGroupLayout,
     pub pipeline_id: CachedComputePipelineId,
@@ -159,7 +160,7 @@ impl ComputeNoisePipelines {
         self.pipelines.get(&type_id)
     }
 
-    pub fn add_pipeline<T: ComputeNoiseType>(&mut self, pipeline: ComputeNoisePipeline) {
+    pub fn add_pipeline<T: ComputeNoise>(&mut self, pipeline: ComputeNoisePipeline) {
         self.pipelines.insert(TypeId::of::<T>(), pipeline);
     }
 

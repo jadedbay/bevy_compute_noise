@@ -32,12 +32,17 @@ fn setup(
     let handle = images.add(image);
 
     noise_queue.add(
-        handle.clone(), 
-        Worley3d {
-            seed: 0,
-            frequency: 5,
-            invert: true,
-        }.into()
+        handle.clone(),
+        Fbm::<Worley3d> {
+            noise: Worley3d {
+                seed: 1,
+                frequency: 4.0,
+                invert: true,
+            },
+            octaves: 3,
+            lacunarity: 2.0,
+            persistence: 0.4,
+        }.into(),
     );
 
     let mut quad = Rectangle::default().mesh().build();
@@ -72,10 +77,15 @@ fn update_noise(
         for material in query.iter() {
             noise_queue.add(
                 materials.get(&material.0).unwrap().image.clone(),
-                Worley3d {
-                    seed: *local,
-                    frequency: 6,
-                    invert: true,
+                Fbm::<Worley3d> {
+                    noise: Worley3d {
+                        seed: *local,
+                        frequency: 4.0,
+                        invert: true,
+                    },
+                    octaves: 3,
+                    lacunarity: 2.0,
+                    persistence: 0.4,
                 }.into(),
             );
         }

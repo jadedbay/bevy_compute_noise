@@ -26,10 +26,11 @@ impl FromWorld for ComputeNoiseEncoder {
 pub fn compute_noise(
     mut compute_noise_encoder: ResMut<ComputeNoiseEncoder>,
     mut compute_noise_queue: ResMut<ComputeNoiseRenderQueue>,
-    pipeline_cache: Res<PipelineCache>,
-    pipelines: Res<ComputeNoisePipelines>,
+    mut pipeline_cache: ResMut<PipelineCache>,
 ) {
     if compute_noise_queue.queue.is_empty() { return; }
+    pipeline_cache.process_queue();
+
     let mut dispatched = false;
 
     let Some(encoder) = &mut compute_noise_encoder.encoder else { return error!("Encoder is None") };
@@ -38,8 +39,8 @@ pub fn compute_noise(
     for bind_groups in compute_noise_queue.queue.iter() {
         pass.set_bind_group(0, &bind_groups.image_bind_group, &[]);
         
-        for (noise_bind_group, type_id) in bind_groups.noise_bind_groups.iter() {
-            if let Some(pipeline) = pipeline_cache.get_compute_pipeline(pipelines.get_pipeline(*type_id).unwrap().pipeline_id) {
+        for (noise_bind_group, compute_noise_pipeline) in bind_groups.noise_bind_groups.iter() {
+            if let Some(pipeline) = pipeline_cache.get_compute_pipeline(compute_noise_pipeline.pipeline_id) {
                 pass.set_pipeline(pipeline);
                 pass.set_bind_group(1, noise_bind_group, &[]);
                 

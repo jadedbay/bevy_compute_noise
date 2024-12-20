@@ -1,13 +1,10 @@
 #define_import_path bevy_compute_noise::worley3d
 
-#import bevy_compute_noise::util::{hash33, INFINITY}
-
-@group(0) @binding(0)
-var texture: texture_storage_3d<rgba8unorm, read_write>;
+#import bevy_compute_noise::util::{hash33, INFINITY, texture3d as texture}
 
 struct NoiseParameters {
     seed: u32,
-    frequency: u32,
+    frequency: f32,
     invert: u32,
 };
 @group(1) @binding(0)
@@ -37,9 +34,9 @@ fn noise(location: vec3<u32>, parameters: NoiseParameters) -> f32 {
                 let offset = vec3<f32>(f32(x), f32(y), f32(z));
             
                 let id = vec3<f32>(
-                    (cell_id.x + f32(x) + freq) % freq,
-                    (cell_id.y + f32(y) + freq) % freq,
-                    (cell_id.z + f32(z) + freq) % freq,
+                   fract((cell_id.x + f32(x)) / freq) * freq,
+                   fract((cell_id.y + f32(y)) / freq) * freq,
+                   fract((cell_id.z + f32(z)) / freq) * freq,
                 );
 
                 let seeded_id = id + vec3<f32>(f32(parameters.seed) * 333, f32(parameters.seed) * 563, f32(parameters.seed) * 122);

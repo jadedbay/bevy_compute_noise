@@ -2,6 +2,9 @@
 
 #import bevy_render::maths::PI
 
+@group(0) @binding(0) var texture2d: texture_storage_2d<rgba8unorm, read_write>;
+@group(0) @binding(0) var texture3d: texture_storage_3d<rgba8unorm, read_write>;
+
 const INFINITY = 3.402823e+38;
 
 const UI0 = 1597334673u;
@@ -37,11 +40,11 @@ fn interpolate_quintic(a0: f32, a1: f32, w: f32) -> f32 {
     return a0 + (a1 - a0) * (6.0 * w5 - 15.0 * w4 + 10.0 * w3);
 }
 
-fn random_gradient(seed: u32, i: vec2<i32>) -> vec2<f32> {
+fn random_gradient(seed: u32, i: vec2<f32>) -> vec2<f32> {
     let w = 32u;
     let s = w / 2u;
-    var a = u32(i.x) + seed;
-    var b = u32(i.y) + seed;
+    var a = u32(floor(i.x)) + seed;
+    var b = u32(floor(i.y)) + seed;
 
     a *= 3284157443u;
     b ^= (b << s) | (b >> (w - s));

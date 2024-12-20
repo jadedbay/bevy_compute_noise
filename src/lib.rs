@@ -1,11 +1,11 @@
 use std::marker::PhantomData;
 
 use bevy::{
-    asset::embedded_asset, prelude::*, render::{Render, RenderApp, RenderSet}
+    asset::embedded_asset, prelude::*, render::{render_resource::SpecializedComputePipelines, Render, RenderApp, RenderSet}
 };
 use noise::{Perlin2d, Worley2d, Worley3d};
 use noise_queue::{prepare_compute_noise_buffers, ComputeNoiseBufferQueue};
-use render::{compute::{compute_noise, submit_compute_noise, ComputeNoiseEncoder}, pipeline::{ComputeNoiseFbmPipeline, ComputeNoisePipelines}};
+use render::{compute::{compute_noise, submit_compute_noise, ComputeNoiseEncoder}, pipeline::{ComputeNoiseFbmPipeline, ComputeNoisePipelines}, prepare::prepare_fbm_pipeline};
 
 use crate::{
     noise::ComputeNoiseType,
@@ -38,6 +38,9 @@ impl<T: ComputeNoiseType> Plugin for ComputeNoiseTypePlugin<T> {
     fn build(&self, app: &mut App) {
         T::embed_shader(app);
         app.register_type::<T>();
+
+        let render_app = app.sub_app_mut(RenderApp);
+        render_app.add_systems(Render, prepare_fbm_pipeline::<T>.in_set(RenderSet::Prepare));
    }
 
     fn finish(&self, app: &mut App) {
@@ -64,8 +67,7 @@ impl Plugin for ComputeNoisePlugin {
             ))
             .init_resource::<ComputeNoiseQueue>()
             .init_resource::<ComputeNoiseBufferQueue>()
-            .add_systems(PostUpdate, prepare_compute_noise_buffers
-        );
+            .add_systems(PostUpdate, prepare_compute_noise_buffers);
 
         let render_app = app.sub_app_mut(RenderApp);
 
@@ -86,6 +88,7 @@ impl Plugin for ComputeNoisePlugin {
         render_app
             .init_resource::<ComputeNoisePipelines>()
             .init_resource::<ComputeNoiseFbmPipeline>()
+            .init_resource::<SpecializedComputePipelines<ComputeNoiseFbmPipeline>>()
             .init_resource::<ComputeNoiseEncoder>();
     }
 }

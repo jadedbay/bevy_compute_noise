@@ -7,20 +7,16 @@ use super::{ComputeNoise, ComputeNoiseType};
 #[reflect(Default)]
 pub struct Perlin2d {
     pub seed: u32,
-    pub frequency: u32,
-    pub octaves: u32,
+    pub frequency: f32,
     pub invert: bool,
-    pub persistence: f32,
 }
 
 impl Default for Perlin2d {
     fn default() -> Self {
         Self {
             seed: 0,
-            frequency: 5,
-            octaves: 4,
+            frequency: 5.0,
             invert: false,
-            persistence: 1.0,
         }
     }
 }
@@ -54,7 +50,7 @@ impl ComputeNoiseType for Perlin2d {
 
 
     fn shader_def() -> ShaderDefVal {
-       "PERLIN_2D".into() 
+       "PERLIN2D".into() 
     }
 }
 
@@ -62,10 +58,8 @@ impl ComputeNoiseType for Perlin2d {
 #[repr(C)]
 pub struct GpuPerlin2d {
     seed: u32,
-    frequency: u32,
-    octaves: u32,
+    frequency: f32,
     invert: u32,
-    persistence: f32,
 }
 
 impl From<Perlin2d> for GpuPerlin2d {
@@ -73,9 +67,7 @@ impl From<Perlin2d> for GpuPerlin2d {
         Self {
             seed: value.seed,
             frequency: value.frequency,
-            octaves: value.octaves,
             invert: value.invert as u32,
-            persistence: value.persistence,
         }
     }
 }

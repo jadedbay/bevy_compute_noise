@@ -4,11 +4,11 @@ use bytemuck::{Pod, Zeroable};
 
 use super::{ComputeNoise, ComputeNoiseType};
 
-#[derive(Clone, Reflect, PartialEq, Eq, Debug)]
+#[derive(Clone, Reflect, PartialEq, Debug)]
 #[reflect(Default)]
 pub struct Worley3d {
     pub seed: u32,
-    pub frequency: u32,
+    pub frequency: f32,
     pub invert: bool,
 }
 
@@ -16,7 +16,7 @@ impl Default for Worley3d {
     fn default() -> Self {
         Self {
             seed: 0,
-            frequency: 5,
+            frequency: 5.0,
             invert: false,
         }
     }
@@ -50,7 +50,7 @@ impl ComputeNoiseType for Worley3d {
     }
 
     fn shader_def() -> ShaderDefVal {
-       "WORLEY_3D".into() 
+       "WORLEY3D".into() 
     }
 }
 
@@ -58,7 +58,7 @@ impl ComputeNoiseType for Worley3d {
 #[repr(C)]
 pub struct GpuWorley3d {
     seed: u32,
-    frequency: u32,
+    frequency: f32,
     invert: u32,
 }
 

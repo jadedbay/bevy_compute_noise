@@ -1,13 +1,10 @@
 #define_import_path bevy_compute_noise::worley2d
 
-#import bevy_compute_noise::util::{hash22, INFINITY}
-
-@group(0) @binding(0)
-var texture: texture_storage_2d<rgba8unorm, read_write>;
+#import bevy_compute_noise::util::{hash22, INFINITY, texture2d as texture}
 
 struct NoiseParameters {
     seed: u32,
-    frequency: u32,
+    frequency: f32,
     invert: u32,
 };
 @group(1) @binding(0)
@@ -15,17 +12,16 @@ var<uniform> parameters: NoiseParameters;
 
 @compute @workgroup_size(8, 8)
 fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
-    let location = invocation_id.xy;
-
-    let value = noise(location, parameters);
-    textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 1.0));
+    let value = noise(invocation_id.xy, parameters);
+    textureStore(texture, invocation_id.xy, vec4<f32>(value, 0.0, 0.0, 1.0));
 }
 
-fn noise(location: vec2<u32>, parameters: NoiseParameters) -> f32 {
+fn noise(ulocation: vec2<u32>, parameters: NoiseParameters) -> f32 {
+    let location = vec2<f32>(ulocation);
     let texture_size = textureDimensions(texture);
     
-    let uv = vec2<f32>(location) / vec2<f32>(texture_size);
-    let freq = f32(parameters.frequency);
+    let uv = location / vec2<f32>(texture_size);
+    let freq = parameters.frequency;
     
     let scaled_uv = uv * freq;
     
@@ -38,8 +34,8 @@ fn noise(location: vec2<u32>, parameters: NoiseParameters) -> f32 {
             let offset = vec2<f32>(f32(x), f32(y));
             
             let id = vec2<f32>(
-               (cell_id.x + f32(x) + freq) % freq,
-               (cell_id.y + f32(y) + freq) % freq
+                fract((cell_id.x + f32(x)) / freq) * freq,
+                fract((cell_id.y + f32(y)) / freq) * freq
             );
 
             let seeded_id = id + vec2<f32>(f32(parameters.seed) * 333, f32(parameters.seed) * 563);

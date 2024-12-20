@@ -6,7 +6,7 @@ use bevy::{
     }
 };
 
-use crate::{image::ComputeNoiseSize, noise::ComputeNoiseSequence};
+use crate::{image::ComputeNoiseSize, noise::ComputeNoiseSequence, render::pipeline::ComputeNoisePipeline};
 
 #[derive(Resource, Default)]
 pub struct ComputeNoiseQueue {
@@ -47,7 +47,7 @@ pub fn prepare_compute_noise_buffers(
 #[derive(Clone)]
 pub struct ComputeNoiseBindGroups {
     pub image_bind_group: BindGroup,
-    pub noise_bind_groups: Vec<(BindGroup, TypeId)>,
+    pub noise_bind_groups: Vec<(BindGroup, ComputeNoisePipeline)>,
     pub size: ComputeNoiseSize,
 }
 
