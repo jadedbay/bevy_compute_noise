@@ -4,14 +4,14 @@ use bevy::{
     prelude::*,
     render::{
         render_asset::RenderAssets,
-        render_resource::{BindGroup, BindGroupEntries, BindGroupEntry, BufferBinding, BufferInitDescriptor, BufferUsages},
+        render_resource::{BindGroup, BindGroupEntries, BindGroupEntry},
         renderer::RenderDevice,
         texture::GpuImage,
     },
 };
 
 use crate::{
-    image::ComputeNoiseSize, noise::{ComputeNoise, GpuComputeNoise}, noise_queue::{ComputeNoiseBindGroups, ComputeNoiseBufferQueue, ComputeNoiseQueue, ComputeNoiseRenderQueue}, render::pipeline::ComputeNoisePipelines
+    image::ComputeNoiseSize, noise_queue::{ComputeNoiseBindGroups, ComputeNoiseBufferQueue, ComputeNoiseRenderQueue}, render::pipeline::ComputeNoisePipelines
 };
 
 pub fn prepare_bind_groups(

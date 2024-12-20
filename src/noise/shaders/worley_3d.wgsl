@@ -1,4 +1,6 @@
-#import bevy_compute_noise::util::hash33
+#define_import_path bevy_compute_noise::worley3d
+
+#import bevy_compute_noise::util::{hash33, INFINITY}
 
 @group(0) @binding(0)
 var texture: texture_storage_3d<rgba8unorm, read_write>;
@@ -11,15 +13,13 @@ struct NoiseParameters {
 @group(1) @binding(0)
 var<uniform> parameters: NoiseParameters;
 
-const INFINITY = 3.402823e+38;
-
 @compute @workgroup_size(8, 8, 8)
-fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
-    let location = vec3<u32>(
-        invocation_id.x,
-        invocation_id.y,
-        invocation_id.z,
-    );
+fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
+    let value = noise(invocation_id, parameters);
+    textureStore(texture, invocation_id, vec4<f32>(value, 0.0, 0.0, 0.0));
+}
+
+fn noise(location: vec3<u32>, parameters: NoiseParameters) -> f32 {
     let texture_size = textureDimensions(texture);
 
     let uv = vec3<f32>(location) / vec3<f32>(texture_size);
@@ -55,10 +55,10 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
 
     // var normalized_distance = min_distance / distance(vec3<f32>(0.0, 0.0, 0.0), cell_size);
 
-    var normalized_distance = min_distance;
+    var value = min_distance;
     if (parameters.invert != 0u) {
-        normalized_distance = 1.0 - normalized_distance;
+        value = 1.0 - value;
     }
 
-    textureStore(texture, location, vec4<f32>(normalized_distance, 0.0, 0.0, 0.0));
+    return value;
 }

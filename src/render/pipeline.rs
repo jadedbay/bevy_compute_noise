@@ -1,6 +1,6 @@
 use std::{any::TypeId, marker::PhantomData};
 
-use bevy::{prelude::*, render::{render_resource::{binding_types::{texture_storage_2d, uniform_buffer_sized}, BindGroupLayout, BindGroupLayoutEntries, BindingType, BufferBindingType, CachedComputePipelineId, ComputePipelineDescriptor, DynamicBindGroupLayoutEntries, IntoBindGroupLayoutEntryBuilder, PipelineCache, ShaderDefVal, ShaderRef, ShaderStages, SpecializedComputePipeline, StorageTextureAccess, TextureDimension, TextureFormat, TextureViewDimension}, renderer::RenderDevice}, utils::HashMap};
+use bevy::{prelude::*, render::{render_resource::{binding_types::{texture_storage_2d, uniform_buffer_sized}, BindGroupLayout, BindGroupLayoutEntries, BindingType, CachedComputePipelineId, ComputePipelineDescriptor, DynamicBindGroupLayoutEntries, IntoBindGroupLayoutEntryBuilder, PipelineCache, ShaderDefVal, ShaderRef, ShaderStages, SpecializedComputePipeline, StorageTextureAccess, TextureDimension, TextureFormat, TextureViewDimension}, renderer::RenderDevice}, utils::HashMap};
 
 use crate::noise::ComputeNoise;
 
@@ -45,7 +45,7 @@ impl<T: ComputeNoise> ComputeNoiseTypePipeline<T> {
                 push_constant_ranges: Vec::new(),
                 shader,
                 shader_defs: vec![],
-                entry_point: "noise".into(),
+                entry_point: "main".into(),
                 zero_initialize_workgroup_memory: false,
             });
 
@@ -60,15 +60,15 @@ impl<T: ComputeNoise> ComputeNoiseTypePipeline<T> {
             ShaderStages::COMPUTE,
             (uniform_buffer_sized(false, None),)
         );
-        for binding in T::bind_group_layout_entries().iter() {
+        for binding in T::bind_group_layout_entries() {
             entries = entries.extend_sequential(
-                (*binding,)
+                (binding,)
             )
         }
         let fbm_layout = render_device.create_bind_group_layout(
             Some("fbm_layout"),
             &entries,
-        );
+        ); 
 
         let mut fbm_pipelines = world.resource_mut::<ComputeNoiseFbmPipeline>();
         fbm_pipelines.type_data.insert(TypeId::of::<T>(), (T::texture_dimension(), T::shader_def(), fbm_layout));
@@ -99,33 +99,13 @@ pub struct ComputeNoiseFbmPipeline {
 
 impl FromWorld for ComputeNoiseFbmPipeline {
     fn from_world(world: &mut World) -> Self {
-        let render_device = world.resource::<RenderDevice>();
-        
-        let image_2d_layout = render_device.create_bind_group_layout(
-            "image_2d_layout",
-            &BindGroupLayoutEntries::single(
-                ShaderStages::COMPUTE,
-                texture_storage_2d(TextureFormat::Rgba8Unorm, StorageTextureAccess::ReadWrite),
-            )
-        );
-        
-        let image_3d_layout = render_device.create_bind_group_layout(
-            "image_3d_layout",
-            &BindGroupLayoutEntries::single(
-                ShaderStages::COMPUTE,
-                BindingType::StorageTexture {
-                    access: StorageTextureAccess::ReadWrite,
-                    format: TextureFormat::Rgba8Unorm,
-                    view_dimension: TextureViewDimension::D3,
-                }.into_bind_group_layout_entry_builder(),
-            )
-        );
+        let pipelines = world.resource::<ComputeNoisePipelines>();
         
         let shader = world.resource::<AssetServer>().load("embedded://bevy_compute_noise/noise/shaders/fbm.wgsl");
 
         Self {
-            image_2d_layout,
-            image_3d_layout,
+            image_2d_layout: pipelines.image_2d_layout.clone(),
+            image_3d_layout: pipelines.image_3d_layout.clone(),
             type_data: HashMap::new(),
             shader,
         }
@@ -142,12 +122,18 @@ impl SpecializedComputePipeline for ComputeNoiseFbmPipeline {
     fn specialize(&self, key: Self::Key) -> ComputePipelineDescriptor {
         let type_data = self.type_data.get(&key.noise_type_id).unwrap();
 
-        let image_layout = match type_data.0 {
-            TextureDimension::D3 => self.image_3d_layout.clone(),
-            _ => self.image_2d_layout.clone(),
-        };
+        let mut shader_defs = vec![type_data.1.clone()];
 
-        let shader_defs = vec![type_data.1.clone()]; 
+        let image_layout = match type_data.0 {
+            TextureDimension::D3 => {
+                shader_defs.push("3D".into());
+                self.image_3d_layout.clone(
+            )}
+            _ => {
+                shader_defs.push("2D".into());
+                self.image_2d_layout.clone()
+            },
+        };
 
         ComputePipelineDescriptor {
             label: Some("fbm_pipeline".into()),

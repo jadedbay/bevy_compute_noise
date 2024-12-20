@@ -1,9 +1,8 @@
-use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroupLayout, BindGroupLayoutEntries, BindingType, Buffer, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
+use bevy::{asset::embedded_asset, prelude::*, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 use bytemuck::{Pod, Zeroable};
 
-use crate::image::ComputeNoiseSize;
 
-use super::{ComputeNoise, GpuComputeNoise};
+use super::ComputeNoise;
 
 #[derive(Clone, Reflect, PartialEq, Eq, Debug)]
 #[reflect(Default)]
@@ -24,14 +23,16 @@ impl Default for Worley3d {
 }
 
 impl ComputeNoise for Worley3d {
-    type Gpu = GpuWorley3d;
-
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
-        Self::Gpu {
-            seed: self.seed,
-            frequency: self.frequency,
-            invert: self.invert as u32,
-        }.buffers(render_device)
+        vec![
+            render_device.create_buffer_with_data(
+                &BufferInitDescriptor {
+                    label: Some("worley3d_points_buffer"),
+                    contents: &bytemuck::cast_slice(&[GpuWorley3d::from(self.clone())]),
+                    usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST
+                }
+            ),
+        ]
     }
 
     fn shader() -> ShaderRef {
@@ -59,16 +60,12 @@ pub struct GpuWorley3d {
     invert: u32,
 }
 
-impl GpuComputeNoise for GpuWorley3d {
-    fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
-        vec![
-            render_device.create_buffer_with_data(
-                &BufferInitDescriptor {
-                    label: Some("worley3d_points_buffer"),
-                    contents: &bytemuck::cast_slice(&[self.clone()]),
-                    usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST
-                }
-            ),
-        ]
-    } 
+impl From<Worley3d> for GpuWorley3d {
+    fn from(value: Worley3d) -> Self {
+        Self {
+            seed: value.seed,
+            frequency: value.frequency,
+            invert: value.invert as u32,
+        }
+    }
 }

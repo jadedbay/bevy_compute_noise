@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::{render_resource::{CommandEncoder, CommandEncoderDescriptor, ComputePassDescriptor, PipelineCache}, renderer::{RenderDevice, RenderQueue}}};
 
-use crate::{noise::ComputeNoise, noise_queue::ComputeNoiseRenderQueue};
+use crate::noise_queue::ComputeNoiseRenderQueue;
 
 use super::pipeline::ComputeNoisePipelines;
 

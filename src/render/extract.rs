@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::MainWorld};
 
-use crate::{noise::ComputeNoise, noise_queue::{ComputeNoiseBufferQueue, ComputeNoiseQueue}};
+use crate::noise_queue::ComputeNoiseBufferQueue;
 
 pub(crate) fn extract_compute_noise_queue(
     mut render_commands: Commands,

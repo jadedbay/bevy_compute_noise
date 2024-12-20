@@ -1,6 +1,6 @@
 use std::any::{Any, TypeId};
 
-use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_graph::RenderLabel, render_resource::{binding_types::{uniform_buffer, uniform_buffer_sized}, BindGroupLayout, BindGroupLayoutEntries, BindGroupLayoutEntryBuilder, BindingType, Buffer, BufferBindingType, DynamicBindGroupLayoutEntries, IntoBindGroupLayoutEntryBuilderArray, IntoIndexedBindGroupLayoutEntryBuilderArray, ShaderDefVal, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
+use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_resource::{binding_types::uniform_buffer_sized, BindGroupLayoutEntryBuilder, Buffer, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 
 pub mod worley_2d;
 pub mod worley_3d;
@@ -10,10 +10,9 @@ pub mod fbm;
 pub use worley_2d::Worley2d;
 pub use worley_3d::Worley3d;
 pub use perlin_2d::Perlin2d;
+pub use fbm::Fbm;
 
 pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + FromReflect + GetTypeRegistration + Typed {
-    type Gpu: GpuComputeNoise;
-
     fn embed_shader(app: &mut App);
     
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer>;
@@ -23,9 +22,6 @@ pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + Fro
     fn bind_group_layout_entries() -> Vec<BindGroupLayoutEntryBuilder> {
         vec![uniform_buffer_sized(false, None)]
     }
-}
-pub trait GpuComputeNoise: Sync + Send + 'static + Default + Clone {
-    fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer>;
 }
 
 pub struct ErasedComputeNoise {

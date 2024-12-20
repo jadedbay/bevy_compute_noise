@@ -1,7 +1,7 @@
-use bevy::{asset::embedded_asset, prelude::*, render::{render_graph::RenderLabel, render_resource::{BindGroupLayout, BindGroupLayoutEntries, BindingType, Buffer, BufferBindingType, BufferInitDescriptor, BufferUsages, IntoBindGroupLayoutEntryBuilderArray, ShaderDefVal, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
+use bevy::{asset::embedded_asset, prelude::*, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 use bytemuck::{Pod, Zeroable};
 
-use super::{ComputeNoise, GpuComputeNoise};
+use super::ComputeNoise;
 
 #[derive(Clone, Reflect, PartialEq, Debug)]
 #[reflect(Default)]
@@ -26,16 +26,16 @@ impl Default for Perlin2d {
 }
 
 impl ComputeNoise for Perlin2d {
-    type Gpu = GpuPerlin2d;
-
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> { 
-        Self::Gpu {
-            seed: self.seed,
-            frequency: self.frequency,
-            octaves: self.octaves,
-            invert: self.invert as u32,
-            persistence: self.persistence,
-        }.buffers(render_device)
+        vec![    
+            render_device.create_buffer_with_data(
+                &BufferInitDescriptor {
+                    label: Some("perlin2d_buffer"),
+                    contents: &bytemuck::cast_slice(&[GpuPerlin2d::from(self.clone())]),
+                    usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST
+                }
+            )
+        ]
     }
 
     fn shader() -> ShaderRef {
@@ -65,16 +65,14 @@ pub struct GpuPerlin2d {
     persistence: f32,
 }
 
-impl GpuComputeNoise for GpuPerlin2d {
-    fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
-        vec![    
-            render_device.create_buffer_with_data(
-                &BufferInitDescriptor {
-                    label: Some("perlin2d_buffer"),
-                    contents: &bytemuck::cast_slice(&[self.clone()]),
-                    usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST
-                }
-            )
-        ]
-    } 
+impl From<Perlin2d> for GpuPerlin2d {
+    fn from(value: Perlin2d) -> Self {
+        Self {
+            seed: value.seed,
+            frequency: value.frequency,
+            octaves: value.octaves,
+            invert: value.invert as u32,
+            persistence: value.persistence,
+        }
+    }
 }

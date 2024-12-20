@@ -2,6 +2,8 @@
 
 #import bevy_render::maths::PI
 
+const INFINITY = 3.402823e+38;
+
 const UI0 = 1597334673u;
 const UI1 = 3812015801u;
 const UI2 = vec2<u32>(UI0, UI1);
@@ -13,12 +15,6 @@ fn hash22(p: vec2<f32>) -> vec2<f32> {
     q = (q.x ^ q.y) * UI2;
     return -1.0 + 2.0 * vec2<f32>(q) * UIF;
 }
-
-// fn hash22(p: vec2<f32>) -> vec2<f32> {
-//     var p2 = fract(p * vec2<f32>(.1031, .1030));
-//     p2 += dot(p2, p2.yx + 33.33);
-//     return fract((p2.xy + p2.yx) * p2.yx);
-// }
 
 fn hash33(p: vec3<f32>) -> vec3<f32> {
     var q = vec3<u32>(vec3<i32>(p)) * UI3;

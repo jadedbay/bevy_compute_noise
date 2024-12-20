@@ -1,9 +1,8 @@
-use bevy::{app::App, reflect::Reflect, render::{render_resource::{BindGroupLayout, BindGroupLayoutEntries, BindingType, Buffer, BufferBindingType, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, ShaderStages, TextureDimension}, renderer::RenderDevice}};
+use bevy::{reflect::Reflect, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef}, renderer::RenderDevice}};
 use bytemuck::{Pod, Zeroable};
 
-use crate::image::ComputeNoiseSize;
 
-use super::{ComputeNoise, GpuComputeNoise};
+use super::ComputeNoise;
 
 #[derive(Clone, Reflect, Default)] // TODO: manual default impl
 pub struct Fbm<T: ComputeNoise> {
@@ -38,7 +37,7 @@ pub struct Fbm<T: ComputeNoise> {
 //     fn texture_dimension() -> TextureDimension {
 //         T::texture_dimension()
 //     }
-//     fn buffers(&self, render_device: &RenderDevice, size: ComputeNoiseSize) -> Vec<Buffer> {
+//     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
 //         Self::Gpu {
             
 //         }
@@ -54,16 +53,16 @@ pub struct GpuFbm {
     pub persistence: f32,
 }
 
-impl GpuComputeNoise for GpuFbm {
-    fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
-        vec![
-            render_device.create_buffer_with_data(
-                &BufferInitDescriptor {
-                    label: Some("fbm_buffer"),
-                    contents: &bytemuck::cast_slice(&[self.clone()]),
-                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
-                }
-            )
-        ]
-    }
-}
+// impl GpuComputeNoise for GpuFbm {
+//     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
+//         vec![
+//             render_device.create_buffer_with_data(
+//                 &BufferInitDescriptor {
+//                     label: Some("fbm_buffer"),
+//                     contents: &bytemuck::cast_slice(&[self.clone()]),
+//                     usage: BufferUsages::STORAGE | BufferUsages::COPY_DST
+//                 }
+//             )
+//         ]
+//     }
+// }

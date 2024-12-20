@@ -1,3 +1,5 @@
+#define_import_path bevy_compute_noise::perlin2d
+
 #import bevy_render::maths::PI
 #import bevy_compute_noise::util::{random_gradient, interpolate_quintic}
 
@@ -14,12 +16,14 @@ struct NoiseParameters {
 @group(1) @binding(0) var<uniform> parameters: NoiseParameters;
 
 @compute @workgroup_size(8, 8)
-fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
-    let location = vec2<u32>(
-        invocation_id.x,
-        invocation_id.y
-    );
+fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
+    let location = invocation_id.xy;
 
+    let value = noise(location, parameters);
+    textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 1.0));
+}
+
+fn noise(location: vec2<u32>, parameters: NoiseParameters) -> f32 {
     // let base_frequency = parameters.frequency;
     // var frequency = parameters.frequency;
     // var amplitude = 1.0;
@@ -48,7 +52,7 @@ fn noise(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     let pixel = vec2<f32>(location) * f32(frequency) / vec2<f32>(texture_size);
     let value = perlin(pixel, i32(frequency));
 
-    textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 1.0));
+    return value;
 }
 
 fn perlin(pixel: vec2<f32>, frequency: i32) -> f32 {

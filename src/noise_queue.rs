@@ -1,12 +1,12 @@
-use std::{any::{Any, TypeId}, marker::PhantomData};
+use std::any::TypeId;
 
 use bevy::{
     prelude::*, render::{
-        extract_resource::ExtractResource, render_resource::{BindGroup, Buffer, TextureDimension}, renderer::RenderDevice,
+        render_resource::{BindGroup, Buffer, TextureDimension}, renderer::RenderDevice,
     }
 };
 
-use crate::{image::{ComputeNoiseFormat, ComputeNoiseSize}, noise::{ComputeNoise, ComputeNoiseSequence, ErasedComputeNoise, GpuComputeNoise}, prelude::ComputeNoiseImage, render};
+use crate::{image::ComputeNoiseSize, noise::ComputeNoiseSequence};
 
 #[derive(Resource, Default)]
 pub struct ComputeNoiseQueue {
