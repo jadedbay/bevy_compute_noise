@@ -1,7 +1,8 @@
 #define_import_path bevy_compute_noise::perlin2d
 
 #import bevy_render::maths::PI
-#import bevy_compute_noise::util::{random_gradient, interpolate_quintic, texture2d as texture}
+#import bevy_pbr::utils::rand_vec2f
+#import bevy_compute_noise::util::{interpolate_quintic, interpolate_cubic, texture2d as texture}
 
 struct NoiseParameters {
     seed: u32,
@@ -20,10 +21,10 @@ fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
 
 fn noise(location: vec2<u32>, parameters: NoiseParameters) -> f32 {
     let texture_size = textureDimensions(texture);
-
-    let frequency = parameters.frequency;
-    let pixel = vec2<f32>(location) * f32(frequency) / vec2<f32>(texture_size);
-    var value = perlin(pixel, parameters);
+    let pixel = vec2<f32>(location) / vec2<f32>(texture_size);
+    
+    var value = perlin(pixel, parameters) * sqrt(2.0) * 0.5 + 0.5;
+    // var value = perlin(pixel, parameters);
     if (parameters.invert != 0u) {
         value = 1.0 - value;
     }
@@ -33,28 +34,44 @@ fn noise(location: vec2<u32>, parameters: NoiseParameters) -> f32 {
 
 fn perlin(pixel: vec2<f32>, parameters: NoiseParameters) -> f32 {
     let seed = parameters.seed;
-    let frequency = parameters.frequency;
-    let f = pixel;
-    let i = vec2<i32>(f);
-    let s = f - vec2<f32>(i);
+    let frequency = parameters.frequency + 2.0;
 
-    var n0 = dot_grid_gradient(seed, i, f, frequency);
-    var n1 = dot_grid_gradient(seed, i + vec2<i32>(1, 0), f, frequency);
-    let ix0 = interpolate_quintic(n0, n1, s.x);
+    let uv = pixel * frequency;
+    let grid_id = floor(uv) % frequency;
+    var grid_uv = fract(uv);
 
-    n0 = dot_grid_gradient(seed, i + vec2<i32>(0, 1), f, frequency);
-    n1 = dot_grid_gradient(seed, i + vec2<i32>(1, 1), f, frequency);
-    let ix1 = interpolate_quintic(n0, n1, s.x);
+    let bl = vec2<u32>(grid_id + vec2<f32>(0.0, 0.0));
+    let br = vec2<u32>((grid_id + vec2<f32>(1.0, 0.0)) % frequency);
+    let tl = vec2<u32>((grid_id + vec2<f32>(0.0, 1.0)) % frequency);
+    let tr = vec2<u32>((grid_id + vec2<f32>(1.0, 1.0)) % frequency);
 
-    let value = interpolate_quintic(ix0, ix1, s.y);
+    let grad_bl = random_gradient(seed, bl);
+    let grad_br = random_gradient(seed, br);
+    let grad_tl = random_gradient(seed, tl);
+    let grad_tr = random_gradient(seed, tr);
+
+    let dist_bl = grid_uv;
+    let dist_br = grid_uv - vec2<f32>(1.0, 0.0);
+    let dist_tl = grid_uv - vec2<f32>(0.0, 1.0);
+    let dist_tr = grid_uv - vec2<f32>(1.0, 1.0);
+
+    let dot_bl = dot(grad_bl, dist_bl);
+    let dot_br = dot(grad_br, dist_br);
+    let dot_tl = dot(grad_tl, dist_tl);
+    let dot_tr = dot(grad_tr, dist_tr);
+
+    grid_uv = interpolate_quintic(grid_uv);
+
+    let b = mix(dot_bl, dot_br, grid_uv.x);
+    let t = mix(dot_tl, dot_tr, grid_uv.x);
+
+    let value = mix(b, t, grid_uv.y);
 
     return value;
 }
 
-fn dot_grid_gradient(seed: u32, i: vec2<i32>, f: vec2<f32>, frequency: f32) -> f32 {
-    let wrapped_i = vec2<f32>(vec2<f32>(i) * frequency % 1.0);
-    let gradient = random_gradient(seed, wrapped_i);
-    let distance_vector = f - vec2<f32>(i);
-
-    return dot(gradient, distance_vector);
+fn random_gradient(seed: u32, pos: vec2<u32>) -> vec2<f32> {
+    var state = seed + pos.x * 1597u + pos.y * 51749u;
+    let v = rand_vec2f(&state) * 2.0 - 1.0;
+    return normalize(v);
 }

@@ -23,8 +23,6 @@ pub trait ComputeNoiseType: ComputeNoise {
 }
 
 pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + FromReflect + GetTypeRegistration + Typed {
-    const FBM: bool = false;
-
     fn texture_dimension() -> TextureDimension;
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer>;
 }
@@ -34,7 +32,6 @@ pub struct ErasedComputeNoise {
     buffers_fn: Box<dyn Fn(&RenderDevice) -> Vec<Buffer> + Send + Sync>,
     pub texture_dimension: TextureDimension,
     pub type_id: TypeId,
-    pub fbm: bool,
 }
 
 impl ErasedComputeNoise {
@@ -104,7 +101,6 @@ impl<T: ComputeNoise> From<T> for ErasedComputeNoise {
             texture_dimension: T::texture_dimension(),
             buffers_fn: Box::new(move |device| value.buffers(device)),
             type_id: TypeId::of::<T>(),
-            fbm: T::FBM,
         }
     }
 }

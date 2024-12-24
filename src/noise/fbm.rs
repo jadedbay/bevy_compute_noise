@@ -13,8 +13,6 @@ pub struct Fbm<T: ComputeNoise> {
 }
 
 impl<T: ComputeNoiseType> ComputeNoise for Fbm<T> {
-    const FBM: bool = true;
-
     fn texture_dimension() -> TextureDimension {
         T::texture_dimension()
     }

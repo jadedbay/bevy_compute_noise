@@ -2,8 +2,6 @@ use bevy::{prelude::*, render::{render_resource::{CommandEncoder, CommandEncoder
 
 use crate::noise_queue::ComputeNoiseRenderQueue;
 
-use super::pipeline::ComputeNoisePipelines;
-
 #[derive(Resource)]
 pub struct ComputeNoiseEncoder {
     encoder: Option<CommandEncoder>,

@@ -29,22 +29,22 @@ fn remap(x: f32, a: f32, b: f32, c: f32, d: f32) {
     return (((x - a) / (b - a)) * (d - c)) + c;
 }
 
-fn interpolate_cubic(a0: f32, a1: f32, w: f32) -> f32 {
-    return (a1 - a0) * (3.0 - w * 2.0) * w * w + a0;
+fn interpolate_cubic(w: vec2<f32>) -> vec2<f32> {
+   return (3.0 - w * 2.0) * w * w;
 }
 
-fn interpolate_quintic(a0: f32, a1: f32, w: f32) -> f32 {
-    let w3 = w * w * w;
-    let w4 = w3 * w;
-    let w5 = w4 * w;
-    return a0 + (a1 - a0) * (6.0 * w5 - 15.0 * w4 + 10.0 * w3);
+fn interpolate_quintic(w: vec2<f32>) -> vec2<f32> {
+   let w3 = w * w * w;
+   let w4 = w3 * w;
+   let w5 = w4 * w;
+   return 6.0 * w5 - 15.0 * w4 + 10.0 * w3;
 }
 
-fn random_gradient(seed: u32, i: vec2<f32>) -> vec2<f32> {
+fn random_gradient(seed: u32, i: vec2<i32>) -> vec2<f32> {
     let w = 32u;
     let s = w / 2u;
-    var a = u32(floor(i.x)) + seed;
-    var b = u32(floor(i.y)) + seed;
+    var a = u32(i.x) + seed;
+    var b = u32(i.y) + seed;
 
     a *= 3284157443u;
     b ^= (b << s) | (b >> (w - s));
