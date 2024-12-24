@@ -1,4 +1,4 @@
-use bevy::{reflect::Reflect, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
+use bevy::{reflect::Reflect, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, TextureDimension}, renderer::RenderDevice}};
 use bytemuck::{Pod, Zeroable};
 
 

@@ -15,6 +15,7 @@ exclude = ["examples/*", "assets/*"]
 [dependencies]
 bytemuck = "1.15"
 rand = "0.8"
+bitflags = "2.6.0"
 
 [dependencies.bevy]
 version = "0.15.0"
@@ -23,7 +24,6 @@ features = [ "bevy_render", "bevy_asset", "tonemapping_luts"]
 
 [dev-dependencies]
 bevy-inspector-egui = "0.28.0"
-noise = "0.9.0"
 bevy = { version = "0.15.0", default-features = false, features = ["bevy_winit", "x11", "bevy_pbr", "bevy_sprite", "bevy_window", "multi_threaded", "embedded_watcher"] }
 
 [profile.dev]

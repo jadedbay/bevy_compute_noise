@@ -1,6 +1,7 @@
 #define_import_path bevy_compute_noise::util
 
 #import bevy_render::maths::PI
+#import bevy_pbr::utils::rand_vec2f
 
 @group(0) @binding(0) var texture2d: texture_storage_2d<rgba8unorm, read_write>;
 @group(0) @binding(0) var texture3d: texture_storage_3d<rgba8unorm, read_write>;
@@ -40,22 +41,8 @@ fn interpolate_quintic(w: vec2<f32>) -> vec2<f32> {
    return 6.0 * w5 - 15.0 * w4 + 10.0 * w3;
 }
 
-fn random_gradient(seed: u32, i: vec2<i32>) -> vec2<f32> {
-    let w = 32u;
-    let s = w / 2u;
-    var a = u32(i.x) + seed;
-    var b = u32(i.y) + seed;
-
-    a *= 3284157443u;
-    b ^= (b << s) | (b >> (w - s));
-    b *= 1911520717u;
-
-    a ^= (b << s) | (b >> (w - s));
-    a *= 2048419325u;
-
-    let random: f32 = f32(a) * (PI / f32(~0u >> 1));
-
-    let v = vec2<f32>(sin(random), cos(random));
-
-    return v;
+fn random_gradient(seed: u32, pos: vec2<u32>) -> vec2<f32> {
+    var state = seed + pos.x * 1597u + pos.y * 51749u;
+    let v = rand_vec2f(&state) * 2.0 - 1.0;
+    return normalize(v);
 }

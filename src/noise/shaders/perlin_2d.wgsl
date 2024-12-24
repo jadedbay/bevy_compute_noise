@@ -1,13 +1,17 @@
 #define_import_path bevy_compute_noise::perlin2d
 
 #import bevy_render::maths::PI
-#import bevy_pbr::utils::rand_vec2f
-#import bevy_compute_noise::util::{interpolate_quintic, interpolate_cubic, texture2d as texture}
+#import bevy_compute_noise::util::{random_gradient, interpolate_quintic, interpolate_cubic, texture2d as texture}
+
+const INVERT: u32 = 1u;
+const REMAP: u32 = 2u;
+const REMAP_SQRT_2: u32 = 4u;
+const INTERPOLATE_CUBIC: u32 = 8u;
 
 struct NoiseParameters {
     seed: u32,
     frequency: f32,
-    invert: u32,
+    flags: u32,
 };
 @group(1) @binding(0) var<uniform> parameters: NoiseParameters;
 
@@ -22,21 +26,21 @@ fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
 fn noise(location: vec2<u32>, parameters: NoiseParameters) -> f32 {
     let texture_size = textureDimensions(texture);
     let pixel = vec2<f32>(location) / vec2<f32>(texture_size);
-    
-    var value = perlin(pixel, parameters) * sqrt(2.0) * 0.5 + 0.5;
-    // var value = perlin(pixel, parameters);
-    if (parameters.invert != 0u) {
-        value = 1.0 - value;
-    }
+
+    var value = perlin(pixel, parameters);
+    if (parameters.flags & REMAP) != 0u { value = value * 0.5 + 0.5; }
+    else if (parameters.flags & REMAP_SQRT_2) != 0 { value = value * sqrt(2.0) * 0.5 + 0.5; }
+    if (parameters.flags & INVERT) != 0u { value = 1.0 - value; }
 
     return value;
 }
 
 fn perlin(pixel: vec2<f32>, parameters: NoiseParameters) -> f32 {
     let seed = parameters.seed;
-    let frequency = parameters.frequency + 2.0;
+    let frequency = parameters.frequency;
 
     let uv = pixel * frequency;
+
     let grid_id = floor(uv) % frequency;
     var grid_uv = fract(uv);
 
@@ -60,7 +64,8 @@ fn perlin(pixel: vec2<f32>, parameters: NoiseParameters) -> f32 {
     let dot_tl = dot(grad_tl, dist_tl);
     let dot_tr = dot(grad_tr, dist_tr);
 
-    grid_uv = interpolate_quintic(grid_uv);
+    if (parameters.flags & INTERPOLATE_CUBIC) != 0u { grid_uv = interpolate_cubic(grid_uv); }
+    else { grid_uv = interpolate_quintic(grid_uv); } 
 
     let b = mix(dot_bl, dot_br, grid_uv.x);
     let t = mix(dot_tl, dot_tr, grid_uv.x);
@@ -68,10 +73,4 @@ fn perlin(pixel: vec2<f32>, parameters: NoiseParameters) -> f32 {
     let value = mix(b, t, grid_uv.y);
 
     return value;
-}
-
-fn random_gradient(seed: u32, pos: vec2<u32>) -> vec2<f32> {
-    var state = seed + pos.x * 1597u + pos.y * 51749u;
-    let v = rand_vec2f(&state) * 2.0 - 1.0;
-    return normalize(v);
 }

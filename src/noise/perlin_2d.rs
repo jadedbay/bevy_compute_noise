@@ -3,12 +3,23 @@ use bytemuck::{Pod, Zeroable};
 
 use super::{ComputeNoise, ComputeNoiseType};
 
-#[derive(Clone, Reflect, PartialEq, Debug)]
+#[derive(Clone, Copy, Reflect, PartialEq, Debug, Pod, Zeroable)]
 #[reflect(Default)]
+#[repr(C)]
 pub struct Perlin2d {
     pub seed: u32,
     pub frequency: f32,
-    pub invert: bool,
+    pub flags: u32,
+}
+
+bitflags::bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub struct Perlin2dFlags: u32 {
+        const INVERT = 1 << 0;
+        const REMAP = 1 << 1;
+        const REMAP_SQRT_2 = 1 << 2;
+        const INTERPOLATE_CUBIC = 1 << 3; // quintic interpolation is default
+    }
 }
 
 impl Default for Perlin2d {
@@ -16,7 +27,7 @@ impl Default for Perlin2d {
         Self {
             seed: 0,
             frequency: 5.0,
-            invert: false,
+            flags: (Perlin2dFlags::REMAP_SQRT_2).bits(),
         }
     }
 }
@@ -27,7 +38,7 @@ impl ComputeNoise for Perlin2d {
             render_device.create_buffer_with_data(
                 &BufferInitDescriptor {
                     label: Some("perlin2d_buffer"),
-                    contents: &bytemuck::cast_slice(&[GpuPerlin2d::from(self.clone())]),
+                    contents: &bytemuck::cast_slice(&[self.clone()]),
                     usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST
                 }
             )
@@ -51,23 +62,5 @@ impl ComputeNoiseType for Perlin2d {
 
     fn shader_def() -> ShaderDefVal {
        "PERLIN2D".into() 
-    }
-}
-
-#[derive(Clone, Copy, Default, Pod, Zeroable)]
-#[repr(C)]
-pub struct GpuPerlin2d {
-    seed: u32,
-    frequency: f32,
-    invert: u32,
-}
-
-impl From<Perlin2d> for GpuPerlin2d {
-    fn from(value: Perlin2d) -> Self {
-        Self {
-            seed: value.seed,
-            frequency: value.frequency,
-            invert: value.invert as u32,
-        }
     }
 }

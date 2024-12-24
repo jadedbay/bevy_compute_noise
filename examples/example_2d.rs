@@ -53,13 +53,13 @@ fn setup(
 
     noise_queue.add(
         handle.clone(),
-        Fbm::<Perlin2d> {
-            noise: Perlin2d {
+        Fbm::<Worley2d> {
+            noise: Worley2d {
                 seed: 5,
-                frequency: 5.0,
-                invert: false,
+                frequency: 5.5,
+                ..default()
             },
-            octaves: 4,
+            octaves: 2,
             lacunarity: 2.0,
             persistence: 0.5,
         }.into(),
