@@ -36,8 +36,8 @@ fn setup(
         Fbm::<Worley3d> {
             noise: Worley3d {
                 seed: 1,
-                frequency: 4.0,
-                invert: true,
+                frequency: 5,
+                flags: WorleyFlags::INVERT.bits(),
             },
             octaves: 3,
             lacunarity: 2.0,
@@ -80,8 +80,8 @@ fn update_noise(
                 Fbm::<Worley3d> {
                     noise: Worley3d {
                         seed: *local,
-                        frequency: 4.0,
-                        invert: true,
+                        frequency: 5,
+                        flags: WorleyFlags::INVERT.bits(),
                     },
                     octaves: 3,
                     lacunarity: 2.0,

@@ -43,13 +43,12 @@ fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
 
     let max_amplitude = (1.0 - pow(fbm_settings.persistence, f32(fbm_settings.octaves))) / (1.0 - fbm_settings.persistence);
     var amplitude = 1.0 / max_amplitude;
-
-    var para = parameters;
+    var frequency = f32(parameters.frequency);
 
     for(var i = 0u; i < fbm_settings.octaves; i++) {
-       value += noise(location, para) * amplitude;
+       value += noise(location, parameters, frequency) * amplitude;
        
-       para.frequency *= fbm_settings.lacunarity; // para.frequency assumes noise has frequency, SOLUTION?: Have frequency attached to FBM<T> and create a Basic<T> to use instead of just Perlin/Worley
+       frequency *= fbm_settings.lacunarity;
        amplitude *= fbm_settings.persistence;
     }
 

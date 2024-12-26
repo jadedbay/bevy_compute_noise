@@ -4,7 +4,7 @@
 
 struct NoiseParameters {
     seed: u32,
-    frequency: f32,
+    frequency: u32,
     invert: u32,
 };
 @group(1) @binding(0)
@@ -12,17 +12,15 @@ var<uniform> parameters: NoiseParameters;
 
 @compute @workgroup_size(8, 8, 8)
 fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
-    let value = noise(invocation_id, parameters);
+    let value = noise(invocation_id, parameters, f32(parameters.frequency));
     textureStore(texture, invocation_id, vec4<f32>(value, 0.0, 0.0, 0.0));
 }
 
-fn noise(location: vec3<u32>, parameters: NoiseParameters) -> f32 {
+fn noise(location: vec3<u32>, parameters: NoiseParameters, frequency: f32) -> f32 {
     let texture_size = textureDimensions(texture);
-
     let uv = vec3<f32>(location) / vec3<f32>(texture_size);
-    let freq = f32(parameters.frequency);
     
-    let scaled_uv = uv * freq;
+    let scaled_uv = uv * frequency;
     
     let cell_id = floor(scaled_uv);
     let local_pos = fract(scaled_uv);
@@ -34,9 +32,9 @@ fn noise(location: vec3<u32>, parameters: NoiseParameters) -> f32 {
                 let offset = vec3<f32>(f32(x), f32(y), f32(z));
             
                 let id = vec3<f32>(
-                   fract((cell_id.x + f32(x)) / freq) * freq,
-                   fract((cell_id.y + f32(y)) / freq) * freq,
-                   fract((cell_id.z + f32(z)) / freq) * freq,
+                   fract((cell_id.x + f32(x)) / frequency) * frequency,
+                   fract((cell_id.y + f32(y)) / frequency) * frequency,
+                   fract((cell_id.z + f32(z)) / frequency) * frequency,
                 );
 
                 let seeded_id = id + vec3<f32>(f32(parameters.seed) * 333, f32(parameters.seed) * 563, f32(parameters.seed) * 122);

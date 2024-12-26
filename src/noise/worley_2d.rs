@@ -4,20 +4,28 @@ use bytemuck::{Pod, Zeroable};
 
 use super::{ComputeNoise, ComputeNoiseType};
 
-#[derive(Clone, Reflect, PartialEq, Debug)]
+#[derive(Clone, Copy, Reflect, PartialEq, Debug, Pod, Zeroable)]
 #[reflect(Default)]
+#[repr(C)]
 pub struct Worley2d {
     pub seed: u32,
-    pub frequency: f32,
-    pub invert: bool,
+    pub frequency: u32,
+    pub flags: u32,
+}
+
+bitflags::bitflags! { 
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub struct WorleyFlags: u32 {
+        const INVERT = 1 << 0;
+    }
 }
 
 impl Default for Worley2d {
     fn default() -> Self {
         Self {
             seed: 0,
-            frequency: 5.0,
-            invert: false,
+            frequency: 5,
+            flags: 0,
         }
     }
 }
@@ -28,7 +36,7 @@ impl ComputeNoise for Worley2d {
             render_device.create_buffer_with_data(
                 &BufferInitDescriptor {
                     label: Some("worley2d_points_buffer"),
-                    contents: &bytemuck::cast_slice(&[GpuWorley2d::from(self.clone())]),
+                    contents: &bytemuck::cast_slice(&[self.clone()]),
                     usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST
                 }
             ),
@@ -52,23 +60,5 @@ impl ComputeNoiseType for Worley2d {
 
     fn shader_def() -> ShaderDefVal {
        "WORLEY2D".into() 
-    }
-}
-
-#[derive(Clone, Copy, Default, Pod, Zeroable)]
-#[repr(C)]
-pub struct GpuWorley2d {
-    seed: u32,
-    frequency: f32,
-    invert: u32,
-}
-
-impl From<Worley2d> for GpuWorley2d {
-    fn from(value: Worley2d) -> Self {
-        Self {
-            seed: value.seed,
-            frequency: value.frequency,
-            invert: value.invert as u32,
-        }
     }
 }

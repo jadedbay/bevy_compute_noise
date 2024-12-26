@@ -10,7 +10,7 @@ const INTERPOLATE_CUBIC: u32 = 8u;
 
 struct NoiseParameters {
     seed: u32,
-    frequency: f32,
+    frequency: u32,
     flags: u32,
 };
 @group(1) @binding(0) var<uniform> parameters: NoiseParameters;
@@ -19,15 +19,15 @@ struct NoiseParameters {
 fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     let location = invocation_id.xy;
 
-    let value = noise(location, parameters);
+    let value = noise(location, parameters, f32(parameters.frequency));
     textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 1.0));
 }
 
-fn noise(location: vec2<u32>, parameters: NoiseParameters) -> f32 {
+fn noise(location: vec2<u32>, parameters: NoiseParameters, frequency: f32) -> f32 {
     let texture_size = textureDimensions(texture);
-    let pixel = vec2<f32>(location) / vec2<f32>(texture_size);
+    let uv = vec2<f32>(location) / vec2<f32>(texture_size);
 
-    var value = perlin(pixel, parameters);
+    var value = perlin(uv, parameters, frequency);
     if (parameters.flags & REMAP) != 0u { value = value * 0.5 + 0.5; }
     else if (parameters.flags & REMAP_SQRT_2) != 0 { value = value * sqrt(2.0) * 0.5 + 0.5; }
     if (parameters.flags & INVERT) != 0u { value = 1.0 - value; }
@@ -35,24 +35,21 @@ fn noise(location: vec2<u32>, parameters: NoiseParameters) -> f32 {
     return value;
 }
 
-fn perlin(pixel: vec2<f32>, parameters: NoiseParameters) -> f32 {
-    let seed = parameters.seed;
-    let frequency = parameters.frequency;
+fn perlin(uv: vec2<f32>, parameters: NoiseParameters, frequency: f32) -> f32 {
+    let scaled_uv = uv * frequency;
 
-    let uv = pixel * frequency;
-
-    let grid_id = floor(uv) % frequency;
-    var grid_uv = fract(uv);
+    let grid_id = floor(scaled_uv) % frequency;
+    var grid_uv = fract(scaled_uv);
 
     let bl = vec2<u32>(grid_id + vec2<f32>(0.0, 0.0));
     let br = vec2<u32>((grid_id + vec2<f32>(1.0, 0.0)) % frequency);
     let tl = vec2<u32>((grid_id + vec2<f32>(0.0, 1.0)) % frequency);
     let tr = vec2<u32>((grid_id + vec2<f32>(1.0, 1.0)) % frequency);
 
-    let grad_bl = random_gradient(seed, bl);
-    let grad_br = random_gradient(seed, br);
-    let grad_tl = random_gradient(seed, tl);
-    let grad_tr = random_gradient(seed, tr);
+    let grad_bl = random_gradient(parameters.seed, bl);
+    let grad_br = random_gradient(parameters.seed, br);
+    let grad_tl = random_gradient(parameters.seed, tl);
+    let grad_tr = random_gradient(parameters.seed, tr);
 
     let dist_bl = grid_uv;
     let dist_br = grid_uv - vec2<f32>(1.0, 0.0);

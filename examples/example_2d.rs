@@ -46,20 +46,21 @@ fn setup(
     //     handle.clone(),
     //     Perlin2d {
     //         seed: 1,
-    //         frequency: 4.,
-    //         invert: false,
+    //         frequency: 5,
+    //         ..default()
     //     }.into(),
     // );
 
     noise_queue.add(
         handle.clone(),
-        Fbm::<Worley2d> {
-            noise: Worley2d {
+        Fbm::<Perlin2d> {
+            noise: Perlin2d {
                 seed: 5,
-                frequency: 5.5,
+                frequency: 5,
+                // flags: Worley2dFlags::INVERT.bits(),
                 ..default()
             },
-            octaves: 2,
+            octaves: 4,
             lacunarity: 2.0,
             persistence: 0.5,
         }.into(),
@@ -68,9 +69,6 @@ fn setup(
     commands.spawn((
         Mesh2d(meshes.add(quad)),
         Transform::default().with_scale(Vec3::splat(512.)),
-        // MeshMaterial2d(materials.add(ImageMaterial {
-        //     image: handle.clone(),
-        // })),
         MeshMaterial2d(materials.add(ImageMaterial {
             image: handle.clone(),
         }))

@@ -7,9 +7,9 @@ pub mod worley_3d;
 pub mod perlin_2d;
 pub mod fbm;
 
-pub use worley_2d::Worley2d;
+pub use worley_2d::{Worley2d, WorleyFlags};
 pub use worley_3d::Worley3d;
-pub use perlin_2d::Perlin2d;
+pub use perlin_2d::{Perlin2d, PerlinFlags};
 pub use fbm::Fbm;
 
 pub trait ComputeNoiseType: ComputeNoise {

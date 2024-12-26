@@ -8,13 +8,13 @@ use super::{ComputeNoise, ComputeNoiseType};
 #[repr(C)]
 pub struct Perlin2d {
     pub seed: u32,
-    pub frequency: f32,
+    pub frequency: u32,
     pub flags: u32,
 }
 
 bitflags::bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub struct Perlin2dFlags: u32 {
+    pub struct PerlinFlags: u32 {
         const INVERT = 1 << 0;
         const REMAP = 1 << 1;
         const REMAP_SQRT_2 = 1 << 2;
@@ -26,8 +26,8 @@ impl Default for Perlin2d {
     fn default() -> Self {
         Self {
             seed: 0,
-            frequency: 5.0,
-            flags: (Perlin2dFlags::REMAP_SQRT_2).bits(),
+            frequency: 5,
+            flags: (PerlinFlags::REMAP_SQRT_2).bits(),
         }
     }
 }
