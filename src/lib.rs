@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use bevy::{
     asset::embedded_asset, prelude::*, render::{render_resource::SpecializedComputePipelines, Render, RenderApp, RenderSet}
 };
-use noise::{Perlin2d, Worley2d, Worley3d};
+use noise::{Perlin2d, Perlin3d, Worley2d, Worley3d};
 use noise_queue::{prepare_compute_noise_buffers, ComputeNoiseBufferQueue};
 use render::{compute::{compute_noise, submit_compute_noise, ComputeNoiseEncoder}, pipeline::{ComputeNoiseFbmPipeline, ComputeNoisePipelines}, prepare::prepare_fbm_pipeline};
 
@@ -25,7 +25,7 @@ mod render;
 pub mod prelude {
     pub use crate::{
         image::{ComputeNoiseImage, ComputeNoiseSize, ComputeNoiseFormat},
-        noise::{Worley2d, Worley3d, Perlin2d, PerlinFlags, WorleyFlags, Fbm, ComputeNoiseBuilder},
+        noise::{Worley2d, Worley3d, Perlin2d, Perlin3d, Perlin2dFlags, Perlin3dFlags, WorleyFlags, Fbm, ComputeNoiseBuilder},
         noise_queue::ComputeNoiseQueue,
         ComputeNoisePlugin
     };
@@ -62,6 +62,7 @@ impl Plugin for ComputeNoisePlugin {
         app
             .add_plugins((
                 ComputeNoiseTypePlugin::<Perlin2d>::default(),
+                ComputeNoiseTypePlugin::<Perlin3d>::default(),
                 ComputeNoiseTypePlugin::<Worley2d>::default(),
                 ComputeNoiseTypePlugin::<Worley3d>::default(),
             ))

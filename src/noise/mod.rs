@@ -5,11 +5,13 @@ use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_r
 pub mod worley_2d;
 pub mod worley_3d;
 pub mod perlin_2d;
+pub mod perlin_3d;
 pub mod fbm;
 
 pub use worley_2d::{Worley2d, WorleyFlags};
 pub use worley_3d::Worley3d;
-pub use perlin_2d::{Perlin2d, PerlinFlags};
+pub use perlin_2d::{Perlin2d, Perlin2dFlags};
+pub use perlin_3d::{Perlin3d, Perlin3dFlags};
 pub use fbm::Fbm;
 
 pub trait ComputeNoiseType: ComputeNoise {

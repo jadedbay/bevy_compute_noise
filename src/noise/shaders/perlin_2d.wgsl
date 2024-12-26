@@ -1,7 +1,7 @@
 #define_import_path bevy_compute_noise::perlin2d
 
 #import bevy_render::maths::PI
-#import bevy_compute_noise::util::{random_gradient, interpolate_quintic, interpolate_cubic, texture2d as texture}
+#import bevy_compute_noise::util::{random_gradient_2d, interpolate_quintic, interpolate_cubic, texture2d as texture}
 
 const INVERT: u32 = 1u;
 const REMAP: u32 = 2u;
@@ -46,10 +46,10 @@ fn perlin(uv: vec2<f32>, parameters: NoiseParameters, frequency: f32) -> f32 {
     let tl = vec2<u32>((grid_id + vec2<f32>(0.0, 1.0)) % frequency);
     let tr = vec2<u32>((grid_id + vec2<f32>(1.0, 1.0)) % frequency);
 
-    let grad_bl = random_gradient(parameters.seed, bl);
-    let grad_br = random_gradient(parameters.seed, br);
-    let grad_tl = random_gradient(parameters.seed, tl);
-    let grad_tr = random_gradient(parameters.seed, tr);
+    let grad_bl = random_gradient_2d(parameters.seed, bl);
+    let grad_br = random_gradient_2d(parameters.seed, br);
+    let grad_tl = random_gradient_2d(parameters.seed, tl);
+    let grad_tr = random_gradient_2d(parameters.seed, tr);
 
     let dist_bl = grid_uv;
     let dist_br = grid_uv - vec2<f32>(1.0, 0.0);

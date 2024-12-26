@@ -2,6 +2,10 @@
     #import bevy_compute_noise::perlin2d::{NoiseParameters, noise}
     @group(1) @binding(1) var<uniform> parameters: NoiseParameters;
 #endif
+#ifdef PERLIN3D
+    #import bevy_compute_noise::perlin3d::{NoiseParameters, noise}
+    @group(1) @binding(1) var<uniform> parameters: NoiseParameters;
+#endif
 #ifdef WORLEY2D
     #import bevy_compute_noise::worley2d::{NoiseParameters, noise}
     @group(1) @binding(1) var<uniform> parameters: NoiseParameters;

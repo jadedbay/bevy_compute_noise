@@ -33,15 +33,15 @@ fn setup(
 
     noise_queue.add(
         handle.clone(),
-        Fbm::<Worley3d> {
-            noise: Worley3d {
+        Fbm::<Perlin3d> {
+            noise: Perlin3d {
                 seed: 1,
                 frequency: 5,
-                flags: WorleyFlags::INVERT.bits(),
+                ..default()
             },
-            octaves: 3,
+            octaves: 4,
             lacunarity: 2.0,
-            persistence: 0.4,
+            persistence: 0.5,
         }.into(),
     );
 
@@ -77,15 +77,16 @@ fn update_noise(
         for material in query.iter() {
             noise_queue.add(
                 materials.get(&material.0).unwrap().image.clone(),
-                Fbm::<Worley3d> {
-                    noise: Worley3d {
+                Fbm::<Perlin3d> {
+                    noise: Perlin3d {
                         seed: *local,
                         frequency: 5,
-                        flags: WorleyFlags::INVERT.bits(),
+                        // flags: WorleyFlags::INVERT.bits(),
+                        ..default()
                     },
-                    octaves: 3,
+                    octaves: 4,
                     lacunarity: 2.0,
-                    persistence: 0.4,
+                    persistence: 0.5,
                 }.into(),
             );
         }
