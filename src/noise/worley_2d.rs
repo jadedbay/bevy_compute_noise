@@ -16,7 +16,8 @@ pub struct Worley2d {
 bitflags::bitflags! { 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct WorleyFlags: u32 {
-        const INVERT = 1 << 0;
+        const TILEABLE = 1 << 0;
+        const INVERT = 1 << 1;
     }
 }
 

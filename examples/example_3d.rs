@@ -33,11 +33,11 @@ fn setup(
 
     noise_queue.add(
         handle.clone(),
-        Fbm::<Perlin3d> {
-            noise: Perlin3d {
+        Fbm::<Worley3d> {
+            noise: Worley3d {
                 seed: 1,
                 frequency: 5,
-                ..default()
+                flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits()
             },
             octaves: 4,
             lacunarity: 2.0,

@@ -2,10 +2,13 @@
 
 #import bevy_compute_noise::util::{hash33, INFINITY, texture3d as texture}
 
+const TILEABLE: u32 = 1u;
+const INVERT: u32 = 2u; 
+
 struct NoiseParameters {
     seed: u32,
     frequency: u32,
-    invert: u32,
+    flags: u32,
 };
 @group(1) @binding(0)
 var<uniform> parameters: NoiseParameters;
@@ -31,10 +34,14 @@ fn noise(location: vec3<u32>, parameters: NoiseParameters, frequency: f32) -> f3
             for (var z: i32 = -1; z <= 1; z++) {
                 let offset = vec3<f32>(f32(x), f32(y), f32(z));
             
-                let id = vec3<f32>(
-                   fract((cell_id.x + f32(x)) / frequency) * frequency,
-                   fract((cell_id.y + f32(y)) / frequency) * frequency,
-                   fract((cell_id.z + f32(z)) / frequency) * frequency,
+                let id = select(
+                    cell_id + vec3<f32>(f32(x), f32(y), f32(z)),
+                    vec3<f32>(
+                        fract((cell_id.x + f32(x)) / frequency) * frequency,
+                        fract((cell_id.y + f32(y)) / frequency) * frequency,
+                        fract((cell_id.z + f32(z)) / frequency) * frequency
+                    ),
+                    (parameters.flags & TILEABLE) != 0u
                 );
 
                 let seeded_id = id + vec3<f32>(f32(parameters.seed) * 333, f32(parameters.seed) * 563, f32(parameters.seed) * 122);
@@ -51,9 +58,7 @@ fn noise(location: vec3<u32>, parameters: NoiseParameters, frequency: f32) -> f3
     // var normalized_distance = min_distance / distance(vec3<f32>(0.0, 0.0, 0.0), cell_size);
 
     var value = min_distance;
-    if (parameters.invert != 0u) {
-        value = 1.0 - value;
-    }
+    if (parameters.flags & INVERT) != 0u { value = 1.0 - value; }
 
     return value;
 }

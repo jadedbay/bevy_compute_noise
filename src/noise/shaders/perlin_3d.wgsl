@@ -3,10 +3,11 @@
 #import bevy_render::maths::PI
 #import bevy_compute_noise::util::{random_gradient_3d, interpolate_quintic_3d, interpolate_cubic_3d, texture3d as texture}
 
-const INVERT: u32 = 1u;
-const REMAP: u32 = 2u;
-const REMAP_SQRT_3: u32 = 4u;
-const INTERPOLATE_CUBIC: u32 = 8u;
+const TILEABLE: u32 = 1u;
+const INVERT: u32 = 2u;
+const REMAP: u32 = 4u;
+const REMAP_SQRT_3: u32 = 8u;
+const INTERPOLATE_CUBIC: u32 = 16u;
 
 struct NoiseParameters {
     seed: u32,
@@ -42,13 +43,23 @@ fn perlin(uv: vec3<f32>, parameters: NoiseParameters, frequency: f32) -> f32 {
     var grid_uv = fract(scaled_uv);
 
     let p000 = vec3<u32>(grid_id + vec3<f32>(0.0, 0.0, 0.0));
-    let p100 = vec3<u32>((grid_id + vec3<f32>(1.0, 0.0, 0.0)) % frequency);
-    let p010 = vec3<u32>((grid_id + vec3<f32>(0.0, 1.0, 0.0)) % frequency);
-    let p110 = vec3<u32>((grid_id + vec3<f32>(1.0, 1.0, 0.0)) % frequency);
-    let p001 = vec3<u32>((grid_id + vec3<f32>(0.0, 0.0, 1.0)) % frequency);
-    let p101 = vec3<u32>((grid_id + vec3<f32>(1.0, 0.0, 1.0)) % frequency);
-    let p011 = vec3<u32>((grid_id + vec3<f32>(0.0, 1.0, 1.0)) % frequency);
-    let p111 = vec3<u32>((grid_id + vec3<f32>(1.0, 1.0, 1.0)) % frequency);
+    var p100 = vec3<u32>(grid_id + vec3<f32>(1.0, 0.0, 0.0));
+    var p010 = vec3<u32>(grid_id + vec3<f32>(0.0, 1.0, 0.0));
+    var p110 = vec3<u32>(grid_id + vec3<f32>(1.0, 1.0, 0.0));
+    var p001 = vec3<u32>(grid_id + vec3<f32>(0.0, 0.0, 1.0));
+    var p101 = vec3<u32>(grid_id + vec3<f32>(1.0, 0.0, 1.0));
+    var p011 = vec3<u32>(grid_id + vec3<f32>(0.0, 1.0, 1.0));
+    var p111 = vec3<u32>(grid_id + vec3<f32>(1.0, 1.0, 1.0));
+
+    if (parameters.flags & TILEABLE) != 0u {
+        p100 = p100 % u32(frequency);
+        p010 = p010 % u32(frequency);
+        p110 = p110 % u32(frequency);
+        p001 = p001 % u32(frequency);
+        p101 = p101 % u32(frequency);
+        p011 = p011 % u32(frequency);
+        p111 = p111 % u32(frequency);
+    }
 
     let grad000 = random_gradient_3d(parameters.seed, p000);
     let grad100 = random_gradient_3d(parameters.seed, p100);

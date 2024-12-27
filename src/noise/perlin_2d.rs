@@ -15,10 +15,17 @@ pub struct Perlin2d {
 bitflags::bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct Perlin2dFlags: u32 {
-        const INVERT = 1 << 0;
-        const REMAP = 1 << 1;
-        const REMAP_SQRT_2 = 1 << 2;
-        const INTERPOLATE_CUBIC = 1 << 3; // quintic interpolation is default
+        const TILEABLE = 1 << 0;
+        const INVERT = 1 << 1;
+        const REMAP = 1 << 2;
+        const REMAP_SQRT_2 = 1 << 3;
+        const INTERPOLATE_CUBIC = 1 << 4; // quintic interpolation is default
+    }
+}
+
+impl Default for Perlin2dFlags {
+    fn default() -> Self {
+        Self::from_bits_retain(Perlin2dFlags::REMAP_SQRT_2.bits())
     }
 }
 
@@ -27,7 +34,7 @@ impl Default for Perlin2d {
         Self {
             seed: 0,
             frequency: 5,
-            flags: (Perlin2dFlags::REMAP_SQRT_2).bits(),
+            flags: Perlin2dFlags::default().bits(),
         }
     }
 }

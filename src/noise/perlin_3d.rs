@@ -15,10 +15,17 @@ pub struct Perlin3d {
 bitflags::bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct Perlin3dFlags: u32 {
-        const INVERT = 1 << 0;
-        const REMAP = 1 << 1;
-        const REMAP_SQRT_3 = 1 << 2;
-        const INTERPOLATE_CUBIC = 1 << 3; // quintic interpolation is default
+        const TILEABLE = 1 << 0;
+        const INVERT = 1 << 1;
+        const REMAP = 1 << 2;
+        const REMAP_SQRT_3 = 1 << 3;
+        const INTERPOLATE_CUBIC = 1 << 4; // quintic interpolation is default
+    }
+}
+
+impl Default for Perlin3dFlags {
+    fn default() -> Self {
+        Self::from_bits_retain(Perlin3dFlags::REMAP_SQRT_3.bits())
     }
 }
 

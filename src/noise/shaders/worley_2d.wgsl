@@ -2,7 +2,8 @@
 
 #import bevy_compute_noise::util::{hash22, INFINITY, texture2d as texture}
 
-const INVERT: u32 = 1u; 
+const TILEABLE: u32 = 1u;
+const INVERT: u32 = 2u; 
 
 struct NoiseParameters {
     seed: u32,
@@ -32,9 +33,13 @@ fn noise(location: vec2<u32>, parameters: NoiseParameters, frequency: f32) -> f3
         for (var y: i32 = -1; y <= 1; y++) {
             let offset = vec2<f32>(f32(x), f32(y));
             
-            let id = vec2<f32>(
-                fract((cell_id.x + f32(x)) / frequency) * frequency,
-                fract((cell_id.y + f32(y)) / frequency) * frequency
+            let id = select(
+                cell_id + vec2<f32>(f32(x), f32(y)),
+                vec2<f32>(
+                    fract((cell_id.x + f32(x)) / frequency) * frequency,
+                    fract((cell_id.y + f32(y)) / frequency) * frequency
+                ),
+                (parameters.flags & TILEABLE) != 0u
             );
 
             let seeded_id = id + vec2<f32>(f32(parameters.seed) * 333, f32(parameters.seed) * 563);

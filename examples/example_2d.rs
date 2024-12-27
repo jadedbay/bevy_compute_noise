@@ -53,12 +53,12 @@ fn setup(
 
     noise_queue.add(
         handle.clone(),
-        Fbm::<Perlin2d> {
-            noise: Perlin2d {
+        Fbm::<Worley2d> {
+            noise: Worley2d {
                 seed: 5,
                 frequency: 5,
-                // flags: Worley2dFlags::INVERT.bits(),
-                ..default()
+                flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits(),
+                // flags: (Perlin2dFlags::default() | Perlin2dFlags::TILEABLE).bits()
             },
             octaves: 4,
             lacunarity: 2.0,
