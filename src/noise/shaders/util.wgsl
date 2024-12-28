@@ -67,4 +67,3 @@ fn random_gradient_3d(seed: u32, pos: vec3<u32>) -> vec3<f32> {
     let v = rand_vec3f(&state) * 2.0 - 1.0;
     return normalize(v);
 }
-

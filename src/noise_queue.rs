@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use bevy::{
     prelude::*, render::{
-        render_resource::{BindGroup, Buffer, TextureDimension}, renderer::RenderDevice,
+        render_resource::{BindGroup, Buffer, TextureDimension, TextureView}, renderer::RenderDevice,
     }
 };
 
@@ -46,6 +46,7 @@ pub fn prepare_compute_noise_buffers(
 
 #[derive(Clone)]
 pub struct ComputeNoiseBindGroups {
+    pub texture_view: TextureView,
     pub image_bind_group: BindGroup,
     pub noise_bind_groups: Vec<(BindGroup, ComputeNoisePipeline)>,
     pub size: ComputeNoiseSize,

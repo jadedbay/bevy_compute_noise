@@ -16,7 +16,8 @@ impl ComputeNoiseImage {
         image.texture_descriptor.usage = TextureUsages::COPY_DST
             | TextureUsages::COPY_SRC
             | TextureUsages::STORAGE_BINDING
-            | TextureUsages::TEXTURE_BINDING;
+            | TextureUsages::TEXTURE_BINDING
+            | TextureUsages::RENDER_ATTACHMENT;
 
         image
     }

@@ -28,10 +28,7 @@ fn noise(location: vec2<u32>, parameters: NoiseParameters, frequency: f32) -> f3
     let texture_size = textureDimensions(texture);
     let uv = vec2<f32>(location) / vec2<f32>(texture_size);
 
-    var value = perlin(uv, parameters, frequency);
-    if (parameters.flags & REMAP) != 0u { value = value * 0.5 + 0.5; }
-    else if (parameters.flags & REMAP_SQRT_2) != 0 { value = value * sqrt(2.0) * 0.5 + 0.5; }
-    if (parameters.flags & INVERT) != 0u { value = 1.0 - value; }
+    let value = perlin(uv, parameters, frequency);
 
     return value;
 }
@@ -74,7 +71,11 @@ fn perlin(uv: vec2<f32>, parameters: NoiseParameters, frequency: f32) -> f32 {
     let b = mix(dot00, dot10, grid_uv.x);
     let t = mix(dot01, dot11, grid_uv.x);
 
-    let value = mix(b, t, grid_uv.y);
+    var value = mix(b, t, grid_uv.y);
+
+    if (parameters.flags & REMAP) != 0u { value = value * 0.5 + 0.5; }
+    else if (parameters.flags & REMAP_SQRT_2) != 0 { value = value * sqrt(2.0) * 0.5 + 0.5; }
+    if (parameters.flags & INVERT) != 0u { value = 1.0 - value; }
 
     return value;
 }

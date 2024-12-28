@@ -5,7 +5,7 @@ use bevy::{
 };
 use noise::{Perlin2d, Perlin3d, Worley2d, Worley3d};
 use noise_queue::{prepare_compute_noise_buffers, ComputeNoiseBufferQueue};
-use render::{compute::{compute_noise, submit_compute_noise, ComputeNoiseEncoder}, pipeline::{ComputeNoiseFbmPipeline, ComputeNoisePipelines}, prepare::prepare_fbm_pipeline};
+use render::{compute::{compute_noise, submit_compute_noise, ComputeNoiseEncoder}, pipeline::{ComputeNoiseFbmPipeline, ComputeNoisePipelines, ComputeNoiseRenderPipeline}, prepare::prepare_fbm_pipeline};
 
 use crate::{
     noise::ComputeNoiseType,
@@ -58,6 +58,7 @@ impl Plugin for ComputeNoisePlugin {
     fn build(&self, app: &mut App) {
         embedded_asset!(app, "noise/shaders/util.wgsl");
         embedded_asset!(app, "noise/shaders/fbm.wgsl");
+        embedded_asset!(app, "noise/shaders/render.wgsl");
 
         app
             .add_plugins((
@@ -90,6 +91,7 @@ impl Plugin for ComputeNoisePlugin {
             .init_resource::<ComputeNoisePipelines>()
             .init_resource::<ComputeNoiseFbmPipeline>()
             .init_resource::<SpecializedComputePipelines<ComputeNoiseFbmPipeline>>()
-            .init_resource::<ComputeNoiseEncoder>();
+            .init_resource::<ComputeNoiseEncoder>()
+            .init_resource::<ComputeNoiseRenderPipeline>();
     }
 }

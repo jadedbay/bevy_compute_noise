@@ -23,8 +23,8 @@ default-features = false
 features = [ "bevy_render", "bevy_asset", "tonemapping_luts"]
 
 [dev-dependencies]
-bevy-inspector-egui = "0.28.0"
-bevy = { version = "0.15.0", default-features = false, features = ["bevy_winit", "x11", "bevy_pbr", "bevy_sprite", "bevy_window", "multi_threaded", "embedded_watcher"] }
+iyes_perf_ui = { git = "https://github.com/Affinator/iyes_perf_ui" }
+bevy = { version = "0.15.0", default-features = false, features = ["bevy_winit", "x11", "bevy_pbr", "bevy_sprite", "bevy_window", "multi_threaded", "embedded_watcher", "default_font"] }
 
 [profile.dev]
 opt-level = 1

@@ -1,6 +1,5 @@
 use bevy::{image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}, prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}}, sprite::{Material2d, Material2dPlugin}};
 use bevy_compute_noise::prelude::*;
-use bevy_inspector_egui::{inspector_options::ReflectInspectorOptions, quick::WorldInspectorPlugin, InspectorOptions};
 
 fn main() {
     App::new()
@@ -9,7 +8,6 @@ fn main() {
             DefaultPlugins,
             Material2dPlugin::<Image3dMaterial>::default(),
             ComputeNoisePlugin,
-            WorldInspectorPlugin::default(),
         ))
         .add_systems(Startup, setup)
         .add_systems(Update, update_noise)
@@ -95,8 +93,7 @@ fn update_noise(
     }
 }
 
-#[derive(Asset, AsBindGroup, Debug, Clone, InspectorOptions, Reflect)]
-#[reflect(InspectorOptions)]
+#[derive(Asset, AsBindGroup, Debug, Clone, Reflect)]
 struct Image3dMaterial {
     #[texture(101, dimension = "3d")]
     #[sampler(102)]

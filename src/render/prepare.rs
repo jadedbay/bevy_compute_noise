@@ -14,7 +14,7 @@ use crate::{
     image::ComputeNoiseSize, noise::{ComputeNoiseType, Fbm}, noise_queue::{ComputeNoiseBindGroups, ComputeNoiseBufferQueue, ComputeNoiseRenderQueue}, render::pipeline::ComputeNoisePipelines
 };
 
-use super::pipeline::{ComputeNoiseFbmPipeline, ComputeNoisePipeline, FbmPipelineKey};
+use super::pipeline::{ComputeNoiseFbmPipeline, ComputeNoisePipeline, ComputeNoiseRenderPipeline, FbmPipelineKey};
 
 pub fn prepare_bind_groups(
     pipelines: Res<ComputeNoisePipelines>,
@@ -22,6 +22,7 @@ pub fn prepare_bind_groups(
     queue: Res<ComputeNoiseBufferQueue>,
     render_device: Res<RenderDevice>,
     mut render_queue: ResMut<ComputeNoiseRenderQueue>,
+    render_pipeline: Res<ComputeNoiseRenderPipeline>,
 ) {
     let mut bind_groups: Vec<ComputeNoiseBindGroups> = Vec::new();
     for noise in queue.queue.iter() {
@@ -46,7 +47,8 @@ pub fn prepare_bind_groups(
 
                     let bind_group = render_device.create_bind_group(
                         Some("noise_bind_group".into()),
-                        &pipeline.noise_layout,
+                        // &pipeline.noise_layout,
+                        &render_pipeline.layout,
                         buffers.iter().enumerate().map(|(i, buffer)| BindGroupEntry {
                             binding: i as u32,
                             resource: buffer.as_entire_binding(),
@@ -57,6 +59,7 @@ pub fn prepare_bind_groups(
                 .collect();
 
             bind_groups.push(ComputeNoiseBindGroups {
+                texture_view: image.texture_view.clone(),
                 image_bind_group,
                 noise_bind_groups,
                 size: noise.size,
