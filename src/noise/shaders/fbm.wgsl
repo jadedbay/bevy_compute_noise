@@ -30,7 +30,7 @@ struct FbmSettings {
 @group(1) @binding(0) var<uniform> fbm_settings: FbmSettings;
 
 #ifdef 2D
-    @compute @workgroup_size(8, 8)
+    @compute @workgroup_size(32, 32)
 #endif
 #ifdef 3D
     @compute @workgroup_size(8, 8, 8)
@@ -55,7 +55,6 @@ fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
        frequency *= fbm_settings.lacunarity;
        amplitude *= fbm_settings.persistence;
     }
-
 
     textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 1.0));
 }

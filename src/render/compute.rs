@@ -63,7 +63,8 @@ pub fn compute_noise(
                 pass.draw(0..3, 0..1);
                 
                 // let workgroups = bind_groups.size.workgroup_count();
-                // pass.dispatch_workgroups(workgroups.0, workgroups.1, workgroups.2);
+                // // pass.dispatch_workgroups(workgroups.0, workgroups.1, workgroups.2);
+                // pass.dispatch_workgroups(16, 16, 1);
                 
                 dispatched = true;
             }

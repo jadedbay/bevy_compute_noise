@@ -24,7 +24,7 @@ mod render;
 
 pub mod prelude {
     pub use crate::{
-        image::{ComputeNoiseImage, ComputeNoiseSize, ComputeNoiseFormat},
+        image::{ComputeNoiseImage, ComputeNoiseSize},
         noise::{Worley2d, Worley3d, Perlin2d, Perlin3d, Perlin2dFlags, Perlin3dFlags, WorleyFlags, Fbm, ComputeNoiseBuilder},
         noise_queue::ComputeNoiseQueue,
         ComputeNoisePlugin

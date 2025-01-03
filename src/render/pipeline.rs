@@ -1,6 +1,6 @@
 use std::{any::TypeId, marker::PhantomData};
 
-use bevy::{core_pipeline::fullscreen_vertex_shader::fullscreen_shader_vertex_state, prelude::*, render::{render_resource::{binding_types::{texture_storage_2d, uniform_buffer_sized}, BindGroupLayout, BindGroupLayoutEntries, BindingType, CachedComputePipelineId, CachedRenderPipelineId, ColorTargetState, ColorWrites, ComputePipelineDescriptor, DynamicBindGroupLayoutEntries, FragmentState, IntoBindGroupLayoutEntryBuilder, MultisampleState, PipelineCache, PrimitiveState, RenderPipelineDescriptor, ShaderDefVal, ShaderRef, ShaderStages, SpecializedComputePipeline, StorageTextureAccess, TextureDimension, TextureFormat, TextureViewDimension}, renderer::RenderDevice}, utils::HashMap};
+use bevy::{core_pipeline::fullscreen_vertex_shader::fullscreen_shader_vertex_state, prelude::*, render::{render_resource::{binding_types::{storage_buffer_sized, texture_storage_2d, uniform_buffer_sized}, BindGroupLayout, BindGroupLayoutEntries, BindingType, CachedComputePipelineId, CachedRenderPipelineId, ColorTargetState, ColorWrites, ComputePipelineDescriptor, DynamicBindGroupLayoutEntries, FragmentState, IntoBindGroupLayoutEntryBuilder, MultisampleState, PipelineCache, PrimitiveState, RenderPipelineDescriptor, ShaderDefVal, ShaderRef, ShaderStages, SpecializedComputePipeline, StorageTextureAccess, TextureDimension, TextureFormat, TextureViewDimension}, renderer::RenderDevice}, utils::HashMap};
 
 use crate::noise::{ComputeNoise, ComputeNoiseType};
 

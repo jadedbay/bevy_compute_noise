@@ -21,7 +21,7 @@ fn setup(
     mut materials: ResMut<Assets<Image3dMaterial>>,
     mut noise_queue: ResMut<ComputeNoiseQueue>,
 ) {
-    let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D3(128, 128, 128), ComputeNoiseFormat::Rgba);
+    let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D3(128, 128, 128));
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
         address_mode_u: ImageAddressMode::Repeat,
         address_mode_v: ImageAddressMode::Repeat,

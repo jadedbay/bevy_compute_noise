@@ -3,13 +3,13 @@ use bevy::{prelude::*, render::{render_asset::RenderAssetUsages, render_resource
 pub struct ComputeNoiseImage;
 
 impl ComputeNoiseImage {
-    pub fn create_image(size: ComputeNoiseSize, format: ComputeNoiseFormat) -> Image {
+    pub fn create_image(size: ComputeNoiseSize) -> Image {
         let mut image =
             Image::new_fill(
                 size.into(),
                 size.into(),
                 &[0, 0, 0, 0],
-                format.into(),
+                TextureFormat::Rgba8Unorm,
                 RenderAssetUsages::all(),
             );
 
@@ -20,23 +20,6 @@ impl ComputeNoiseImage {
             | TextureUsages::RENDER_ATTACHMENT;
 
         image
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub enum ComputeNoiseFormat {
-    R,
-    Rg,
-    Rgba
-}
-
-impl From<ComputeNoiseFormat> for TextureFormat {
-    fn from(value: ComputeNoiseFormat) -> Self {
-        match value {
-            ComputeNoiseFormat::R => TextureFormat::R8Unorm,
-            ComputeNoiseFormat::Rg => TextureFormat::Rg8Unorm,
-            ComputeNoiseFormat::Rgba => TextureFormat::Rgba8Unorm
-        }
     }
 }
 

@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
     render::{
         render_asset::RenderAssets,
-        render_resource::{BindGroup, BindGroupEntries, BindGroupEntry, PipelineCache, SpecializedComputePipelines},
+        render_resource::{BindGroup, BindGroupEntries, BindGroupEntry, BufferDescriptor, BufferUsages, PipelineCache, SpecializedComputePipelines},
         renderer::RenderDevice,
         texture::GpuImage,
     },
@@ -42,7 +42,7 @@ pub fn prepare_bind_groups(
                 .iter()
                 .map(|(type_id, buffers)| {
                     let pipeline = pipelines.get_pipeline(*type_id)
-                        .ok_or_else(|| format!("Failed to get pipeline for type_id: {:?}", type_id)) // Sometimes get error here TODO: fix it
+                        .ok_or_else(|| format!("Failed to get pipeline for type_id: {:?}", type_id)) // Sometimes get error here TODO: fix it UPDATE: maybe not?
                         .unwrap_or_else(|err| panic!("{}", err));
 
                     let bind_group = render_device.create_bind_group(

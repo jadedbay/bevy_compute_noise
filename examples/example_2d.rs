@@ -33,10 +33,10 @@ fn setup(
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut materials: ResMut<Assets<ImageMaterial>>,
     mut noise_queue: ResMut<ComputeNoiseQueue>
 ) {
-    let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(1024, 1024), ComputeNoiseFormat::Rgba);
+    let mut image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(512, 512));
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
         address_mode_u: ImageAddressMode::Repeat,
         address_mode_v: ImageAddressMode::Repeat,
@@ -81,9 +81,8 @@ fn setup(
     commands.spawn((
         Mesh2d(meshes.add(quad)),
         Transform::default().with_scale(Vec3::splat(512.)),
-        MeshMaterial2d(materials.add(ColorMaterial {
-            texture: Some(handle.clone()),
-            ..default()
+        MeshMaterial2d(materials.add(ImageMaterial {
+            image: handle.clone(),
         }))
     ));
 
@@ -93,10 +92,10 @@ fn setup(
 
 fn update_noise(
     mut noise_queue: ResMut<ComputeNoiseQueue>,
-    query: Query<&MeshMaterial2d<ColorMaterial>>,
+    query: Query<&MeshMaterial2d<ImageMaterial>>,
     keys: Res<ButtonInput<KeyCode>>,
     mut local: Local<u32>,
-    materials: Res<Assets<ColorMaterial>>,
+    materials: Res<Assets<ImageMaterial>>,
 ) {
     if keys.just_pressed(KeyCode::Space) {
         
@@ -105,7 +104,7 @@ fn update_noise(
     for material in query.iter() {
         for _ in 0..100 {
             noise_queue.add(
-                materials.get(&material.0).unwrap().texture.as_ref().unwrap().clone(),
+                materials.get(&material.0).unwrap().image.clone(),
                     Fbm::<Perlin2d> {
                     noise: Perlin2d {
                         seed: 5,
