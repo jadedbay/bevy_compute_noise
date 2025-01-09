@@ -9,7 +9,7 @@ use super::{ComputeNoise, ComputeNoiseType};
 #[derive(Clone, Copy, Reflect, PartialEq, Debug, Pod, Zeroable)]
 #[reflect(Default)]
 #[repr(C)]
-pub struct Worley2d {
+pub struct Worley {
     pub seed: u32,
     pub frequency: f32,
     pub flags: u32,
@@ -23,7 +23,7 @@ bitflags::bitflags! {
     }
 }
 
-impl Default for Worley2d {
+impl Default for Worley {
     fn default() -> Self {
         Self {
             seed: 0,
@@ -33,7 +33,7 @@ impl Default for Worley2d {
     }
 }
 
-impl ComputeNoise for Worley2d {
+impl ComputeNoise for Worley {
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
         vec![
             render_device.create_buffer_with_data(
@@ -51,7 +51,7 @@ impl ComputeNoise for Worley2d {
     }
 }
 
-impl ComputeNoiseType for Worley2d {
+impl ComputeNoiseType for Worley {
     fn shader_2d() -> ShaderRef {
         "embedded://bevy_compute_noise/noise/shaders/worley_2d.wgsl".into()
     }

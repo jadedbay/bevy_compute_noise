@@ -2,17 +2,13 @@ use std::any::{Any, TypeId};
 
 use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_resource::{binding_types::uniform_buffer_sized, BindGroup, BindGroupLayout, BindGroupLayoutEntryBuilder, Buffer, DynamicBindGroupEntries, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 
-pub mod worley_2d;
-pub mod worley_3d;
-pub mod perlin_2d;
-pub mod perlin_3d;
+pub mod worley;
+pub mod perlin;
 pub mod fbm;
 
 use bytemuck::Pod;
-pub use worley_2d::{Worley2d, WorleyFlags};
-// pub use worley_3d::Worley3d;
-pub use perlin_2d::{Perlin2d, Perlin2dFlags};
-// pub use perlin_3d::{Perlin3d, Perlin3dFlags};
+pub use worley::{Worley, WorleyFlags};
+pub use perlin::{Perlin, PerlinFlags};
 pub use fbm::Fbm;
 
 pub trait ComputeNoiseType: ComputeNoise + Pod {

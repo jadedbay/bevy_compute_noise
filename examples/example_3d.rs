@@ -31,12 +31,12 @@ fn setup(
 
     noise_queue.write(
         handle.clone(),
-        Fbm::<Perlin2d> {
-            noise: Perlin2d {
+        Fbm::<Perlin> {
+            noise: Perlin {
                 seed: 1,
                 frequency: 5.0,
                 // flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits()
-                flags: (Perlin2dFlags::default() | Perlin2dFlags::TILEABLE).bits()
+                flags: (PerlinFlags::default() | PerlinFlags::TILEABLE).bits()
             },
             octaves: 4,
             lacunarity: 2.0,
@@ -76,12 +76,12 @@ fn update_noise(
         for material in query.iter() {
             noise_queue.write(
                 materials.get(&material.0).unwrap().image.clone(),
-                Fbm::<Perlin2d> {
-                    noise: Perlin2d {
+                Fbm::<Perlin> {
+                    noise: Perlin {
                         seed: *local,
                         frequency: 5.0,
                         // flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits(),
-                        flags: (Perlin2dFlags::default() | Perlin2dFlags::TILEABLE).bits()
+                        flags: (PerlinFlags::default() | PerlinFlags::TILEABLE).bits()
                     },
                     octaves: 4,
                     lacunarity: 2.0,

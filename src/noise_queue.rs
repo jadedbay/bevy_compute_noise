@@ -1,5 +1,3 @@
-use std::any::TypeId;
-
 use bevy::{
     prelude::*, render::{
         render_resource::{BindGroup, Buffer, CachedComputePipelineId, TextureDimension, TextureView}, renderer::RenderDevice,
@@ -13,9 +11,9 @@ pub struct ComputeNoiseQueue {
     pub queue: Vec<(Vec<Handle<Image>>, ErasedComputeNoise)>,
 }
 impl ComputeNoiseQueue {
-    pub fn write(&mut self, image: Handle<Image>, noise: ErasedComputeNoise) {
+    pub fn write(&mut self, output: Handle<Image>, noise: ErasedComputeNoise) {
         self.queue.push((
-            vec![image],
+            vec![output],
             noise,
         ));
     }

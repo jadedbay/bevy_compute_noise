@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use bevy::{
     asset::embedded_asset, prelude::*, render::{render_resource::SpecializedComputePipelines, Render, RenderApp, RenderSet}
 };
-use noise::{Perlin2d, Worley2d};
+use noise::{Perlin, Worley};
 use noise_queue::{prepare_compute_noise_buffers, ComputeNoiseBufferQueue};
 use render::{compute::{compute_noise, submit_compute_noise, ComputeNoiseEncoder}, pipeline::{load_fbm_shaders, load_compute_noise_shader, ComputeNoisePipelines}, prepare::prepare_compute_noise_pipelines};
 
@@ -12,7 +12,6 @@ use crate::{
     noise_queue::{ComputeNoiseQueue, ComputeNoiseRenderQueue},
     render::{
         extract::extract_compute_noise_queue,
-        // pipeline::ComputeNoiseTypePipeline,
         prepare::prepare_bind_groups,
     },
 };
@@ -25,7 +24,7 @@ mod render;
 pub mod prelude {
     pub use crate::{
         image::{ComputeNoiseImage, ComputeNoiseSize},
-        noise::{Worley2d, Perlin2d, Perlin2dFlags, WorleyFlags, Fbm},
+        noise::{Worley, Perlin, PerlinFlags, WorleyFlags, Fbm},
         noise_queue::ComputeNoiseQueue,
         ComputeNoisePlugin
     };
@@ -38,14 +37,10 @@ impl<T: ComputeNoiseType> Plugin for ComputeNoiseTypePlugin<T> {
     fn build(&self, app: &mut App) {
         T::embed_shaders(app);
         app.register_type::<T>();
-
-        let render_app = app.sub_app_mut(RenderApp);
-        // render_app.add_systems(Render, prepare_fbm_pipeline::<T>.in_set(RenderSet::Prepare));
    }
 
     fn finish(&self, app: &mut App) {
         let render_app = app.sub_app_mut(RenderApp);
-        // ComputeNoiseTypePipeline::<T>::create_pipeline(render_app.world_mut());
         load_compute_noise_shader::<T>(render_app.world_mut());
         load_fbm_shaders::<T>(render_app.world_mut());
     }
@@ -63,10 +58,8 @@ impl Plugin for ComputeNoisePlugin {
 
         app
             .add_plugins((
-                ComputeNoiseTypePlugin::<Perlin2d>::default(),
-                // ComputeNoiseTypePlugin::<Perlin3d>::default(),
-                ComputeNoiseTypePlugin::<Worley2d>::default(),
-                // ComputeNoiseTypePlugin::<Worley3d>::default(),
+                ComputeNoiseTypePlugin::<Perlin>::default(),
+                ComputeNoiseTypePlugin::<Worley>::default(),
             ))
             .init_resource::<ComputeNoiseQueue>()
             .init_resource::<ComputeNoiseBufferQueue>()
@@ -92,8 +85,6 @@ impl Plugin for ComputeNoisePlugin {
         render_app
             .init_resource::<ComputeNoisePipelines>()
             .init_resource::<SpecializedComputePipelines<ComputeNoisePipelines>>()
-            // .init_resource::<ComputeNoiseFbmPipeline>()
-            // .init_resource::<SpecializedComputePipelines<ComputeNoiseFbmPipeline>>()
             .init_resource::<ComputeNoiseEncoder>();
     }
 }
