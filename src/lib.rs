@@ -3,16 +3,16 @@ use std::marker::PhantomData;
 use bevy::{
     asset::embedded_asset, prelude::*, render::{render_resource::SpecializedComputePipelines, Render, RenderApp, RenderSet}
 };
-use noise::{Perlin2d, Perlin3d, Worley2d, Worley3d};
+use noise::{Perlin2d, Worley2d};
 use noise_queue::{prepare_compute_noise_buffers, ComputeNoiseBufferQueue};
-use render::{compute::{compute_noise, submit_compute_noise, ComputeNoiseEncoder}, pipeline::{ComputeNoiseFbmPipeline, ComputeNoisePipelines, ComputeNoiseRenderPipeline}, prepare::prepare_fbm_pipeline};
+use render::{compute::{compute_noise, submit_compute_noise, ComputeNoiseEncoder}, pipeline::{load_fbm_shaders, load_compute_noise_shader, ComputeNoisePipelines}, prepare::prepare_compute_noise_pipelines};
 
 use crate::{
     noise::ComputeNoiseType,
     noise_queue::{ComputeNoiseQueue, ComputeNoiseRenderQueue},
     render::{
         extract::extract_compute_noise_queue,
-        pipeline::ComputeNoiseTypePipeline,
+        // pipeline::ComputeNoiseTypePipeline,
         prepare::prepare_bind_groups,
     },
 };
@@ -25,7 +25,7 @@ mod render;
 pub mod prelude {
     pub use crate::{
         image::{ComputeNoiseImage, ComputeNoiseSize},
-        noise::{Worley2d, Worley3d, Perlin2d, Perlin3d, Perlin2dFlags, Perlin3dFlags, WorleyFlags, Fbm, ComputeNoiseBuilder},
+        noise::{Worley2d, Perlin2d, Perlin2dFlags, WorleyFlags, Fbm},
         noise_queue::ComputeNoiseQueue,
         ComputeNoisePlugin
     };
@@ -36,16 +36,18 @@ pub struct ComputeNoiseTypePlugin<T: ComputeNoiseType>(PhantomData<T>);
 
 impl<T: ComputeNoiseType> Plugin for ComputeNoiseTypePlugin<T> {
     fn build(&self, app: &mut App) {
-        T::embed_shader(app);
+        T::embed_shaders(app);
         app.register_type::<T>();
 
         let render_app = app.sub_app_mut(RenderApp);
-        render_app.add_systems(Render, prepare_fbm_pipeline::<T>.in_set(RenderSet::Prepare));
+        // render_app.add_systems(Render, prepare_fbm_pipeline::<T>.in_set(RenderSet::Prepare));
    }
 
     fn finish(&self, app: &mut App) {
         let render_app = app.sub_app_mut(RenderApp);
-        ComputeNoiseTypePipeline::<T>::create_pipeline(render_app.world_mut());
+        // ComputeNoiseTypePipeline::<T>::create_pipeline(render_app.world_mut());
+        load_compute_noise_shader::<T>(render_app.world_mut());
+        load_fbm_shaders::<T>(render_app.world_mut());
     }
 }
 
@@ -58,14 +60,13 @@ impl Plugin for ComputeNoisePlugin {
     fn build(&self, app: &mut App) {
         embedded_asset!(app, "noise/shaders/util.wgsl");
         embedded_asset!(app, "noise/shaders/fbm.wgsl");
-        embedded_asset!(app, "noise/shaders/render.wgsl");
 
         app
             .add_plugins((
                 ComputeNoiseTypePlugin::<Perlin2d>::default(),
-                ComputeNoiseTypePlugin::<Perlin3d>::default(),
+                // ComputeNoiseTypePlugin::<Perlin3d>::default(),
                 ComputeNoiseTypePlugin::<Worley2d>::default(),
-                ComputeNoiseTypePlugin::<Worley3d>::default(),
+                // ComputeNoiseTypePlugin::<Worley3d>::default(),
             ))
             .init_resource::<ComputeNoiseQueue>()
             .init_resource::<ComputeNoiseBufferQueue>()
@@ -79,6 +80,7 @@ impl Plugin for ComputeNoisePlugin {
             .add_systems(
                 Render,
                 (
+                    prepare_compute_noise_pipelines.in_set(RenderSet::Prepare),
                     prepare_bind_groups.in_set(RenderSet::PrepareBindGroups),
                     (compute_noise, submit_compute_noise).after(RenderSet::PrepareBindGroups).before(RenderSet::Render).chain(),
                 )
@@ -89,9 +91,9 @@ impl Plugin for ComputeNoisePlugin {
         let render_app = app.sub_app_mut(RenderApp);
         render_app
             .init_resource::<ComputeNoisePipelines>()
-            .init_resource::<ComputeNoiseFbmPipeline>()
-            .init_resource::<SpecializedComputePipelines<ComputeNoiseFbmPipeline>>()
-            .init_resource::<ComputeNoiseEncoder>()
-            .init_resource::<ComputeNoiseRenderPipeline>();
+            .init_resource::<SpecializedComputePipelines<ComputeNoisePipelines>>()
+            // .init_resource::<ComputeNoiseFbmPipeline>()
+            // .init_resource::<SpecializedComputePipelines<ComputeNoiseFbmPipeline>>()
+            .init_resource::<ComputeNoiseEncoder>();
     }
 }

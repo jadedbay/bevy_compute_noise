@@ -2,19 +2,36 @@ use std::any::TypeId;
 
 use bevy::{
     prelude::*, render::{
-        render_resource::{BindGroup, Buffer, TextureDimension, TextureView}, renderer::RenderDevice,
+        render_resource::{BindGroup, Buffer, CachedComputePipelineId, TextureDimension, TextureView}, renderer::RenderDevice,
     }
 };
 
-use crate::{image::ComputeNoiseSize, noise::ComputeNoiseSequence, render::pipeline::ComputeNoisePipeline};
+use crate::{image::ComputeNoiseSize, noise::{ErasedComputeNoise, Fbm}, render::pipeline::ComputeNoisePipelineKey};
 
 #[derive(Resource, Default)]
 pub struct ComputeNoiseQueue {
-    pub(crate) queue: Vec<(Handle<Image>, ComputeNoiseSequence)>,
+    pub queue: Vec<(Vec<Handle<Image>>, ErasedComputeNoise)>,
 }
 impl ComputeNoiseQueue {
-    pub fn add(&mut self, image: Handle<Image>, noise: ComputeNoiseSequence) {
-        self.queue.push((image, noise));
+    pub fn write(&mut self, image: Handle<Image>, noise: ErasedComputeNoise) {
+        self.queue.push((
+            vec![image],
+            noise,
+        ));
+    }
+
+    pub fn modify(&mut self, input: Handle<Image>, output: Handle<Image>, modification: ErasedComputeNoise) {
+        self.queue.push((
+            vec![input, output],
+            modification,
+        ))
+    }
+
+    pub fn combine(&mut self, input1: Handle<Image>, input2: Handle<Image>, output: Handle<Image>, op: ErasedComputeNoise) {
+        self.queue.push((
+            vec![input1, input2, output],
+            op,
+        ))
     }
 }
 
@@ -24,21 +41,27 @@ pub fn prepare_compute_noise_buffers(
     mut noise_queue: ResMut<ComputeNoiseQueue>,
     mut noise_buffer_queue: ResMut<ComputeNoiseBufferQueue>,
 ) {
-    for noise in &noise_queue.queue {
-        let size: ComputeNoiseSize = images.get(&noise.0).unwrap().texture_descriptor.size.into();
-        if noise.1.0.iter().all(|n| TextureDimension::from(size) == n.texture_dimension) {
-            noise_buffer_queue.queue.push(
-                ComputeNoiseBuffers {
-                    image: noise.0.clone(),
-                    buffers: noise.1.0.iter()
-                        .map(|n| (n.type_id, n.buffers(&render_device)))
-                        .collect(),
-                    size,
-                }
-            )
-        } else {
-            error!("Image dimensions do not match noise dimensions - did not queue compute noise.")
+    for item in &noise_queue.queue {
+        let sizes: Vec<ComputeNoiseSize> = item.0.iter()
+            .map(|image_handle| {
+                images.get(image_handle).unwrap().texture_descriptor.size.into()
+            })
+            .collect();
+
+        if !sizes.windows(2).all(|window| TextureDimension::from(window[0]) == TextureDimension::from(window[1])) {
+            error!("Not all images have the same dimension - did not queue compute noise.");
+            continue;
         }
+
+        noise_buffer_queue.queue.push(ComputeNoiseBuffers {
+            key: ComputeNoisePipelineKey {
+                type_id: item.1.type_id,
+                dimension: sizes[0].into(),
+            },
+            images: item.0.clone(),
+            buffers: item.1.buffers(&render_device),
+            size: *sizes.last().unwrap(),
+        });
     }
     
     noise_queue.queue.clear();
@@ -46,21 +69,22 @@ pub fn prepare_compute_noise_buffers(
 
 #[derive(Clone)]
 pub struct ComputeNoiseBindGroups {
-    pub texture_view: TextureView,
-    pub image_bind_group: BindGroup,
-    pub noise_bind_groups: Vec<(BindGroup, ComputeNoisePipeline)>,
+    pub key: ComputeNoisePipelineKey,
+    pub bind_group: BindGroup,
     pub size: ComputeNoiseSize,
 }
 
 #[derive(Default, Resource)]
 pub(crate) struct ComputeNoiseRenderQueue {
     pub queue: Vec<ComputeNoiseBindGroups>,
+    pub pipeline_ids: Vec<CachedComputePipelineId>,
 }
 
 #[derive(Clone)]
 pub struct ComputeNoiseBuffers {
-    pub image: Handle<Image>,
-    pub buffers: Vec<(TypeId, Vec<Buffer>)>,
+    pub key: ComputeNoisePipelineKey,
+    pub images: Vec<Handle<Image>>,
+    pub buffers: Vec<Buffer>,
     pub size: ComputeNoiseSize,
 }
 

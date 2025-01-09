@@ -1,28 +1,30 @@
-#define_import_path bevy_compute_noise::worley3d
+#define_import_path bevy_compute_noise::worley_3d
 
 #import bevy_compute_noise::util::{hash33, INFINITY, texture3d as texture}
 
 const TILEABLE: u32 = 1u;
 const INVERT: u32 = 2u; 
 
-struct NoiseParameters {
+struct Worley {
     seed: u32,
-    frequency: u32,
+    frequency: f32,
     flags: u32,
 };
 @group(1) @binding(0)
-var<uniform> parameters: NoiseParameters;
+var<uniform> worley: Worley;
 
 @compute @workgroup_size(8, 8, 8)
 fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
-    let value = noise(invocation_id, parameters, f32(parameters.frequency));
-    textureStore(texture, invocation_id, vec4<f32>(value, 0.0, 0.0, 0.0));
-}
-
-fn noise(location: vec3<u32>, parameters: NoiseParameters, frequency: f32) -> f32 {
+    let location = invocation_id.xyz;
     let texture_size = textureDimensions(texture);
     let uv = vec3<f32>(location) / vec3<f32>(texture_size);
-    
+
+    let value = worley_3d(uv, worley);
+    textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 0.0));
+}
+
+fn worley_3d(uv: vec3<f32>, worley: Worley) -> f32 {
+    let frequency = worley.frequency;
     let scaled_uv = uv * frequency;
     
     let cell_id = floor(scaled_uv);
@@ -41,10 +43,10 @@ fn noise(location: vec3<u32>, parameters: NoiseParameters, frequency: f32) -> f3
                         fract((cell_id.y + f32(y)) / frequency) * frequency,
                         fract((cell_id.z + f32(z)) / frequency) * frequency
                     ),
-                    (parameters.flags & TILEABLE) != 0u
+                    (worley.flags & TILEABLE) != 0u
                 );
 
-                let seeded_id = id + vec3<f32>(f32(parameters.seed) * 333, f32(parameters.seed) * 563, f32(parameters.seed) * 122);
+                let seeded_id = id + vec3<f32>(f32(worley.seed) * 333, f32(worley.seed) * 563, f32(worley.seed) * 122);
                 
                 let h = (hash33(seeded_id) * 0.5 + 0.5);
                 let point_pos = offset + h;
@@ -58,7 +60,7 @@ fn noise(location: vec3<u32>, parameters: NoiseParameters, frequency: f32) -> f3
     // var normalized_distance = min_distance / distance(vec3<f32>(0.0, 0.0, 0.0), cell_size);
 
     var value = min_distance;
-    if (parameters.flags & INVERT) != 0u { value = 1.0 - value; }
+    if (worley.flags & INVERT) != 0u { value = 1.0 - value; }
 
     return value;
 }

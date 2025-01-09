@@ -16,8 +16,7 @@ impl ComputeNoiseImage {
         image.texture_descriptor.usage = TextureUsages::COPY_DST
             | TextureUsages::COPY_SRC
             | TextureUsages::STORAGE_BINDING
-            | TextureUsages::TEXTURE_BINDING
-            | TextureUsages::RENDER_ATTACHMENT;
+            | TextureUsages::TEXTURE_BINDING;
 
         image
     }
@@ -60,7 +59,7 @@ impl ComputeNoiseSize {
 
     pub(crate) fn workgroup_count(&self) -> (u32, u32, u32) {
         match self {
-            Self::D2(width, height) => (width / 8, height / 8, 1),
+            Self::D2(width, height) => (width / 32, height / 32, 1),
             Self::D3(width, height, depth) => (width / 8, height / 8, depth / 8),
         }
     }

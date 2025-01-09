@@ -29,13 +29,14 @@ fn setup(
     });
     let handle = images.add(image);
 
-    noise_queue.add(
+    noise_queue.write(
         handle.clone(),
-        Fbm::<Worley3d> {
-            noise: Worley3d {
+        Fbm::<Perlin2d> {
+            noise: Perlin2d {
                 seed: 1,
-                frequency: 5,
-                flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits()
+                frequency: 5.0,
+                // flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits()
+                flags: (Perlin2dFlags::default() | Perlin2dFlags::TILEABLE).bits()
             },
             octaves: 4,
             lacunarity: 2.0,
@@ -73,14 +74,14 @@ fn update_noise(
 ) {
     if keys.just_pressed(KeyCode::Space) {
         for material in query.iter() {
-            noise_queue.add(
+            noise_queue.write(
                 materials.get(&material.0).unwrap().image.clone(),
-                Fbm::<Perlin3d> {
-                    noise: Perlin3d {
+                Fbm::<Perlin2d> {
+                    noise: Perlin2d {
                         seed: *local,
-                        frequency: 5,
-                        // flags: WorleyFlags::INVERT.bits(),
-                        ..default()
+                        frequency: 5.0,
+                        // flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits(),
+                        flags: (Perlin2dFlags::default() | Perlin2dFlags::TILEABLE).bits()
                     },
                     octaves: 4,
                     lacunarity: 2.0,

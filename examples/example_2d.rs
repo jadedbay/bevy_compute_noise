@@ -63,12 +63,12 @@ fn setup(
     //     }.into(),
     // );
 
-    noise_queue.add(
+    noise_queue.write(
         handle.clone(),
-        Fbm::<Perlin2d> {
-            noise: Perlin2d {
+        Fbm::<Worley2d> {
+            noise: Worley2d {
                 seed: 5,
-                frequency: 5,
+                frequency: 5.0,
                 // flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits(),
                 flags: (Perlin2dFlags::default() | Perlin2dFlags::TILEABLE).bits()
             },
@@ -97,27 +97,24 @@ fn update_noise(
     mut local: Local<u32>,
     materials: Res<Assets<ImageMaterial>>,
 ) {
-    if keys.just_pressed(KeyCode::Space) {
-        
+    if keys.just_pressed(KeyCode::Space) { 
         *local = *local + 1;
     }
     for material in query.iter() {
-        for _ in 0..100 {
-            noise_queue.add(
-                materials.get(&material.0).unwrap().image.clone(),
-                    Fbm::<Perlin2d> {
-                    noise: Perlin2d {
-                        seed: 5,
-                        frequency: 5,
-                        // flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits(),
-                        flags: (Perlin2dFlags::default() | Perlin2dFlags::TILEABLE).bits()
-                    },
-                    octaves: 4,
-                    lacunarity: 2.0,
-                    persistence: 0.5,
-                }.into(),
-            );
-        }
+        noise_queue.write(
+            materials.get(&material.0).unwrap().image.clone(),
+            Fbm::<Worley2d> {
+                noise: Worley2d {
+                    seed: *local,
+                    frequency: 5.0,
+                    // flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits(),
+                    flags: (Perlin2dFlags::default() | Perlin2dFlags::TILEABLE).bits()
+                },
+                octaves: 4,
+                lacunarity: 2.0,
+                persistence: 0.5,
+            }.into(),
+        );
     }
 }
 

@@ -1,6 +1,8 @@
-use bevy::{asset::embedded_asset, prelude::*, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
+use bevy::{asset::embedded_asset, prelude::*, render::{render_resource::{binding_types::uniform_buffer_sized, BindGroupLayoutEntryBuilder, Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 use bytemuck::{Pod, Zeroable};
 
+
+use crate::render::pipeline::noise_texture_2d;
 
 use super::{ComputeNoise, ComputeNoiseType};
 
@@ -9,7 +11,7 @@ use super::{ComputeNoise, ComputeNoiseType};
 #[repr(C)]
 pub struct Worley2d {
     pub seed: u32,
-    pub frequency: u32,
+    pub frequency: f32,
     pub flags: u32,
 }
 
@@ -25,7 +27,7 @@ impl Default for Worley2d {
     fn default() -> Self {
         Self {
             seed: 0,
-            frequency: 5,
+            frequency: 5.0,
             flags: 0,
         }
     }
@@ -50,16 +52,27 @@ impl ComputeNoise for Worley2d {
 }
 
 impl ComputeNoiseType for Worley2d {
-
-    fn shader() -> ShaderRef {
+    fn shader_2d() -> ShaderRef {
         "embedded://bevy_compute_noise/noise/shaders/worley_2d.wgsl".into()
     }
 
-    fn embed_shader(app: &mut App) {
+    fn shader_3d() -> ShaderRef {
+        "embedded://bevy_compute_noise/noise/shaders/worley_3d.wgsl".into()
+    }
+
+    fn embed_shaders(app: &mut App) {
         embedded_asset!(app, "shaders/worley_2d.wgsl");
+        embedded_asset!(app, "shaders/worley_3d.wgsl");
     }
 
     fn shader_def() -> ShaderDefVal {
-       "WORLEY2D".into() 
+       "WORLEY".into() 
+    }
+
+    fn bind_group_layout_entries() -> Vec<BindGroupLayoutEntryBuilder> {
+        vec![
+            noise_texture_2d(),
+            uniform_buffer_sized(false, None),
+        ]
     }
 }

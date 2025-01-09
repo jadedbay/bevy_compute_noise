@@ -1,4 +1,4 @@
-#define_import_path bevy_compute_noise::perlin2d
+#define_import_path bevy_compute_noise::perlin_2d
 
 #import bevy_render::maths::PI
 #import bevy_compute_noise::util::{random_gradient_2d, interpolate_quintic, interpolate_cubic, texture2d as texture}
@@ -6,34 +6,29 @@
 const TILEABLE: u32 = 1u;
 const INVERT: u32 = 2u;
 const REMAP: u32 = 4u;
-const REMAP_SQRT_2: u32 = 8u;
+const REMAP_SQRT: u32 = 8u;
 const INTERPOLATE_CUBIC: u32 = 16u;
 
-struct NoiseParameters {
+struct Perlin {
     seed: u32,
-    frequency: u32,
+    frequency: f32,
     flags: u32,
 };
-@group(1) @binding(0) var<uniform> parameters: NoiseParameters;
+@group(1) @binding(0) var<uniform> perlin: Perlin;
 
-@compute @workgroup_size(8, 8)
+@compute @workgroup_size(32, 32)
 fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     let location = invocation_id.xy;
-
-    let value = noise(location, parameters, f32(parameters.frequency));
-    textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 1.0));
-}
-
-fn noise(location: vec2<u32>, parameters: NoiseParameters, frequency: f32) -> f32 {
     let texture_size = textureDimensions(texture);
     let uv = vec2<f32>(location) / vec2<f32>(texture_size);
 
-    let value = perlin(uv, parameters, frequency);
-
-    return value;
+    let value = perlin_2d(uv, perlin);
+    textureStore(texture, location, vec4<f32>(value, 0.0, 0.0, 1.0));
 }
 
-fn perlin(uv: vec2<f32>, parameters: NoiseParameters, frequency: f32) -> f32 {
+fn perlin_2d(uv: vec2<f32>, perlin: Perlin) -> f32 {
+    var frequency = perlin.frequency;
+    if (perlin.flags & TILEABLE) != 0u { frequency = floor(frequency); }
     let scaled_uv = uv * frequency;
 
     let grid_id = floor(scaled_uv);
@@ -44,16 +39,16 @@ fn perlin(uv: vec2<f32>, parameters: NoiseParameters, frequency: f32) -> f32 {
     var p01 = vec2<u32>(grid_id + vec2<f32>(0.0, 1.0));
     var p11 = vec2<u32>(grid_id + vec2<f32>(1.0, 1.0));
 
-    if (parameters.flags & TILEABLE) != 0u {
+    if (perlin.flags & TILEABLE) != 0u {
         p10 = p10 % u32(frequency);
         p01 = p01 % u32(frequency);
         p11 = p11 % u32(frequency);
     }
 
-    let grad00 = random_gradient_2d(parameters.seed, p00);
-    let grad10 = random_gradient_2d(parameters.seed, p10);
-    let grad01 = random_gradient_2d(parameters.seed, p01);
-    let grad11 = random_gradient_2d(parameters.seed, p11);
+    let grad00 = random_gradient_2d(perlin.seed, p00);
+    let grad10 = random_gradient_2d(perlin.seed, p10);
+    let grad01 = random_gradient_2d(perlin.seed, p01);
+    let grad11 = random_gradient_2d(perlin.seed, p11);
 
     let dist00 = grid_uv;
     let dist10 = grid_uv - vec2<f32>(1.0, 0.0);
@@ -65,7 +60,7 @@ fn perlin(uv: vec2<f32>, parameters: NoiseParameters, frequency: f32) -> f32 {
     let dot01 = dot(grad01, dist01);
     let dot11 = dot(grad11, dist11);
 
-    if (parameters.flags & INTERPOLATE_CUBIC) != 0u { grid_uv = interpolate_cubic(grid_uv); }
+    if (perlin.flags & INTERPOLATE_CUBIC) != 0u { grid_uv = interpolate_cubic(grid_uv); }
     else { grid_uv = interpolate_quintic(grid_uv); } 
 
     let b = mix(dot00, dot10, grid_uv.x);
@@ -73,9 +68,9 @@ fn perlin(uv: vec2<f32>, parameters: NoiseParameters, frequency: f32) -> f32 {
 
     var value = mix(b, t, grid_uv.y);
 
-    if (parameters.flags & REMAP) != 0u { value = value * 0.5 + 0.5; }
-    else if (parameters.flags & REMAP_SQRT_2) != 0 { value = value * sqrt(2.0) * 0.5 + 0.5; }
-    if (parameters.flags & INVERT) != 0u { value = 1.0 - value; }
+    if (perlin.flags & REMAP) != 0u { value = value * 0.5 + 0.5; }
+    else if (perlin.flags & REMAP_SQRT) != 0 { value = value * sqrt(2.0) * 0.5 + 0.5; }
+    if (perlin.flags & INVERT) != 0u { value = 1.0 - value; }
 
     return value;
 }
