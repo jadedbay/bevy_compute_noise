@@ -68,11 +68,4 @@ impl ComputeNoiseType for Worley {
     fn shader_def() -> ShaderDefVal {
        "WORLEY".into() 
     }
-
-    fn bind_group_layout_entries() -> Vec<BindGroupLayoutEntryBuilder> {
-        vec![
-            noise_texture_2d(),
-            uniform_buffer_sized(false, None),
-        ]
-    }
 }

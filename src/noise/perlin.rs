@@ -76,11 +76,4 @@ impl ComputeNoiseType for Perlin {
     fn shader_def() -> ShaderDefVal {
        "PERLIN".into() 
     }
-
-    fn bind_group_layout_entries() -> Vec<BindGroupLayoutEntryBuilder> {
-        vec![
-            noise_texture_2d(),
-            uniform_buffer_sized(false, None),
-        ]
-    }
 }

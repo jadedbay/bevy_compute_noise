@@ -15,9 +15,7 @@ pub trait ComputeNoiseType: ComputeNoise + Pod {
     fn embed_shaders(app: &mut App);
     fn shader_2d() -> ShaderRef;
     fn shader_3d() -> ShaderRef;
-
     fn shader_def() -> ShaderDefVal;
-    fn bind_group_layout_entries() -> Vec<BindGroupLayoutEntryBuilder>;
 }
 
 pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + FromReflect + GetTypeRegistration + Typed {
