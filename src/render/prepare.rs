@@ -1,22 +1,16 @@
-use std::any::TypeId;
-
 use bevy::{
     prelude::*,
     render::{
         render_asset::RenderAssets,
-        render_resource::{BindGroup, BindGroupEntries, BindGroupEntry, BufferDescriptor, BufferUsages, IntoBinding, PipelineCache, SpecializedComputePipelines, TextureDimension},
+        render_resource::{BindGroupEntry, IntoBinding, PipelineCache, SpecializedComputePipelines},
         renderer::RenderDevice,
         texture::GpuImage,
     },
 };
 
 use crate::{
-    image::ComputeNoiseSize, noise::{ComputeNoiseType, Fbm}, noise_queue::{ComputeNoiseBindGroups, ComputeNoiseBufferQueue, ComputeNoiseRenderQueue}, render::pipeline::ComputeNoisePipelines
+    image::ComputeNoiseSize, noise_queue::{ComputeNoiseBindGroups, ComputeNoiseBufferQueue, ComputeNoiseRenderQueue}, render::pipeline::ComputeNoisePipelines
 };
-
-use super::pipeline::ComputeNoisePipelineKey;
-
-// use super::pipeline::{ComputeNoiseFbmPipeline, ComputeNoisePipeline, FbmPipelineKey};
 
 pub fn prepare_bind_groups(
     pipelines: Res<ComputeNoisePipelines>,

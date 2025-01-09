@@ -1,11 +1,12 @@
 use bevy::{
     prelude::*, render::{
-        render_resource::{BindGroup, Buffer, CachedComputePipelineId, TextureDimension, TextureView}, renderer::RenderDevice,
+        render_resource::{BindGroup, Buffer, CachedComputePipelineId, TextureDimension}, renderer::RenderDevice,
     }
 };
 
-use crate::{image::ComputeNoiseSize, noise::{ErasedComputeNoise, Fbm}, render::pipeline::ComputeNoisePipelineKey};
+use crate::{image::ComputeNoiseSize, noise::ErasedComputeNoise, render::pipeline::ComputeNoisePipelineKey};
 
+// Main World
 #[derive(Resource, Default)]
 pub struct ComputeNoiseQueue {
     pub queue: Vec<(Vec<Handle<Image>>, ErasedComputeNoise)>,
@@ -65,19 +66,7 @@ pub fn prepare_compute_noise_buffers(
     noise_queue.queue.clear();
 }
 
-#[derive(Clone)]
-pub struct ComputeNoiseBindGroups {
-    pub key: ComputeNoisePipelineKey,
-    pub bind_group: BindGroup,
-    pub size: ComputeNoiseSize,
-}
-
-#[derive(Default, Resource)]
-pub(crate) struct ComputeNoiseRenderQueue {
-    pub queue: Vec<ComputeNoiseBindGroups>,
-    pub pipeline_ids: Vec<CachedComputePipelineId>,
-}
-
+// Main/Render World
 #[derive(Clone)]
 pub struct ComputeNoiseBuffers {
     pub key: ComputeNoisePipelineKey,
@@ -89,4 +78,18 @@ pub struct ComputeNoiseBuffers {
 #[derive(Resource, Clone, Default)]
 pub struct ComputeNoiseBufferQueue {
     pub queue: Vec<ComputeNoiseBuffers>,
+}
+
+// Render World
+#[derive(Clone)]
+pub struct ComputeNoiseBindGroups {
+    pub key: ComputeNoisePipelineKey,
+    pub bind_group: BindGroup,
+    pub size: ComputeNoiseSize,
+}
+
+#[derive(Default, Resource)]
+pub(crate) struct ComputeNoiseRenderQueue {
+    pub queue: Vec<ComputeNoiseBindGroups>,
+    pub pipeline_ids: Vec<CachedComputePipelineId>,
 }

@@ -1,6 +1,6 @@
 use std::any::{Any, TypeId};
 
-use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_resource::{binding_types::uniform_buffer_sized, BindGroup, BindGroupLayout, BindGroupLayoutEntryBuilder, Buffer, DynamicBindGroupEntries, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
+use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_resource::{Buffer, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 
 pub mod worley;
 pub mod perlin;
