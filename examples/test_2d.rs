@@ -1,4 +1,4 @@
-use bevy::{core_pipeline::tonemapping::Tonemapping, image::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor}, prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}}, sprite::{Material2d, Material2dPlugin}, window::PresentMode};
+use bevy::{core_pipeline::tonemapping::Tonemapping, image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}, prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}}, sprite::{Material2d, Material2dPlugin}, window::PresentMode};
 use bevy_compute_noise::prelude::*;
 use iyes_perf_ui::{prelude::PerfUiDefaultEntries, PerfUiPlugin};
 

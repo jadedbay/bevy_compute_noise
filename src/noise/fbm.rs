@@ -1,7 +1,7 @@
-use bevy::{reflect::Reflect, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, TextureDimension}, renderer::RenderDevice}};
+use bevy::{reflect::Reflect, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages}, renderer::RenderDevice}};
 use crate::noise::{ComputeNoise, ComputeNoiseType};
 
-#[derive(Clone, Reflect, Default)] // TODO: manual default impl
+#[derive(Clone, Reflect)] // TODO: manual default impl
 pub struct Fbm<T: ComputeNoise> {
     pub noise: T,
     pub octaves: u32,
@@ -10,9 +10,6 @@ pub struct Fbm<T: ComputeNoise> {
 }
 
 impl<T: ComputeNoiseType> ComputeNoise for Fbm<T> {
-    fn texture_dimension() -> TextureDimension {
-        T::texture_dimension()
-    }
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
         vec![
             render_device.create_buffer_with_data(
@@ -29,5 +26,16 @@ impl<T: ComputeNoiseType> ComputeNoise for Fbm<T> {
                 }
             )
         ]
+    }
+}
+
+impl<T: ComputeNoiseType> Default for Fbm<T> {
+    fn default() -> Self {
+        Self {
+            noise: T::default(),
+            octaves: 4,
+            lacunarity: 2.0,
+            persistence: 0.5,
+        }
     }
 }

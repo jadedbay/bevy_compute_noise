@@ -51,10 +51,6 @@ impl ComputeNoise for Perlin {
             )
         ]
     }
-
-    fn texture_dimension() -> TextureDimension {
-        TextureDimension::D2
-    }
 }
 
 impl ComputeNoiseType for Perlin {

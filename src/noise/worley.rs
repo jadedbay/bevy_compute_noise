@@ -42,10 +42,6 @@ impl ComputeNoise for Worley {
             ),
         ] 
     }
-
-    fn texture_dimension() -> TextureDimension {
-        TextureDimension::D2
-    }
 }
 
 impl ComputeNoiseType for Worley {

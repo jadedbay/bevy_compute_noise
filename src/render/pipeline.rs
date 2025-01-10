@@ -4,7 +4,6 @@ use bevy::{prelude::*, render::{render_resource::{binding_types::{texture_storag
 
 use crate::noise::{ComputeNoiseType, Fbm};
 
-// TODO: Let user specify which shaders to load
 pub fn load_compute_noise_shader<T: ComputeNoiseType>(world: &mut World) {
     let shader_2d = match T::shader_2d() {
         ShaderRef::Default => None,
