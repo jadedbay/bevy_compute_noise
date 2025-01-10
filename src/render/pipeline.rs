@@ -18,9 +18,9 @@ pub fn load_compute_noise_shader<T: ComputeNoiseType>(world: &mut World) {
         ShaderRef::Path(path) => Some(world.resource::<AssetServer>().load(path)),
     }.unwrap();
 
-    let mut pipelines = world.resource_mut::<ComputeNoisePipelines>();
+    let mut pipeline = world.resource_mut::<ComputeNoisePipeline>();
 
-    pipelines.shaders.insert(
+    pipeline.shaders.insert(
         ComputeNoisePipelineKey {
             type_id: TypeId::of::<T>(),
             dimension: TextureDimension::D2,
@@ -28,7 +28,7 @@ pub fn load_compute_noise_shader<T: ComputeNoiseType>(world: &mut World) {
         shader_2d,
     );
 
-    pipelines.shaders.insert(
+    pipeline.shaders.insert(
         ComputeNoisePipelineKey {
             type_id: TypeId::of::<T>(),
             dimension: TextureDimension::D3,
@@ -39,9 +39,9 @@ pub fn load_compute_noise_shader<T: ComputeNoiseType>(world: &mut World) {
 
 pub fn load_fbm_shaders<T: ComputeNoiseType>(world: &mut World) {
     let shader = world.resource::<AssetServer>().load("embedded://bevy_compute_noise/noise/shaders/fbm.wgsl");
-    let mut pipelines = world.resource_mut::<ComputeNoisePipelines>();
+    let mut pipeline = world.resource_mut::<ComputeNoisePipeline>();
 
-    pipelines.shaders.insert(
+    pipeline.shaders.insert(
         ComputeNoisePipelineKey {
             type_id: TypeId::of::<Fbm<T>>(),
             dimension: TextureDimension::D2,
@@ -49,7 +49,7 @@ pub fn load_fbm_shaders<T: ComputeNoiseType>(world: &mut World) {
         shader.clone(),
     );
 
-    pipelines.shaders.insert(
+    pipeline.shaders.insert(
         ComputeNoisePipelineKey {
             type_id: TypeId::of::<Fbm<T>>(),
             dimension: TextureDimension::D3,
@@ -57,14 +57,14 @@ pub fn load_fbm_shaders<T: ComputeNoiseType>(world: &mut World) {
         shader,
     );
 
-    pipelines.shader_defs.insert(
+    pipeline.shader_defs.insert(
         ComputeNoisePipelineKey {
             type_id: TypeId::of::<Fbm<T>>(),
             dimension: TextureDimension::D2,
         },
         vec![T::shader_def(), "2D".into()]
     );
-    pipelines.shader_defs.insert(
+    pipeline.shader_defs.insert(
         ComputeNoisePipelineKey {
             type_id: TypeId::of::<Fbm<T>>(),
             dimension: TextureDimension::D3,
@@ -74,7 +74,7 @@ pub fn load_fbm_shaders<T: ComputeNoiseType>(world: &mut World) {
 }
 
 #[derive(Resource)]
-pub struct ComputeNoisePipelines {
+pub struct ComputeNoisePipeline {
     pub layout_2d: BindGroupLayout,
     pub layout_3d: BindGroupLayout,
     shaders: HashMap<ComputeNoisePipelineKey, Handle<Shader>>,
@@ -82,7 +82,7 @@ pub struct ComputeNoisePipelines {
     _util_shader: Handle<Shader>,
 }
 
-impl FromWorld for ComputeNoisePipelines {
+impl FromWorld for ComputeNoisePipeline {
     fn from_world(world: &mut World) -> Self {
         let render_device = world.resource::<RenderDevice>();
 
@@ -123,7 +123,7 @@ pub struct ComputeNoisePipelineKey {
     pub dimension: TextureDimension,
 }
 
-impl SpecializedComputePipeline for ComputeNoisePipelines {
+impl SpecializedComputePipeline for ComputeNoisePipeline {
     type Key = ComputeNoisePipelineKey;
 
     fn specialize(&self, key: Self::Key) -> ComputePipelineDescriptor {

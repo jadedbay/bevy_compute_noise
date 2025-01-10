@@ -4,7 +4,7 @@
 
 A plugin for `bevy 0.15` for generating tilable 2D/3D noise textures using compute shaders.
 
-Check out a demo of the plugin here: https://jadedbay.com/demo/bevy_compute_noise (Chrome only)
+Check out a demo of the plugin here: https://jadedbay.com/demo/bevy_compute_noise (This demo uses v0.1.0, will update eventually)
 
 <img width="945" alt="bevy_compute_noise" src="https://github.com/jadedbay/bevy_compute_noise/assets/86005828/3d987e54-5846-47e0-ad97-262065b48596">
 

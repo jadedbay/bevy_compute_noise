@@ -9,7 +9,7 @@ use crate::{image::ComputeNoiseSize, noise::ErasedComputeNoise, render::pipeline
 // Main World
 #[derive(Resource, Default)]
 pub struct ComputeNoiseQueue {
-    pub queue: Vec<(Vec<Handle<Image>>, ErasedComputeNoise)>,
+    pub(crate) queue: Vec<(Vec<Handle<Image>>, ErasedComputeNoise)>,
 }
 impl ComputeNoiseQueue {
     pub fn write(&mut self, output: Handle<Image>, noise: ErasedComputeNoise) {
@@ -82,14 +82,14 @@ pub struct ComputeNoiseBufferQueue {
 
 // Render World
 #[derive(Clone)]
-pub struct ComputeNoiseBindGroups {
+pub struct RenderComputeNoise {
     pub key: ComputeNoisePipelineKey,
     pub bind_group: BindGroup,
+    pub pipeline_id: CachedComputePipelineId,
     pub size: ComputeNoiseSize,
 }
 
 #[derive(Default, Resource)]
 pub(crate) struct ComputeNoiseRenderQueue {
-    pub queue: Vec<ComputeNoiseBindGroups>,
-    pub pipeline_ids: Vec<CachedComputePipelineId>,
+    pub queue: Vec<RenderComputeNoise>,
 }

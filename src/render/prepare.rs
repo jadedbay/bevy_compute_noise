@@ -9,17 +9,19 @@ use bevy::{
 };
 
 use crate::{
-    image::ComputeNoiseSize, noise_queue::{ComputeNoiseBindGroups, ComputeNoiseBufferQueue, ComputeNoiseRenderQueue}, render::pipeline::ComputeNoisePipelines
+    image::ComputeNoiseSize, noise_queue::{RenderComputeNoise, ComputeNoiseBufferQueue, ComputeNoiseRenderQueue}, render::pipeline::ComputeNoisePipeline
 };
 
-pub fn prepare_bind_groups(
-    pipelines: Res<ComputeNoisePipelines>,
+pub fn prepare_render_noise(
+    pipeline: Res<ComputeNoisePipeline>,
+    mut pipelines: ResMut<SpecializedComputePipelines<ComputeNoisePipeline>>,
+    pipeline_cache: Res<PipelineCache>,
     gpu_images: Res<RenderAssets<GpuImage>>,
     render_device: Res<RenderDevice>,
     queue: Res<ComputeNoiseBufferQueue>,
     mut render_queue: ResMut<ComputeNoiseRenderQueue>,
 ) {
-    let mut bind_groups: Vec<ComputeNoiseBindGroups> = Vec::new();
+    let mut bind_groups: Vec<RenderComputeNoise> = Vec::new();
     for noise in queue.queue.iter() {
         let images: Option<Vec<_>> = noise.images.iter()
             .map(|handle| gpu_images.get(handle))
@@ -27,8 +29,8 @@ pub fn prepare_bind_groups(
         
         if let Some(images) = images {
             let layout = match noise.size {
-                ComputeNoiseSize::D2(_, _) => &pipelines.layout_2d,
-                ComputeNoiseSize::D3(_, _, _) => &pipelines.layout_3d,
+                ComputeNoiseSize::D2(_, _) => &pipeline.layout_2d,
+                ComputeNoiseSize::D3(_, _, _) => &pipeline.layout_3d,
             };
 
             let bind_group = render_device.create_bind_group(
@@ -48,11 +50,18 @@ pub fn prepare_bind_groups(
                     )
                     .collect::<Vec<_>>()
                     .as_slice(),
-            ); 
+            );
 
-            bind_groups.push(ComputeNoiseBindGroups {
+            let pipeline_id = pipelines.specialize(
+                &pipeline_cache, 
+                &pipeline, 
+                noise.key,
+            );
+
+            bind_groups.push(RenderComputeNoise {
                 key: noise.key,
                 bind_group,
+                pipeline_id,
                 size: noise.size,
             });
         }
@@ -61,22 +70,4 @@ pub fn prepare_bind_groups(
     render_queue
         .queue
         .extend(bind_groups.iter().cloned());
-}
-
-pub fn prepare_compute_noise_pipelines(
-    mut compute_noise_pipelines: ResMut<SpecializedComputePipelines<ComputeNoisePipelines>>,
-    pipeline: Res<ComputeNoisePipelines>,
-    queue: Res<ComputeNoiseBufferQueue>,
-    mut render_queue: ResMut<ComputeNoiseRenderQueue>,
-    pipeline_cache: Res<PipelineCache>,
-) {
-    for item in &queue.queue {
-        render_queue.pipeline_ids.push(
-            compute_noise_pipelines.specialize(
-                &pipeline_cache, 
-                &pipeline, 
-                item.key,
-            )
-        );
-    }
 }

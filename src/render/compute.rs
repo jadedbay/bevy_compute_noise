@@ -32,26 +32,25 @@ pub fn compute_noise(
     let Some(encoder) = &mut compute_noise_encoder.encoder else { return error!("Encoder is None") };
     let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
     
-    let mut indices_to_remove = Vec::new();
-    
-    for (i, bind_group) in compute_noise_queue.queue.iter().enumerate() { 
-        if let Some(pipeline) = pipeline_cache.get_compute_pipeline(compute_noise_queue.pipeline_ids[i]) {
+    let mut dispatched = Vec::new();    
+    for (i, render_noise) in compute_noise_queue.queue.iter().enumerate() { 
+        if let Some(pipeline) = pipeline_cache.get_compute_pipeline(render_noise.pipeline_id) {
             pass.set_pipeline(pipeline);
-            pass.set_bind_group(0, &bind_group.bind_group, &[]);
+            pass.set_bind_group(0, &render_noise.bind_group, &[]);
 
-            let workgroups = bind_group.size.workgroup_count();
+            let workgroups = render_noise.size.workgroup_count();
             pass.dispatch_workgroups(workgroups.0, workgroups.1, workgroups.2);
-            
-            indices_to_remove.push(i);
+
+            dispatched.push(i);
         }
     }
 
-    if !indices_to_remove.is_empty() {
+    for &i in dispatched.iter().rev() {
+        compute_noise_queue.queue.remove(i);
+    }
+
+    if !dispatched.is_empty() {
         compute_noise_encoder.submit = true;
-        for &i in indices_to_remove.iter().rev() {
-            compute_noise_queue.queue.remove(i);
-            compute_noise_queue.pipeline_ids.remove(i);
-        }
     }
 }
 
