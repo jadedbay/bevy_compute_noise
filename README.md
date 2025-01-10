@@ -4,7 +4,7 @@
 
 A plugin for `bevy 0.15` for generating tilable 2D/3D noise textures using compute shaders.
 
-Check out a demo of the plugin here: https://jadedbay.com/demo/bevy_compute_noise (This demo uses v0.1.0, will update eventually)
+Check out a demo of the plugin here: https://jadedbay.com/demo/bevy_compute_noise (This demo currently uses v0.1.0)
 
 <img width="945" alt="bevy_compute_noise" src="https://github.com/jadedbay/bevy_compute_noise/assets/86005828/3d987e54-5846-47e0-ad97-262065b48596">
 
@@ -14,7 +14,7 @@ Add the `bevy_compute_noise` dependency to `Cargo.toml`:
 
 ```toml
 [dependencies]
-bevy_compute_noise = "0.3.0"
+bevy_compute_noise = "0.4.0"
 ```
 
 ### Add Noise Plugin
@@ -23,54 +23,36 @@ use bevy_compute_noise::prelude::*;
 
 App::default()
     .add_plugins(DefaultPlugins)
-    .add_plugins(ComputeNoisePlugin::<Perlin2D>::default()) // add new plugin for each type of noise needed
+    .add_plugins(ComputeNoisePlugin) // Add compute noise plugin
     .run();
 ```
 
-### Queue Noise Generation
+### Write Noise to Image
 ```rust
 fn setup(
     mut images: ResMut<Assets<Image>>,
-    mut perlin_2d_queue: ResMut<ComputeNoiseQueue<Perlin2D>>
+    mut noise_queue: ResMut<ComputeNoiseQueue>
 ) {
-    // Create and queue noise image
-    let noise_image: Handle<Image> = perlin_2d_queue.add(
-        &mut images, 
-        ComputeNoiseSize::D2(128, 128), // Use ComputeNoiseSize::D3 for 3D noise
-        Perlin2d {
+    // Create image 
+    let image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(512, 512));
+
+    // Queue noise to be written to image
+    noise_queue.write(
+        image
+        Perlin {
             seed: 0,
-            frequency: 5,
-            octaves: 4
+            frequency: 5.0,
+            flags: (PerlinFlags::default() | PerlinFlags::TILEABLE).bits()
         }
     );
 }
 ```
 
-Alternatively, you can add `ComputeNoiseComponent<T: ComputeNoise>` to an entity and it will be automatically queued whenever it has been updated:
-
-```rust
-fn setup(
-    commands: Commands,
-    mut images: ResMut<Assets<Image>>,
-) {
-    // Manually create noise image, so it can be used elsewhere.
-    let noise_image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(128, 128));
-    
-    commands.spawn(ComputeNoiseComponent::<Perlin2d> {
-        image: noise_image.clone();
-        noise: Perlin2d {
-            seed: 0,
-            frequency: 5,
-            octaves: 4
-        }
-    });
-}
-```
-
 ## Noise Types
-- Worley2D
-- Worley3D
-- Perlin2D
+- Perlin
+- Worley
+
+FBM is available for all noise types, use `Fbm<T: ComputeNoiseType>`.
 
 ## TODO
 - Add more noise types.
@@ -80,9 +62,6 @@ fn setup(
 ## Version Compatibility
 | `bevy_compute_noise` | Bevy   |
 | :--                  | :--    |
-| `0.3`                | `0.15` |
+| `0.3`, `0.4`         | `0.15` |
 | `0.2`                | `0.14` |
 | `0.1`                | `0.13` |
-
-## Readback
-If you need to readback the noise texture to the CPU, you can clone the readback branch and view the example in there. I'm not completely happy with the implementation and it's better to just generate the noise on the CPU using another crate anyway.
