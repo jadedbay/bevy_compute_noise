@@ -1,24 +1,15 @@
 use std::any::{Any, TypeId};
 
-use bevy::{prelude::*, reflect::{GetTypeRegistration,  Typed}, render::{render_resource::{Buffer, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
+use bevy::{reflect::{FromReflect, GetTypeRegistration, TypePath, Typed}, render::{render_resource::Buffer, renderer::RenderDevice}};
 
-pub mod worley;
-pub mod perlin;
-pub mod fbm;
+use crate::render::pipeline::NoiseOp;
 
-use bytemuck::Pod;
-pub use worley::{Worley, WorleyFlags};
-pub use perlin::{Perlin, PerlinFlags};
-pub use fbm::Fbm;
-
-pub trait ComputeNoiseType: ComputeNoise + Pod {
-    fn embed_shaders(app: &mut App);
-    fn shader_2d() -> ShaderRef;
-    fn shader_3d() -> ShaderRef;
-    fn shader_def() -> ShaderDefVal;
-}
+pub mod generators;
+pub mod modifiers;
 
 pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + FromReflect + GetTypeRegistration + Typed {
+    const NOISE_OP: NoiseOp;
+
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer>;
 }
 

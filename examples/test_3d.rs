@@ -29,7 +29,7 @@ fn setup(
     });
     let handle = images.add(image);
 
-    noise_queue.write(
+    noise_queue.generate(
         handle.clone(),
         Fbm::<Perlin> {
             noise: Perlin {
@@ -74,7 +74,7 @@ fn update_noise(
 ) {
     if keys.just_pressed(KeyCode::Space) {
         for material in query.iter() {
-            noise_queue.write(
+            noise_queue.generate(
                 materials.get(&material.0).unwrap().image.clone(),
                 Fbm::<Perlin> {
                     noise: Perlin {

@@ -4,10 +4,8 @@
 #import bevy_compute_noise::util::{random_gradient_3d, interpolate_quintic_3d, interpolate_cubic_3d, texture3d as texture}
 
 const TILEABLE: u32 = 1u;
-const INVERT: u32 = 2u;
-const REMAP: u32 = 4u;
-const REMAP_SQRT: u32 = 8u;
-const INTERPOLATE_CUBIC: u32 = 16u;
+const REMAP: u32 = 2u;
+const INTERPOLATE_CUBIC: u32 = 4u;
 
 struct Perlin {
     seed: u32,
@@ -91,11 +89,9 @@ fn perlin_3d(uv: vec3<f32>, perlin: Perlin) -> f32 {
     let y0 = mix(x00, x10, grid_uv.y);
     let y1 = mix(x01, x11, grid_uv.y);
 
-    var value = mix(y0, y1, grid_uv.z);
+    var value = mix(y0, y1, grid_uv.z) * 1.154701;
 
     if (perlin.flags & REMAP) != 0u { value = value * 0.5 + 0.5; }
-    else if (perlin.flags & REMAP_SQRT) != 0 { value = value * sqrt(3.0) * 0.5 + 0.5; }
-    if (perlin.flags & INVERT) != 0u { value = 1.0 - value; }
 
     return value;
 }

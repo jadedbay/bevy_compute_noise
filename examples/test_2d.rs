@@ -25,7 +25,7 @@ fn main() {
             bevy::diagnostic::SystemInformationDiagnosticsPlugin,
         ))
         .add_systems(Startup, setup)
-        .add_systems(Update, update_noise)
+        // .add_systems(Update, update_noise)
         .run();
 }
 
@@ -54,19 +54,14 @@ fn setup(
         }
     }
 
-    noise_queue.write(
-        handle.clone(),
-        Fbm::<Worley> {
-            noise: Worley {
-                seed: 5,
-                frequency: 5.0,
-                flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits(),
-                // flags: (PerlinFlags::default() | PerlinFlags::TILEABLE).bits()
-            },
-            octaves: 4,
-            lacunarity: 2.0,
-            persistence: 0.5,
-        }.into(),
+    noise_queue.sequence(
+        ComputeNoiseSequenceBuilder::new_image(handle.clone())
+            .generate_image(Worley {
+                flags: WorleyFlags::TILEABLE.bits(),
+                ..default()
+            }.into())
+            .modify_image(Invert.into())
+            .build()
     );
 
     commands.spawn((
@@ -92,13 +87,13 @@ fn update_noise(
         *local = *local + 1;
     }
     for material in query.iter() {
-        noise_queue.write(
+        noise_queue.generate(
             materials.get(&material.0).unwrap().image.clone(),
             Fbm::<Worley> {
                 noise: Worley {
                     seed: *local,
                     frequency: 5.0,
-                    flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits(),
+                    flags: WorleyFlags::TILEABLE.bits(),
                     // flags: (PerlinFlags::default() | PerlinFlags::TILEABLE).bits()
                 },
                 octaves: 4,

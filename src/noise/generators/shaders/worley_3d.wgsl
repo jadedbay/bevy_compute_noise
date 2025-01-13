@@ -3,7 +3,6 @@
 #import bevy_compute_noise::util::{hash33, INFINITY, texture3d as texture}
 
 const TILEABLE: u32 = 1u;
-const INVERT: u32 = 2u; 
 
 struct Worley {
     seed: u32,
@@ -60,7 +59,6 @@ fn worley_3d(uv: vec3<f32>, worley: Worley) -> f32 {
     // var normalized_distance = min_distance / distance(vec3<f32>(0.0, 0.0, 0.0), cell_size);
 
     var value = min_distance;
-    if (worley.flags & INVERT) != 0u { value = 1.0 - value; }
 
     return value;
 }

@@ -19,7 +19,7 @@ fn setup(
     mut noise_queue: ResMut<ComputeNoiseQueue>,
 ) {
     let image = images.add(ComputeNoiseImage::create_image(ComputeNoiseSize::D2(512, 512)));
-    noise_queue.write(
+    noise_queue.generate(
         image,
         Perlin::default().into()
     );

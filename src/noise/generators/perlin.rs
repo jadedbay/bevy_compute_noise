@@ -1,7 +1,9 @@
 use bevy::{asset::embedded_asset, prelude::*, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 use bytemuck::{Pod, Zeroable};
 
-use super::{ComputeNoise, ComputeNoiseType};
+use crate::render::pipeline::NoiseOp;
+
+use super::{ComputeNoise, ComputeNoiseGenerator};
 
 #[derive(Clone, Copy, Reflect, PartialEq, Debug, Pod, Zeroable)]
 #[reflect(Default)]
@@ -16,16 +18,14 @@ bitflags::bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct PerlinFlags: u32 {
         const TILEABLE = 1 << 0;
-        const INVERT = 1 << 1;
-        const REMAP = 1 << 2;
-        const REMAP_SQRT = 1 << 3;
-        const INTERPOLATE_CUBIC = 1 << 4; // quintic interpolation is default
+        const REMAP = 1 << 1;
+        const INTERPOLATE_CUBIC = 1 << 2; // quintic interpolation is default
     }
 }
 
 impl Default for PerlinFlags {
     fn default() -> Self {
-        Self::from_bits_retain(PerlinFlags::REMAP_SQRT.bits())
+        Self::from_bits_retain(PerlinFlags::REMAP.bits())
     }
 }
 
@@ -40,6 +40,8 @@ impl Default for Perlin {
 }
 
 impl ComputeNoise for Perlin {
+    const NOISE_OP: NoiseOp = NoiseOp::Modifier; 
+
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> { 
         vec![
             render_device.create_buffer_with_data(
@@ -53,13 +55,13 @@ impl ComputeNoise for Perlin {
     }
 }
 
-impl ComputeNoiseType for Perlin {
+impl ComputeNoiseGenerator for Perlin {
     fn shader_2d() -> ShaderRef {
-        "embedded://bevy_compute_noise/noise/shaders/perlin_2d.wgsl".into()
+        "embedded://bevy_compute_noise/noise/generators/shaders/perlin_2d.wgsl".into()
     }
 
     fn shader_3d() -> ShaderRef {
-        "embedded://bevy_compute_noise/noise/shaders/perlin_3d.wgsl".into()
+        "embedded://bevy_compute_noise/noise/generators/shaders/perlin_3d.wgsl".into()
     }
 
     fn embed_shaders(app: &mut App) {

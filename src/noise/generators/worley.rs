@@ -1,7 +1,9 @@
 use bevy::{asset::embedded_asset, prelude::*, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
 use bytemuck::{Pod, Zeroable};
 
-use super::{ComputeNoise, ComputeNoiseType};
+use crate::render::pipeline::NoiseOp;
+
+use super::{ComputeNoise, ComputeNoiseGenerator};
 
 #[derive(Clone, Copy, Reflect, PartialEq, Debug, Pod, Zeroable)]
 #[reflect(Default)]
@@ -16,7 +18,6 @@ bitflags::bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct WorleyFlags: u32 {
         const TILEABLE = 1 << 0;
-        const INVERT = 1 << 1;
     }
 }
 
@@ -31,6 +32,8 @@ impl Default for Worley {
 }
 
 impl ComputeNoise for Worley {
+    const NOISE_OP: NoiseOp = NoiseOp::Modifier; 
+
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
         vec![
             render_device.create_buffer_with_data(
@@ -44,13 +47,13 @@ impl ComputeNoise for Worley {
     }
 }
 
-impl ComputeNoiseType for Worley {
+impl ComputeNoiseGenerator for Worley {
     fn shader_2d() -> ShaderRef {
-        "embedded://bevy_compute_noise/noise/shaders/worley_2d.wgsl".into()
+        "embedded://bevy_compute_noise/noise/generators/shaders/worley_2d.wgsl".into()
     }
 
     fn shader_3d() -> ShaderRef {
-        "embedded://bevy_compute_noise/noise/shaders/worley_3d.wgsl".into()
+        "embedded://bevy_compute_noise/noise/generators/shaders/worley_3d.wgsl".into()
     }
 
     fn embed_shaders(app: &mut App) {

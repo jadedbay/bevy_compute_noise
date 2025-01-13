@@ -37,7 +37,7 @@ fn setup(
     let image = ComputeNoiseImage::create_image(ComputeNoiseSize::D2(512, 512));
 
     // Queue noise to be written to image
-    noise_queue.write(
+    noise_queue.generate(
         image
         Perlin {
             seed: 0,
@@ -52,7 +52,7 @@ fn setup(
 - Perlin
 - Worley
 
-FBM is available for all noise types, use `Fbm<T: ComputeNoiseType>`.
+FBM is available for all noise types, use `Fbm<T: ComputeNoiseGenerator>`.
 
 ## TODO
 - Add more noise types.
