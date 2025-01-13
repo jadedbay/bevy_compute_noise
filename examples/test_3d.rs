@@ -10,7 +10,7 @@ fn main() {
             ComputeNoisePlugin,
         ))
         .add_systems(Startup, setup)
-        .add_systems(Update, update_noise)
+        // .add_systems(Update, update_noise)
         .run();
 }
 
@@ -29,7 +29,7 @@ fn setup(
     });
     let handle = images.add(image);
 
-    noise_queue.generate(
+    noise_queue.queue(
         handle.clone(),
         Fbm::<Perlin> {
             noise: Perlin {
@@ -41,7 +41,7 @@ fn setup(
             octaves: 4,
             lacunarity: 2.0,
             persistence: 0.5,
-        }.into(),
+        },
     );
 
     let mut quad = Rectangle::default().mesh().build();
@@ -65,34 +65,34 @@ fn setup(
     commands.spawn(Camera2d::default());
 }
 
-fn update_noise(
-    mut noise_queue: ResMut<ComputeNoiseQueue>,
-    query: Query<&MeshMaterial2d<Image3dMaterial>>,
-    keys: Res<ButtonInput<KeyCode>>,
-    mut local: Local<u32>,
-    materials: Res<Assets<Image3dMaterial>>,
-) {
-    if keys.just_pressed(KeyCode::Space) {
-        for material in query.iter() {
-            noise_queue.generate(
-                materials.get(&material.0).unwrap().image.clone(),
-                Fbm::<Perlin> {
-                    noise: Perlin {
-                        seed: *local,
-                        frequency: 5.0,
-                        // flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits(),
-                        flags: (PerlinFlags::default() | PerlinFlags::TILEABLE).bits()
-                    },
-                    octaves: 4,
-                    lacunarity: 2.0,
-                    persistence: 0.5,
-                }.into(),
-            );
-        }
+// fn update_noise(
+//     mut noise_queue: ResMut<ComputeNoiseQueue>,
+//     query: Query<&MeshMaterial2d<Image3dMaterial>>,
+//     keys: Res<ButtonInput<KeyCode>>,
+//     mut local: Local<u32>,
+//     materials: Res<Assets<Image3dMaterial>>,
+// ) {
+//     if keys.just_pressed(KeyCode::Space) {
+//         for material in query.iter() {
+//             noise_queue.generate(
+//                 materials.get(&material.0).unwrap().image.clone(),
+//                 Fbm::<Perlin> {
+//                     noise: Perlin {
+//                         seed: *local,
+//                         frequency: 5.0,
+//                         // flags: (WorleyFlags::INVERT | WorleyFlags::TILEABLE).bits(),
+//                         flags: (PerlinFlags::default() | PerlinFlags::TILEABLE).bits()
+//                     },
+//                     octaves: 4,
+//                     lacunarity: 2.0,
+//                     persistence: 0.5,
+//                 }.into(),
+//             );
+//         }
         
-        *local = *local + 1;
-    }
-}
+//         *local = *local + 1;
+//     }
+// }
 
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect)]
 struct Image3dMaterial {

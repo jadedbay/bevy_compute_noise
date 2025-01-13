@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_compute_noise::prelude::*;
 
 // This is a simple example to show how to queue a noise to be generated in a compute shader and written to a texture,
-// if you want to see the result look at the test examples
+// if you want to see results of noise look at the test examples
 
 fn main() {
     App::new()
@@ -19,8 +19,19 @@ fn setup(
     mut noise_queue: ResMut<ComputeNoiseQueue>,
 ) {
     let image = images.add(ComputeNoiseImage::create_image(ComputeNoiseSize::D2(512, 512)));
-    noise_queue.generate(
+
+    // generate noise
+    noise_queue.queue(
+        image.clone(),
+        Perlin::default()
+    );
+
+    // generate noise and invert
+    noise_queue.queue(
         image,
-        Perlin::default().into()
+        (
+            Worley::default(),
+            Invert
+        )
     );
 }

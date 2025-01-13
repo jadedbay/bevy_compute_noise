@@ -4,7 +4,7 @@ use bevy::{
     }
 };
 
-use crate::{image::ComputeNoiseSize, noise::ErasedComputeNoise, render::pipeline::{ComputeNoisePipelineKey, NoiseOp}};
+use crate::{image::ComputeNoiseSize, noise::{ComputeNoise, ErasedComputeNoise}, render::pipeline::{ComputeNoisePipelineKey, NoiseOp}};
 
 pub struct ComputeNoiseInstruction {
     images: Vec<Handle<Image>>,
@@ -13,72 +13,97 @@ pub struct ComputeNoiseInstruction {
 }
 pub struct ComputeNoiseSequence(Vec<ComputeNoiseInstruction>);
 
-pub struct ComputeNoiseSequenceBuilder {
-    instructions: Vec<ComputeNoiseInstruction>,
-    image: Option<Handle<Image>>,
+pub enum QueueNoiseOp {
+    Generate(ErasedComputeNoise),
+    Modify(Handle<Image>, ErasedComputeNoise),
+    Combine(Handle<Image>, Handle<Image>, ErasedComputeNoise),
 }
 
-impl ComputeNoiseSequenceBuilder {
-    pub fn new() -> Self {
-        Self {
-            instructions: Vec::new(),
-            image: None,
+impl QueueNoiseOp {
+    fn resolve_images(self, output: Handle<Image>) -> Self {
+        match self {
+            QueueNoiseOp::Generate(noise) => QueueNoiseOp::Generate(noise),
+            QueueNoiseOp::Modify(input, noise) if input == Handle::default() => 
+                QueueNoiseOp::Modify(output.clone(), noise),
+            QueueNoiseOp::Modify(input, noise) => QueueNoiseOp::Modify(input, noise),
+            QueueNoiseOp::Combine(input1, input2, noise) if input1 == Handle::default() && input2 == Handle::default() =>
+                QueueNoiseOp::Combine(output.clone(), output.clone(), noise),
+            QueueNoiseOp::Combine(input1, input2, noise) => QueueNoiseOp::Combine(input1, input2, noise),
         }
-    }
-
-    pub fn generate(mut self, output: Handle<Image>, noise: ErasedComputeNoise) -> Self {
-        self.instructions.push(ComputeNoiseInstruction {
-            images: vec![output],
-            noise,
-            op: NoiseOp::Generator,
-        });
-        self
-    }
-    
-    pub fn modify(mut self, input: Handle<Image>, output: Handle<Image>, modifier: ErasedComputeNoise) -> Self {
-        self.instructions.push(ComputeNoiseInstruction {
-            images: vec![input, output],
-            noise: modifier,
-            op: NoiseOp::Modifier,
-        });
-        self
-    }
-    
-    pub fn combine(mut self, input1: Handle<Image>, input2: Handle<Image>, output: Handle<Image>, combiner: ErasedComputeNoise) -> Self {
-        self.instructions.push(ComputeNoiseInstruction {
-            images: vec![input1, input2, output],
-            noise: combiner,
-            op: NoiseOp::Combiner,
-        });
-        self
-    }
-
-    pub fn new_image(image: Handle<Image>) -> Self {
-        Self {
-            instructions: Vec::new(),
-            image: Some(image),
-        }
-    }
-
-    pub fn generate_image(self, noise: ErasedComputeNoise) -> Self {
-        let image = self.image.clone().expect("No image set. Use new_image()");
-        self.generate(image, noise)
-    }
-
-    pub fn modify_image(self, noise: ErasedComputeNoise) -> Self {
-        let image = self.image.clone().expect("No image set. Use new_image()");
-        self.modify(image.clone(), image, noise)
-    }
-
-    pub fn combine_image(self, other: Handle<Image>, noise: ErasedComputeNoise) -> Self {
-        let image = self.image.clone().expect("No image set. Use new_image()");
-        self.combine(image.clone(), other, image.clone(), noise)
-    }
-    
-    pub fn build(self) -> ComputeNoiseSequence {
-        ComputeNoiseSequence(self.instructions)
     }
 }
+
+impl<T: ComputeNoise> From<T> for QueueNoiseOp {
+    fn from(noise: T) -> Self {
+        let erased = ErasedComputeNoise::from(noise);
+        match T::NOISE_OP {
+            NoiseOp::Generator => QueueNoiseOp::Generate(erased),
+            NoiseOp::Modifier => QueueNoiseOp::Modify(Handle::default(), erased),
+            NoiseOp::Combiner => QueueNoiseOp::Combine(Handle::default(), Handle::default(), erased),
+        }
+    }
+}
+
+pub trait IntoNoiseSequence {
+    fn into_sequence(self, output: Handle<Image>) -> ComputeNoiseSequence;
+}
+
+impl IntoNoiseSequence for QueueNoiseOp {
+    fn into_sequence(self, output: Handle<Image>) -> ComputeNoiseSequence {
+        let instruction = match self.resolve_images(output.clone()) {
+            QueueNoiseOp::Generate(noise) => ComputeNoiseInstruction {
+                images: vec![output],
+                noise,
+                op: NoiseOp::Generator,
+            },
+            QueueNoiseOp::Modify(input, noise) => ComputeNoiseInstruction {
+                images: vec![input, output],
+                noise,
+                op: NoiseOp::Modifier,
+            },
+            QueueNoiseOp::Combine(input1, input2, noise) => ComputeNoiseInstruction {
+                images: vec![input1, input2, output],
+                noise,
+                op: NoiseOp::Combiner,
+            },
+        };
+        ComputeNoiseSequence(vec![instruction])
+    }
+}
+
+impl<T: ComputeNoise> IntoNoiseSequence for T {
+    fn into_sequence(self, output: Handle<Image>) -> ComputeNoiseSequence {
+        QueueNoiseOp::from(self).into_sequence(output)
+    }
+}
+
+macro_rules! impl_into_noise_sequence_tuple {
+    ($($idx:tt : $type:ident),+) => {
+        impl<$($type: IntoNoiseSequence),+> IntoNoiseSequence for ($($type,)+) {
+            fn into_sequence(self, image: Handle<Image>) -> ComputeNoiseSequence {
+                let mut result = ComputeNoiseSequence(Vec::new());
+                $(
+                    let seq = self.$idx.into_sequence(image.clone());
+                    result.0.extend(seq.0);
+                )+
+                result
+            }
+        }
+    };
+}
+
+impl_into_noise_sequence_tuple! {0: A}
+impl_into_noise_sequence_tuple! {0: A, 1: B}
+impl_into_noise_sequence_tuple! {0: A, 1: B, 2: C}
+impl_into_noise_sequence_tuple! {0: A, 1: B, 2: C, 3: D}
+impl_into_noise_sequence_tuple! {0: A, 1: B, 2: C, 3: D, 4: E}
+impl_into_noise_sequence_tuple! {0: A, 1: B, 2: C, 3: D, 4: E, 5: F}
+impl_into_noise_sequence_tuple! {0: A, 1: B, 2: C, 3: D, 4: E, 5: F, 6: G}
+impl_into_noise_sequence_tuple! {0: A, 1: B, 2: C, 3: D, 4: E, 5: F, 6: G, 7: H}
+impl_into_noise_sequence_tuple! {0: A, 1: B, 2: C, 3: D, 4: E, 5: F, 6: G, 7: H, 8: I}
+impl_into_noise_sequence_tuple! {0: A, 1: B, 2: C, 3: D, 4: E, 5: F, 6: G, 7: H, 8: I, 9: J}
+impl_into_noise_sequence_tuple! {0: A, 1: B, 2: C, 3: D, 4: E, 5: F, 6: G, 7: H, 8: I, 9: J, 10: K}
+impl_into_noise_sequence_tuple! {0: A, 1: B, 2: C, 3: D, 4: E, 5: F, 6: G, 7: H, 8: I, 9: J, 10: K, 11: L}
 
 // Main World
 #[derive(Resource, Default)]
@@ -86,44 +111,8 @@ pub struct ComputeNoiseQueue {
     pub(crate) queue: Vec<ComputeNoiseSequence>,
 }
 impl ComputeNoiseQueue {
-    pub fn generate(&mut self, output: Handle<Image>, noise: ErasedComputeNoise) {
-        self.queue.push(
-            ComputeNoiseSequence(vec![
-                ComputeNoiseInstruction {
-                    images: vec![output],
-                    noise,
-                    op: NoiseOp::Generator
-                }
-            ])
-        );
-    }
-
-    pub fn modify(&mut self, input: Handle<Image>, output: Handle<Image>, modifier: ErasedComputeNoise) {
-        self.queue.push(
-            ComputeNoiseSequence(vec![
-                ComputeNoiseInstruction {
-                    images: vec![input, output],
-                    noise: modifier,
-                    op: NoiseOp::Modifier
-                }
-            ])
-        );
-    }
-
-    pub fn combine(&mut self, input1: Handle<Image>, input2: Handle<Image>, output: Handle<Image>, combiner: ErasedComputeNoise) {
-        self.queue.push(
-            ComputeNoiseSequence(vec![
-                ComputeNoiseInstruction {
-                    images: vec![input1, input2, output],
-                    noise: combiner,
-                    op: NoiseOp::Combiner
-                }
-            ])
-        );
-    }
-
-    pub fn sequence(&mut self, sequence: ComputeNoiseSequence) {
-        self.queue.push(sequence);
+    pub fn queue<T: IntoNoiseSequence>(&mut self, output: Handle<Image>, operations: T) {
+        self.queue.push(operations.into_sequence(output));
     }
 }
 

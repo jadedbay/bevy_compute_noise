@@ -1,5 +1,5 @@
 use bevy::{core_pipeline::tonemapping::Tonemapping, image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}, prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}}, sprite::{Material2d, Material2dPlugin}, window::PresentMode};
-use bevy_compute_noise::prelude::*;
+use bevy_compute_noise::{noise::ComputeNoise, noise_queue::QueueNoiseOp::*, prelude::*};
 use iyes_perf_ui::{prelude::PerfUiDefaultEntries, PerfUiPlugin};
 
 
@@ -54,15 +54,13 @@ fn setup(
         }
     }
 
-    noise_queue.sequence(
-        ComputeNoiseSequenceBuilder::new_image(handle.clone())
-            .generate_image(Worley {
-                flags: WorleyFlags::TILEABLE.bits(),
-                ..default()
-            }.into())
-            .modify_image(Invert.into())
-            .build()
-    );
+    noise_queue.queue(handle.clone(), (
+        Worley {
+            flags: WorleyFlags::TILEABLE.bits(),
+            ..default()
+        },
+        Invert,
+    ));
 
     commands.spawn((
         Mesh2d(meshes.add(quad)),
@@ -76,33 +74,33 @@ fn setup(
     commands.spawn(PerfUiDefaultEntries::default());
 }
 
-fn update_noise(
-    mut noise_queue: ResMut<ComputeNoiseQueue>,
-    query: Query<&MeshMaterial2d<ImageMaterial>>,
-    keys: Res<ButtonInput<KeyCode>>,
-    mut local: Local<u32>,
-    materials: Res<Assets<ImageMaterial>>,
-) {
-    if keys.just_pressed(KeyCode::Space) { 
-        *local = *local + 1;
-    }
-    for material in query.iter() {
-        noise_queue.generate(
-            materials.get(&material.0).unwrap().image.clone(),
-            Fbm::<Worley> {
-                noise: Worley {
-                    seed: *local,
-                    frequency: 5.0,
-                    flags: WorleyFlags::TILEABLE.bits(),
-                    // flags: (PerlinFlags::default() | PerlinFlags::TILEABLE).bits()
-                },
-                octaves: 4,
-                lacunarity: 2.0,
-                persistence: 0.5,
-            }.into(),
-        );
-    }
-}
+// fn update_noise(
+//     mut noise_queue: ResMut<ComputeNoiseQueue>,
+//     query: Query<&MeshMaterial2d<ImageMaterial>>,
+//     keys: Res<ButtonInput<KeyCode>>,
+//     mut local: Local<u32>,
+//     materials: Res<Assets<ImageMaterial>>,
+// ) {
+//     if keys.just_pressed(KeyCode::Space) { 
+//         *local = *local + 1;
+//     }
+//     for material in query.iter() {
+//         noise_queue.generate(
+//             materials.get(&material.0).unwrap().image.clone(),
+//             Fbm::<Worley> {
+//                 noise: Worley {
+//                     seed: *local,
+//                     frequency: 5.0,
+//                     flags: WorleyFlags::TILEABLE.bits(),
+//                     // flags: (PerlinFlags::default() | PerlinFlags::TILEABLE).bits()
+//                 },
+//                 octaves: 4,
+//                 lacunarity: 2.0,
+//                 persistence: 0.5,
+//             }.into(),
+//         );
+//     }
+// }
 
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect)]
 struct ImageMaterial {

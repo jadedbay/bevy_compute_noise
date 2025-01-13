@@ -27,7 +27,7 @@ pub mod prelude {
         image::{ComputeNoiseImage, ComputeNoiseSize},
         noise::generators::{Worley, Perlin, PerlinFlags, WorleyFlags, Fbm},
         noise::modifiers::Invert,
-        noise_queue::{ComputeNoiseQueue, ComputeNoiseSequenceBuilder},
+        noise_queue::ComputeNoiseQueue,
         ComputeNoisePlugin
     };
 }

@@ -1,8 +1,8 @@
 use std::any::{Any, TypeId};
 
-use bevy::{reflect::{FromReflect, GetTypeRegistration, TypePath, Typed}, render::{render_resource::Buffer, renderer::RenderDevice}};
+use bevy::{prelude::*, reflect::{FromReflect, GetTypeRegistration, TypePath, Typed}, render::{render_resource::Buffer, renderer::RenderDevice}};
 
-use crate::render::pipeline::NoiseOp;
+use crate::{noise_queue::QueueNoiseOp, render::pipeline::NoiseOp};
 
 pub mod generators;
 pub mod modifiers;
@@ -11,6 +11,23 @@ pub trait ComputeNoise: Sync + Send + 'static + Default + Clone + TypePath + Fro
     const NOISE_OP: NoiseOp;
 
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer>;
+
+    fn input_image(self, input: Handle<Image>) -> QueueNoiseOp {
+        let erased = ErasedComputeNoise::from(self);
+        match Self::NOISE_OP {
+            NoiseOp::Modifier => QueueNoiseOp::Modify(input, erased),
+            NoiseOp::Combiner => panic!("Use with_inputs for combiners"),
+            _ => panic!("Operation doesn't support input images"),
+        }
+    }
+
+    fn input_images(self, input1: Handle<Image>, input2: Handle<Image>) -> QueueNoiseOp {
+        let erased = ErasedComputeNoise::from(self);
+        match Self::NOISE_OP {
+            NoiseOp::Combiner => QueueNoiseOp::Combine(input1, input2, erased),
+            _ => panic!("Operation doesn't support multiple inputs"),
+        }
+    }
 }
 
 pub struct ErasedComputeNoise {

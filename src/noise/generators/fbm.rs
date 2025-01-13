@@ -12,7 +12,7 @@ pub struct Fbm<T: ComputeNoiseGenerator> {
 }
 
 impl<T: ComputeNoiseGenerator> ComputeNoise for Fbm<T> {
-    const NOISE_OP: NoiseOp = NoiseOp::Modifier; 
+    const NOISE_OP: NoiseOp = NoiseOp::Generator; 
 
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> {
         vec![

@@ -40,7 +40,7 @@ impl Default for Perlin {
 }
 
 impl ComputeNoise for Perlin {
-    const NOISE_OP: NoiseOp = NoiseOp::Modifier; 
+    const NOISE_OP: NoiseOp = NoiseOp::Generator; 
 
     fn buffers(&self, render_device: &RenderDevice) -> Vec<Buffer> { 
         vec![
