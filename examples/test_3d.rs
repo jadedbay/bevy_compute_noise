@@ -41,6 +41,7 @@ fn setup(
             octaves: 4,
             lacunarity: 2.0,
             persistence: 0.5,
+            ..default()
         },
     );
 

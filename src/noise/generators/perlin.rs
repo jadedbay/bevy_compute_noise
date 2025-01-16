@@ -1,7 +1,7 @@
-use bevy::{asset::embedded_asset, prelude::*, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
+use bevy::{asset::embedded_asset, prelude::*, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef}, renderer::RenderDevice}};
 use bytemuck::{Pod, Zeroable};
 
-use crate::render::pipeline::NoiseOp;
+use crate::{render::pipeline::NoiseOp, shader::ComputeNoiseShader};
 
 use super::{ComputeNoise, ComputeNoiseGenerator};
 
@@ -71,5 +71,19 @@ impl ComputeNoiseGenerator for Perlin {
 
     fn shader_def() -> ShaderDefVal {
        "PERLIN".into() 
+    }
+}
+
+impl ComputeNoiseShader for Perlin {
+    fn function_name() -> &'static str {
+        "perlin_2d"
+    }
+
+    fn import_path() -> &'static str {
+        "bevy_compute_noise::perlin"
+    }
+
+    fn struct_name() -> Option<&'static str> {
+        Some("Perlin")
     }
 }

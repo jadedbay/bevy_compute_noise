@@ -6,12 +6,12 @@ use bevy::{
 
 use crate::{image::ComputeNoiseSize, noise::{ComputeNoise, ErasedComputeNoise}, render::pipeline::{ComputeNoisePipelineKey, NoiseOp}};
 
-pub struct ComputeNoiseInstruction {
-    images: Vec<Handle<Image>>,
-    noise: ErasedComputeNoise,
-    op: NoiseOp,
+pub(crate) struct ComputeNoiseInstruction {
+    pub images: Vec<Handle<Image>>,
+    pub noise: ErasedComputeNoise,
+    pub op: NoiseOp,
 }
-pub struct ComputeNoiseSequence(Vec<ComputeNoiseInstruction>);
+pub struct ComputeNoiseSequence(pub(crate) Vec<ComputeNoiseInstruction>);
 
 pub enum QueueNoiseOp {
     Generate(ErasedComputeNoise),

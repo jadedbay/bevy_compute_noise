@@ -1,6 +1,6 @@
 use bevy::{app::App, render::render_resource::ShaderRef};
 
-use crate::{noise::ComputeNoise, render::pipeline::NoiseOp};
+use crate::noise::ComputeNoise;
 
 pub mod invert;
 

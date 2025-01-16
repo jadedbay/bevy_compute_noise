@@ -1,7 +1,7 @@
-use bevy::{asset::embedded_asset, prelude::*, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef, TextureDimension}, renderer::RenderDevice}};
+use bevy::{asset::embedded_asset, prelude::*, render::{render_resource::{Buffer, BufferInitDescriptor, BufferUsages, ShaderDefVal, ShaderRef}, renderer::RenderDevice}};
 use bytemuck::{Pod, Zeroable};
 
-use crate::render::pipeline::NoiseOp;
+use crate::{render::pipeline::NoiseOp, shader::ComputeNoiseShader};
 
 use super::{ComputeNoise, ComputeNoiseGenerator};
 
@@ -63,5 +63,19 @@ impl ComputeNoiseGenerator for Worley {
 
     fn shader_def() -> ShaderDefVal {
        "WORLEY".into() 
+    }
+}
+
+impl ComputeNoiseShader for Worley {
+    fn function_name() -> &'static str {
+        "worley_2d"
+    }
+
+    fn import_path() -> &'static str {
+        "bevy_compute_noise::worley"
+    }
+
+    fn struct_name() -> Option<&'static str> {
+        Some("Worley")
     }
 }

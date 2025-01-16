@@ -17,11 +17,14 @@
     #endif
 #endif
 
+const INVERT: u32 = 1u;
+const BILLOWY: u32 = 2u;
+
 struct Config {
     octaves: u32,
     lacunarity: f32,
     persistence: f32,
-    _padding: u32,
+    flags: u32,
     noise: Noise,
 }
 @group(0) @binding(1) var<uniform> config: Config;
@@ -50,7 +53,15 @@ fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     var noise = config.noise;
 
     for(var i = 0u; i < config.octaves; i++) {
-       value += noise_fn(uv, noise) * amplitude;
+        var octave_value = noise_fn(uv, noise);
+        if (config.flags & INVERT) != 0u {
+           octave_value = 1.0 - octave_value;
+        }
+        if (config.flags & BILLOWY) != 0 {
+            octave_value = abs(octave_value);
+        }
+
+       value += octave_value * amplitude;
        
        noise.frequency *= config.lacunarity;
        amplitude *= config.persistence;

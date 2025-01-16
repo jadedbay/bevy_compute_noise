@@ -21,6 +21,7 @@ pub mod image;
 pub mod noise;
 pub mod noise_queue;
 mod render;
+mod shader;
 
 pub mod prelude {
     pub use crate::{

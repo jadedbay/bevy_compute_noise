@@ -12,7 +12,7 @@ struct Perlin {
     frequency: f32,
     flags: u32,
 };
-@group(1) @binding(0) var<uniform> perlin: Perlin;
+@group(0) @binding(1) var<uniform> perlin: Perlin;
 
 @compute @workgroup_size(8, 8, 8)
 fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {

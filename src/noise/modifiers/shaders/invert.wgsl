@@ -17,6 +17,10 @@ fn main(@builtin(global_invocation_id) invocation_id: vec3<u32>) {
     #endif
 
     var value = textureLoad(input_texture, location);
-    value = 1.0 - value;
+    value = invert(value);
     textureStore(output_texture, location, value);
+}
+
+fn invert(value: f32) -> f32 {
+    return 1.0 - value;
 }

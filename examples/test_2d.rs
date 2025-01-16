@@ -1,6 +1,7 @@
 use bevy::{core_pipeline::tonemapping::Tonemapping, image::{ImageAddressMode, ImageSampler, ImageSamplerDescriptor}, prelude::*, render::{mesh::VertexAttributeValues, render_resource::{AsBindGroup, ShaderRef}}, sprite::{Material2d, Material2dPlugin}, window::PresentMode};
-use bevy_compute_noise::{noise::ComputeNoise, noise_queue::QueueNoiseOp::*, prelude::*};
+use bevy_compute_noise::{noise::generators::fbm::FbmFlags, prelude::*};
 use iyes_perf_ui::{prelude::PerfUiDefaultEntries, PerfUiPlugin};
+use ops::exp2;
 
 
 fn main() {
@@ -46,20 +47,31 @@ fn setup(
 
 
     let mut quad = Rectangle::default().mesh().build();
-    if let Some(uvs) = quad.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
-        if let VertexAttributeValues::Float32x2(uvs) = uvs {
-            for uv in uvs.iter_mut() {
-                *uv = [uv[0] * 2.0, uv[1] * 2.0];
-            }
-        }
-    }
+    // if let Some(uvs) = quad.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
+    //     if let VertexAttributeValues::Float32x2(uvs) = uvs {
+    //         for uv in uvs.iter_mut() {
+    //             *uv = [uv[0] * 2.0, uv[1] * 2.0];
+    //         }
+    //     }
+    // }
+
+    // noise_queue.queue(handle.clone(), (
+    //     Fbm::<Perlin> {
+    //         noise: Perlin {
+    //             flags: PerlinFlags::TILEABLE.bits(),
+    //             ..default()
+    //         },
+    //         persistence: exp2(-0.85),
+    //         flags: FbmFlags::BILLOWY.bits(),
+    //         ..default()
+    //     },
+    //     //Write(handle.clone(), Channel::R)
+    // ));
 
     noise_queue.queue(handle.clone(), (
-        Worley {
-            flags: WorleyFlags::TILEABLE.bits(),
-            ..default()
-        },
+        Perlin::default(),
         Invert,
+        Store(Channel::R)
     ));
 
     commands.spawn((
